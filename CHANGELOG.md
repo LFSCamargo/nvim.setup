@@ -11,15 +11,19 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Features
 
+- adds git log view sitting at 45% bottom on nvim view ([d578cf2](https://github.com/LFSCamargo/nvim.setup/commit/d578cf23325512d101c672deaf0497f7f427cc4b))
 - **git:** add source-control sidebar with commit and revert ([74cacf5](https://github.com/LFSCamargo/nvim.setup/commit/74cacf5e6c108affb5d71e304b26e52c24bdcb6b))
 - **session:** persist tabs, unsaved buffers, and chat UUIDs ([7b78fb4](https://github.com/LFSCamargo/nvim.setup/commit/7b78fb4fb391c7a50e9f0ea9e02f9676cb5870f6))
 
 ### Bug Fixes
 
+- **git:** shrink the commit log pane to 30% height ([09a7dd2](https://github.com/LFSCamargo/nvim.setup/commit/09a7dd24ea56c993e656b3a4f4bf2fe996dfc36a))
+- **git:** open files and commits in the mid editor ([a40e288](https://github.com/LFSCamargo/nvim.setup/commit/a40e288815a505ca7e6b423fc7762df65c4e71aa))
 - **editor:** preserve selection highlights and add quit shortcut ([e7d8c3c](https://github.com/LFSCamargo/nvim.setup/commit/e7d8c3c125dac9931079ff127bd8b9f1df589003))
 
 ### Documentation
 
+- **agents:** require a regression test for every bug fix ([d2c8970](https://github.com/LFSCamargo/nvim.setup/commit/d2c897084b4aae5c5b495d6d1c80bf8ec5b02cc2))
 - add keybindings, plugin overview, and e2e test plan ([63ee5d3](https://github.com/LFSCamargo/nvim.setup/commit/63ee5d3f7acebd09fa69586692622a05ef8aae68))
 - **agents:** add shared contribution instructions ([ec92f0e](https://github.com/LFSCamargo/nvim.setup/commit/ec92f0e6c05ae91626424eae65844ffb272313af))
 
@@ -29,6 +33,7 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Chores
 
+- adds new view for recent commits from the repository ([9057d9b](https://github.com/LFSCamargo/nvim.setup/commit/9057d9b28fdb3be095a10505a158e22603eeb59a))
 - **gitignore:** ignore Neovim runtime logs ([c4c1a12](https://github.com/LFSCamargo/nvim.setup/commit/c4c1a12377ee597fa7d973938caa5394d9940702))
 - add commitlint with conventional commits ([34f73f0](https://github.com/LFSCamargo/nvim.setup/commit/34f73f07f59af22d19595595e1699d2f2c8a13c0))
 
