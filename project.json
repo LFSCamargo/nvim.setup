@@ -1,0 +1,29 @@
+{
+  "$schema": "./node_modules/nx/schemas/project-schema.json",
+  "name": "setup",
+  "root": ".",
+  "targets": {
+    "check": {
+      "executor": "nx:run-commands",
+      "options": { "command": "make check" },
+      "cache": false
+    },
+    "e2e": {
+      "executor": "nx:run-commands",
+      "options": { "command": "make e2e" },
+      "cache": false
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "make test",
+          "node --test scripts/tests/workspace.test.mjs",
+          "bash scripts/tests/bootstrap.test.sh"
+        ],
+        "parallel": false
+      },
+      "cache": false
+    }
+  }
+}

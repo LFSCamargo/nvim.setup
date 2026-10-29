@@ -1,8 +1,11 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
-.PHONY: help deps doctor install plugins parsers tools validate update upgrade capture bump check e2e test commitlint changelog
+.PHONY: help bootstrap deps doctor install plugins parsers tools validate update upgrade capture bump check e2e test commitlint changelog
 help: ## Show available commands
 	@awk 'BEGIN {FS = ":.*## "} /^[a-z0-9-]+:.*## / {printf "  %-12s %s\n", $$1, $$2}' Makefile
+
+bootstrap: ## Fetch this setup (if needed), install Neovim and other deps, then install
+	@bash scripts/bootstrap.sh
 
 deps: ## Install macOS/Linux system dependencies (may need sudo)
 	@bash scripts/deps.sh
@@ -49,7 +52,7 @@ e2e: ## Exercise local chat focus and input using a simulated Neovim UI
 test: check e2e ## Syntax-check Lua/shell and run the simulated UI e2e tests
 
 commitlint: ## Check the latest commit message against Conventional Commits
-	@npx --no -- commitlint --last --verbose
+	@pnpm exec commitlint --last --verbose
 
 changelog: ## Validate every commit and regenerate CHANGELOG.md
 	@bash scripts/changelog.sh

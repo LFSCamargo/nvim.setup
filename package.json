@@ -7,7 +7,15 @@
   "scripts": {
     "prepare": "husky",
     "commitlint": "commitlint --edit",
-    "changelog": "node scripts/changelog.mjs"
+    "changelog": "node scripts/changelog.mjs",
+    "dev": "nx run web:dev",
+    "build": "nx run web:build",
+    "test": "nx run-many -t test",
+    "test:setup": "nx run setup:test",
+    "test:workspace": "node --test scripts/tests/workspace.test.mjs && bash scripts/tests/bootstrap.test.sh",
+    "test:web:e2e": "playwright test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.4",
@@ -15,6 +23,14 @@
     "@commitlint/lint": "^21.2.4",
     "@commitlint/load": "^21.2.4",
     "@commitlint/parse": "^21.2.3",
-    "husky": "^9.1.7"
+    "@playwright/test": "1.58.2",
+    "husky": "^9.1.7",
+    "nx": "22.5.4",
+    "prettier": "^3.9.10",
+    "prettier-plugin-tailwindcss": "^0.8.1"
+  },
+  "packageManager": "pnpm@10.34.9",
+  "engines": {
+    "node": ">=22.12.0"
   }
 }

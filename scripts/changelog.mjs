@@ -1,13 +1,13 @@
-import { execFileSync } from 'node:child_process'
-import { writeFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
-import lint from '@commitlint/lint'
-import load from '@commitlint/load'
-import parse from '@commitlint/parse'
+import { execFileSync } from 'node:child_process';
+import { writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import lint from '@commitlint/lint';
+import load from '@commitlint/load';
+import parse from '@commitlint/parse';
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..')
-const outfile = join(root, 'CHANGELOG.md')
+const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+const outfile = join(root, 'CHANGELOG.md');
 const sections = new Map([
   ['feat', 'Features'],
   ['fix', 'Bug Fixes'],
@@ -20,10 +20,10 @@ const sections = new Map([
   ['ci', 'CI'],
   ['chore', 'Chores'],
   ['style', 'Styles'],
-])
+]);
 
 function git(args) {
-  return execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trimEnd()
+  return execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trimEnd();
 }
 
 function repoUrl() {
@@ -32,145 +32,188 @@ function repoUrl() {
       .replace(/^git@github\.com:/, 'https://github.com/')
       .replace(/^ssh:\/\/git@github\.com\//, 'https://github.com/')
       .replace(/^https:\/\/github\.com\//, 'https://github.com/')
-      .replace(/\.git$/, '')
+      .replace(/\.git$/, '');
   } catch {
-    return ''
+    return '';
   }
 }
 
 function hashes(range) {
-  const args = ['log', '--reverse', '--no-merges', '--format=%H']
-  if (range) args.push(range)
-  const out = git(args)
-  return out ? out.split('\n') : []
+  const args = ['log', '--reverse', '--no-merges', '--format=%H'];
+  if (range) args.push(range);
+  const out = git(args);
+  return out ? out.split('\n') : [];
 }
 
 function readCommits() {
-  const out = git(['log', '--reverse', '--no-merges', '--format=%H%x00%h%x00%cs%x00%B%x1e'])
-  const commits = []
+  const out = git([
+    'log',
+    '--reverse',
+    '--no-merges',
+    '--format=%H%x00%h%x00%cs%x00%B%x1e',
+  ]);
+  const commits = [];
   for (const record of out.split('\x1e')) {
-    const trimmed = record.replace(/^\n/, '')
-    if (!trimmed) continue
-    const [hash, short, date, raw = ''] = trimmed.split('\x00')
-    const message = raw.replace(/\n+$/, '')
-    if (!hash || !message) continue
-    commits.push({ hash, short, date, message, subject: message.split('\n')[0] })
+    const trimmed = record.replace(/^\n/, '');
+    if (!trimmed) continue;
+    const [hash, short, date, raw = ''] = trimmed.split('\x00');
+    const message = raw.replace(/\n+$/, '');
+    if (!hash || !message) continue;
+    commits.push({
+      hash,
+      short,
+      date,
+      message,
+      subject: message.split('\n')[0],
+    });
   }
-  return commits
+  return commits;
 }
 
 function releaseTags() {
-  const out = git(['tag', '--list', '--sort=version:refname'])
-  return out ? out.split('\n').filter((tag) => /^v?\d+\.\d+\.\d+$/.test(tag)) : []
+  const out = git(['tag', '--list', '--sort=version:refname']);
+  return out
+    ? out.split('\n').filter((tag) => /^v?\d+\.\d+\.\d+$/.test(tag))
+    : [];
 }
 
 function isLegacyFailure(report, parsed) {
-  if (report.valid) return false
-  return !parsed.type || report.errors.every((error) => error.name === 'type-empty' || error.name === 'subject-empty')
+  if (report.valid) return false;
+  return (
+    !parsed.type ||
+    report.errors.every(
+      (error) => error.name === 'type-empty' || error.name === 'subject-empty',
+    )
+  );
 }
 
 function isBreaking(parsed) {
-  if ((parsed.notes || []).some((note) => /^BREAKING[- ]CHANGE$/i.test(note.title))) return true
-  return /!:/.test(parsed.header || '')
+  if (
+    (parsed.notes || []).some((note) =>
+      /^BREAKING[- ]CHANGE$/i.test(note.title),
+    )
+  )
+    return true;
+  return /!:/.test(parsed.header || '');
 }
 
 function isChangelogCommit(parsed) {
-  return parsed.type === 'chore' && parsed.scope === 'changelog'
+  return parsed.type === 'chore' && parsed.scope === 'changelog';
 }
 
 function entryLine(commit, parsed, url) {
-  const subject = (parsed.subject || commit.subject).trim()
-  const scope = parsed.scope ? `**${parsed.scope}:** ` : ''
-  const link = url ? `[${commit.short}](${url}/commit/${commit.hash})` : commit.short
-  return `- ${scope}${subject} (${link})`
+  const subject = (parsed.subject || commit.subject).trim();
+  const scope = parsed.scope ? `**${parsed.scope}:** ` : '';
+  const link = url
+    ? `[${commit.short}](${url}/commit/${commit.hash})`
+    : commit.short;
+  return `- ${scope}${subject} (${link})`;
 }
 
 function renderSection(title, lines) {
-  return lines.length ? `### ${title}\n\n${lines.join('\n')}\n` : ''
+  return lines.length ? `### ${title}\n\n${lines.join('\n')}\n` : '';
 }
 
 function renderRelease(title, grouped, order) {
-  const blocks = []
-  if (grouped.has('breaking')) blocks.push(renderSection('Breaking Changes', grouped.get('breaking')))
+  const blocks = [];
+  if (grouped.has('breaking'))
+    blocks.push(renderSection('Breaking Changes', grouped.get('breaking')));
   for (const type of order) {
-    if (type === 'breaking' || type === 'other') continue
-    if (grouped.has(type)) blocks.push(renderSection(sections.get(type) || type, grouped.get(type)))
+    if (type === 'breaking' || type === 'other') continue;
+    if (grouped.has(type))
+      blocks.push(renderSection(sections.get(type) || type, grouped.get(type)));
   }
   for (const [type, lines] of grouped) {
-    if (type === 'breaking' || type === 'other' || sections.has(type) || order.includes(type)) continue
-    blocks.push(renderSection(type, lines))
+    if (
+      type === 'breaking' ||
+      type === 'other' ||
+      sections.has(type) ||
+      order.includes(type)
+    )
+      continue;
+    blocks.push(renderSection(type, lines));
   }
-  if (grouped.has('other')) blocks.push(renderSection('Other', grouped.get('other')))
-  return `## ${title}\n\n${blocks.filter(Boolean).join('\n')}`
+  if (grouped.has('other'))
+    blocks.push(renderSection('Other', grouped.get('other')));
+  return `## ${title}\n\n${blocks.filter(Boolean).join('\n')}`;
 }
 
-const config = await load({}, { cwd: root })
-const parserOpts = config.parserPreset && typeof config.parserPreset === 'object'
-  ? config.parserPreset.parserOpts
-  : undefined
+const config = await load({}, { cwd: root });
+const parserOpts =
+  config.parserPreset && typeof config.parserPreset === 'object'
+    ? config.parserPreset.parserOpts
+    : undefined;
 const lintOpts = {
   parserOpts: parserOpts && typeof parserOpts === 'object' ? parserOpts : {},
   plugins: config.plugins,
   ignores: config.ignores,
   defaultIgnores: config.defaultIgnores,
-}
+};
 
-const url = repoUrl()
-const commits = readCommits()
+const url = repoUrl();
+const commits = readCommits();
 if (!commits.length) {
-  console.error('ERROR: No git commits found.')
-  process.exit(1)
+  console.error('ERROR: No git commits found.');
+  process.exit(1);
 }
 
-const byHash = new Map()
-const unknownTypes = []
-let conventional = 0
-let other = 0
-const invalid = []
+const byHash = new Map();
+const unknownTypes = [];
+let conventional = 0;
+let other = 0;
+const invalid = [];
 
 for (const commit of commits) {
-  const report = await lint(commit.message, config.rules, lintOpts)
-  const parsed = await parse(commit.message, undefined, lintOpts.parserOpts)
-  const legacy = isLegacyFailure(report, parsed)
+  const report = await lint(commit.message, config.rules, lintOpts);
+  const parsed = await parse(commit.message, undefined, lintOpts.parserOpts);
+  const legacy = isLegacyFailure(report, parsed);
   if (!report.valid && !legacy) {
-    invalid.push({ commit, report })
-    continue
+    invalid.push({ commit, report });
+    continue;
   }
   if (legacy || !parsed.type) {
-    other += 1
-    byHash.set(commit.hash, { commit, parsed, section: 'other' })
-    continue
+    other += 1;
+    byHash.set(commit.hash, { commit, parsed, section: 'other' });
+    continue;
   }
-  conventional += 1
-  if (isChangelogCommit(parsed)) continue
-  if (!sections.has(parsed.type) && !unknownTypes.includes(parsed.type)) unknownTypes.push(parsed.type)
-  byHash.set(commit.hash, { commit, parsed, section: isBreaking(parsed) ? 'breaking' : parsed.type })
+  conventional += 1;
+  if (isChangelogCommit(parsed)) continue;
+  if (!sections.has(parsed.type) && !unknownTypes.includes(parsed.type))
+    unknownTypes.push(parsed.type);
+  byHash.set(commit.hash, {
+    commit,
+    parsed,
+    section: isBreaking(parsed) ? 'breaking' : parsed.type,
+  });
 }
 
 if (invalid.length) {
   for (const { commit, report } of invalid) {
-    console.error(`${commit.short} ${commit.subject}`)
-    for (const error of report.errors) console.error(`  ${error.name}: ${error.message}`)
+    console.error(`${commit.short} ${commit.subject}`);
+    for (const error of report.errors)
+      console.error(`  ${error.name}: ${error.message}`);
   }
-  console.error(`ERROR: ${invalid.length} commit(s) failed Conventional Commits checks.`)
-  process.exit(1)
+  console.error(
+    `ERROR: ${invalid.length} commit(s) failed Conventional Commits checks.`,
+  );
+  process.exit(1);
 }
 
-const tags = releaseTags()
-const releases = []
-let previous
+const tags = releaseTags();
+const releases = [];
+let previous;
 for (const tag of tags) {
-  const range = previous ? `${previous}..${tag}` : tag
-  const date = git(['log', '-1', '--format=%cs', tag])
-  const label = tag.replace(/^v/, '')
+  const range = previous ? `${previous}..${tag}` : tag;
+  const date = git(['log', '-1', '--format=%cs', tag]);
+  const label = tag.replace(/^v/, '');
   releases.push({
     title: `[${label}] - ${date}`,
     hashes: hashes(range),
     tag,
     label,
     previous,
-  })
-  previous = tag
+  });
+  previous = tag;
 }
 releases.push({
   title: '[Unreleased]',
@@ -178,33 +221,37 @@ releases.push({
   tag: null,
   label: 'Unreleased',
   previous,
-})
+});
 
-const typeOrder = [...sections.keys(), ...unknownTypes]
-const changelogReleases = []
-const compare = []
+const typeOrder = [...sections.keys(), ...unknownTypes];
+const changelogReleases = [];
+const compare = [];
 for (const release of [...releases].reverse()) {
-  const grouped = new Map()
+  const grouped = new Map();
   for (const hash of [...release.hashes].reverse()) {
-    const item = byHash.get(hash)
-    if (!item) continue
-    const lines = grouped.get(item.section) || []
-    lines.push(entryLine(item.commit, item.parsed, url))
-    grouped.set(item.section, lines)
+    const item = byHash.get(hash);
+    if (!item) continue;
+    const lines = grouped.get(item.section) || [];
+    lines.push(entryLine(item.commit, item.parsed, url));
+    grouped.set(item.section, lines);
   }
-  if (!grouped.size && release.tag) continue
-  changelogReleases.push(grouped.size
-    ? renderRelease(release.title, grouped, typeOrder)
-    : `## ${release.title}\n`)
-  if (!url) continue
+  if (!grouped.size && release.tag) continue;
+  changelogReleases.push(
+    grouped.size
+      ? renderRelease(release.title, grouped, typeOrder)
+      : `## ${release.title}\n`,
+  );
+  if (!url) continue;
   if (release.tag && release.previous) {
-    compare.push(`[${release.label}]: ${url}/compare/${release.previous}...${release.tag}`)
+    compare.push(
+      `[${release.label}]: ${url}/compare/${release.previous}...${release.tag}`,
+    );
   } else if (release.tag) {
-    compare.push(`[${release.label}]: ${url}/releases/tag/${release.tag}`)
+    compare.push(`[${release.label}]: ${url}/releases/tag/${release.tag}`);
   } else if (release.previous) {
-    compare.push(`[Unreleased]: ${url}/compare/${release.previous}...HEAD`)
+    compare.push(`[Unreleased]: ${url}/compare/${release.previous}...HEAD`);
   } else {
-    compare.push(`[Unreleased]: ${url}/commits/HEAD`)
+    compare.push(`[Unreleased]: ${url}/commits/HEAD`);
   }
 }
 
@@ -220,8 +267,10 @@ const body = [
   '',
   changelogReleases.join('\n'),
   compare.length ? compare.join('\n') + '\n' : '',
-].join('\n')
+].join('\n');
 
-writeFileSync(outfile, body)
-console.log(`Validated ${commits.length} commits (${conventional} conventional, ${other} other).`)
-console.log(`Wrote ${outfile}`)
+writeFileSync(outfile, body);
+console.log(
+  `Validated ${commits.length} commits (${conventional} conventional, ${other} other).`,
+);
+console.log(`Wrote ${outfile}`);
