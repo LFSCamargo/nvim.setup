@@ -124,6 +124,8 @@ Run these from the repository:
 | `make doctor` | Check prerequisites |
 | `make install` | Back up, deploy, restore plugins, install parsers and tools, validate |
 | `make check` | Check shell syntax and compile every Lua file |
+| `make e2e` | Exercise chat focus and input with a simulated Neovim UI |
+| `make test` | Run `make check` then `make e2e` |
 | `make validate` | Validate the installed setup |
 | `make plugins` / `make parsers` / `make tools` | Restore pinned plugins / install parsers / install missing Mason tools |
 | `make update` | Fast-forward from the configured upstream, then install |
@@ -131,6 +133,7 @@ Run these from the repository:
 | `make capture` | Copy installed config changes back into this repository |
 | `make bump VERSION=1.1.0` | Set this setup's release version |
 | `make commitlint` | Check the latest commit message against Conventional Commits |
+| `make changelog` | Validate every commit and regenerate `CHANGELOG.md` |
 
 Prefer editing `nvim/` here and running `make install`. If you edited the installed config instead:
 
@@ -159,6 +162,12 @@ docs: document the e2e check
 
 Use `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, or `revert`. After `npm install` in this repository, a `commit-msg` hook rejects messages that do not match.
 
+After each commit, run `make changelog`. If `CHANGELOG.md` changed, commit it as `chore(changelog): regenerate from commits` before pushing. A `pre-push` hook and CI fail when the file is stale. Regeneration commits are omitted from the changelog so that extra commit does not loop.
+
+`make changelog` lints the full history with those rules and rewrites [CHANGELOG.md](CHANGELOG.md). Conventional commits are grouped by type; older messages without a type go under Other. Tagged `vX.Y.Z` releases become dated sections; untagged commits stay under Unreleased.
+
+Cursor, Claude Code, and Codex follow [AGENTS.md](AGENTS.md). After code changes they write tests, check for spaghetti, run `make test`, and review for vulnerabilities. Claude Code also reads [CLAUDE.md](CLAUDE.md); Cursor also loads `.cursor/rules/`.
+
 ## Backups and recovery
 
 The installed config lives at `${XDG_CONFIG_HOME:-~/.config}/${NVIM_APPNAME:-nvim}`. Each install moves the previous config to `${XDG_STATE_HOME:-~/.local/state}/nvim.setup/backups/`. Symlinks stay symlinks. Plugin data, caches, and Mason tools are not included.
@@ -178,11 +187,15 @@ If a download fails, the new config stays installed and the backup is kept. Fix 
 | Path | Contents |
 | --- | --- |
 | `nvim/` | Deployable config, plugin lockfile, and tool installers |
+| `.luarc.json` | lua-language-server settings so `vim` is a known global |
 | `scripts/` | Install, update, capture, and validation |
 | `docs/EDITOR.md` | Editor, language, and debug reference |
 | `docs/VALIDATION.md` | What the packaging checks cover |
 | `Makefile` / `VERSION` | Maintenance commands and the setup release version |
 | `commitlint.config.mjs` | Conventional Commits rules for `git commit` |
+| `CHANGELOG.md` | Generated history from validated commits |
+| `AGENTS.md` / `CLAUDE.md` | Shared instructions for Cursor, Claude Code, and Codex |
+| `.cursor/rules/` | Cursor agent rules for tests, E2E, and changelog commits |
 
 Validation checks startup, mappings, plugin modules, Mason packages, syntax parsers, highlighting, and transparency. Headless maintenance does not start chats. It does not verify CLI login, project dependencies, or every language-server operation.
 

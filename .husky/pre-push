@@ -1,0 +1,7 @@
+node scripts/changelog.mjs
+if ! git diff --quiet -- CHANGELOG.md; then
+  echo "CHANGELOG.md is stale. Commit the regenerated file before pushing:"
+  echo "  make changelog && git add CHANGELOG.md && git commit -m 'chore(changelog): regenerate from commits'"
+  git diff --stat -- CHANGELOG.md
+  exit 1
+fi
