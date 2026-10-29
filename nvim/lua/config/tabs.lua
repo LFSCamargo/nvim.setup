@@ -223,8 +223,14 @@ vim.opt.hidden = true
 local function refresh()
   for _, win in ipairs(api.nvim_tabpage_list_wins(0)) do
     local buf = api.nvim_win_get_buf(win)
-    vim.wo[win].winbar = (editor_buf(buf) or require('config.agents').is_chat(buf))
-      and "%!v:lua.require'config.tabs'.render()" or ''
+    if vim.bo[buf].filetype == 'NvimTree' or vim.bo[buf].filetype == 'git-composer' then
+      vim.wo[win].winbar = "%!v:lua.require'config.sidebar'.winbar()"
+    elseif vim.bo[buf].filetype == 'git-changes' then
+      vim.wo[win].winbar = ''
+    else
+      vim.wo[win].winbar = (editor_buf(buf) or require('config.agents').is_chat(buf))
+        and "%!v:lua.require'config.tabs'.render()" or ''
+    end
   end
   vim.cmd('redrawstatus')
 end

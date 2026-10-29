@@ -8,7 +8,7 @@ map({ 'n', 'i' }, '<D-p>', function() require('fzf-lua').files() end, 'Find proj
 map('n', '<leader>ff', function() require('fzf-lua').files() end, 'Find files')
 map('n', '<leader>fg', function() require('fzf-lua').live_grep() end, 'Search project text')
 map('n', '<leader>fb', function() require('fzf-lua').buffers() end, 'Find open buffer')
-map('n', '<leader>e', '<cmd>NvimTreeToggle<cr>', 'Toggle file tree')
+map('n', '<leader>e', function() require('config.sidebar').toggle_files() end, 'Toggle file tree')
 map('n', '<leader>ac', '<cmd>Codex<cr>', 'Codex chat')
 map('n', '<leader>au', '<cmd>CursorAgent<cr>', 'Cursor Agent chat')
 map('n', '<leader>xx', '<cmd>Trouble diagnostics toggle<cr>', 'Project diagnostics')
@@ -59,10 +59,13 @@ map('n', '<leader>dq', function() require('dap').terminate() end, 'Stop debuggin
 vim.api.nvim_create_user_command('ProjectCloseTab', function() require('config.tabs').close() end, {})
 vim.api.nvim_create_user_command('PaneNewTab', function() require('config.tabs').new_context() end, {})
 vim.api.nvim_create_user_command('PaneSave', function() require('config.tabs').save() end, {})
+vim.api.nvim_create_user_command('GitChanges', function() require('config.sidebar').git() end, {})
+vim.api.nvim_create_user_command('SidebarFilesToggle', function() require('config.sidebar').toggle_files() end, {})
 
 local shortcuts = {
   ['<C-s>'] = { 'PaneSave', 'Save editor file' },
-  ['<C-b>'] = { 'NvimTreeToggle', 'Toggle file tree' },
+  ['<C-b>'] = { 'SidebarFilesToggle', 'Toggle file tree' },
+  ['<C-g>'] = { 'GitChanges', 'Show Git changes' },
   ['<C-p>'] = { 'FzfLua files', 'Find project files' },
   ['<C-f>'] = { 'FzfLua live_grep', 'Search project text' },
   ['<C-t>'] = { 'PaneNewTab', 'New editor or chat tab' },

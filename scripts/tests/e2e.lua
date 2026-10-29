@@ -138,6 +138,208 @@ local ok, err = xpcall(function()
     vim.env.NVIM_CLEAN = nil
   ]])
 
+  eval([[
+    vim.cmd.cd(vim.fn.fnameescape(vim.env.E2E_DIR .. '/repo'))
+    local tree_win
+    package.loaded['nvim-tree.api'] = { tree = {
+      close = function() if tree_win and vim.api.nvim_win_is_valid(tree_win) then vim.api.nvim_win_close(tree_win, true) end end,
+      open = function()
+        vim.cmd('topleft vsplit')
+        tree_win = vim.api.nvim_get_current_win()
+        local buf = vim.api.nvim_create_buf(false, true)
+        vim.bo[buf].filetype = 'NvimTree'
+        vim.api.nvim_win_set_buf(tree_win, buf)
+      end,
+    } }
+    local system = vim.system
+    vim.system = function(_, _, cb) vim.defer_fn(function() cb({ code = 0, stdout = '/late\n' }) end, 300) end
+    local sidebar = require('config.sidebar')
+    sidebar.git()
+    assert(table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), '\n'):find('Loading', 1, true), 'loading indicator missing')
+    sidebar.files()
+    vim.system = system
+  ]])
+  vim.wait(500)
+  assert(eval("return require('config.sidebar').view") == 'files', 'late Git result reopened the sidebar')
+  eval("require('config.sidebar').git()")
+  wait_for('Git changes', function()
+    return eval([[
+      for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+        local buf = vim.api.nvim_win_get_buf(win)
+        if vim.bo[buf].filetype == 'git-changes'
+          and table.concat(vim.api.nvim_buf_get_lines(buf, 0, -1, false), '\n'):find('changed file.txt', 1, true) then
+          return true
+        end
+      end
+      return false
+    ]])
+  end)
+  local function focus_git_list()
+    eval([[
+      for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+        if vim.bo[vim.api.nvim_win_get_buf(win)].filetype == 'git-changes' then
+          vim.api.nvim_set_current_win(win)
+          return
+        end
+      end
+      error('git list window missing')
+    ]])
+  end
+  local function sidebar_text()
+    focus_git_list()
+    return eval("return table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), '\\n')")
+  end
+  local function sidebar_line(label)
+    focus_git_list()
+    return eval(string.format([[
+      local label = %s
+      local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+      for i, line in ipairs(lines) do
+        if line:find(label, 1, true) and (not line:find('Staged', 1, true) or label:find('Staged', 1, true)) then
+          return i
+        end
+      end
+      return 0
+    ]], string.format('%q', label)))
+  end
+  local function focus_git_line(label)
+    local line = sidebar_line(label)
+    assert(line > 0, 'git line missing: ' .. label)
+    eval('vim.api.nvim_win_set_cursor(0, { ' .. line .. ', 0 })')
+    return line
+  end
+  local function click_sidebar(line, col)
+    focus_git_list()
+    local win = request('nvim_get_current_win')
+    local sp = eval(string.format('return vim.fn.screenpos(%d, %d, %d)', win, line, math.max(col, 1)))
+    request('nvim_input_mouse', 'left', 'press', '', 0, sp.row - 1, sp.col - 1)
+    request('nvim_input_mouse', 'left', 'release', '', 0, sp.row - 1, sp.col - 1)
+  end
+  assert(sidebar_line('Staged Changes') > 0 and sidebar_line('deleted.txt') > 0 and sidebar_line('new.txt') > 0, 'Git sections or changes missing')
+  local shown = sidebar_text()
+  assert(not shown:find('Click', 1, true), 'mouse hint should not be shown')
+  assert(shown:find('[Commit]', 1, true) and shown:find('Ctrl+Enter', 1, true), 'commit button missing')
+  assert(shown:find('x revert', 1, true) and shown:find('i message', 1, true), 'keyboard helper text missing')
+  assert(shown:find('[Stage All]', 1, true) and shown:find('[Revert All]', 1, true), 'bulk change actions missing')
+  assert(eval([[
+    local found = false
+    for _, win in ipairs(vim.api.nvim_list_wins()) do
+      if vim.bo[vim.api.nvim_win_get_buf(win)].filetype == 'git-composer' then found = true end
+    end
+    return found
+  ]]), 'commit message composer missing')
+  assert(eval([[
+    local marks = vim.api.nvim_buf_get_extmarks(0, vim.api.nvim_get_namespaces().GitChanges, 0, -1, { details = true })
+    local seen = {}
+    for _, mark in ipairs(marks) do seen[mark[4].hl_group] = true end
+    return seen.GitChangeDeleted and seen.GitChangeModified and seen.GitChangeAdded
+  ]]), 'change colors missing')
+  click_sidebar(sidebar_line('Changes  ('), 2)
+  wait_for('collapsing changes with mouse', function() return sidebar_line('changed file.txt') == 0 end)
+  vim.wait(500)
+  click_sidebar(sidebar_line('Changes  ('), 2)
+  wait_for('expanding changes with mouse', function() return sidebar_line('changed file.txt') > 0 end)
+  click_sidebar(sidebar_line('changed file.txt'), 2)
+  wait_for('staging from Git sidebar', function()
+    local result = vim.system({ 'git', '-C', vim.env.E2E_DIR .. '/repo', 'diff', '--cached', '--name-only' }, { text = true }):wait()
+    return result.stdout:find('changed file.txt', 1, true) ~= nil
+  end)
+  wait_for('Git sidebar refresh', function()
+    return sidebar_text():find('M  changed file.txt', 1, true) ~= nil
+  end)
+  wait_for('Unstage All action', function() return sidebar_line('[Unstage All]') > 0 end)
+  vim.wait(500)
+  click_sidebar(sidebar_line('changed file.txt'), 2)
+  wait_for('unstaging with mouse', function()
+    local result = vim.system({ 'git', '-C', vim.env.E2E_DIR .. '/repo', 'diff', '--cached', '--name-only' }, { text = true }):wait()
+    return not result.stdout:find('changed file.txt', 1, true)
+  end)
+  wait_for('unstaged section refresh', function()
+    return sidebar_text():find('+  M  changed file.txt', 1, true) ~= nil
+  end)
+  focus_git_line('changed file.txt')
+  request('nvim_input', 's')
+  wait_for('keyboard staging', function()
+    local result = vim.system({ 'git', '-C', vim.env.E2E_DIR .. '/repo', 'diff', '--cached', '--name-only' }, { text = true }):wait()
+    return result.stdout:find('changed file.txt', 1, true) ~= nil
+  end)
+  wait_for('staged file after keyboard', function()
+    return sidebar_text():find('M  changed file.txt', 1, true) ~= nil and sidebar_line('[Unstage All]') > 0
+  end)
+  focus_git_list()
+  request('nvim_input', 'U')
+  wait_for('unstage all', function()
+    local result = vim.system({ 'git', '-C', vim.env.E2E_DIR .. '/repo', 'diff', '--cached', '--name-only' }, { text = true }):wait()
+    return result.stdout:find('changed file.txt', 1, true) == nil
+  end)
+  wait_for('changes restored after unstage all', function()
+    return sidebar_text():find('+  M  changed file.txt', 1, true) ~= nil
+  end)
+  focus_git_line('new.txt')
+  request('nvim_input', 's')
+  wait_for('staging new file for commit', function()
+    local result = vim.system({ 'git', '-C', vim.env.E2E_DIR .. '/repo', 'diff', '--cached', '--name-only' }, { text = true }):wait()
+    return result.stdout:find('new.txt', 1, true) ~= nil
+  end)
+  wait_for('staged new file in sidebar', function()
+    return sidebar_line('[Unstage All]') > 0 and sidebar_text():find('new.txt', 1, true) ~= nil
+  end)
+  eval([[
+    for _, win in ipairs(vim.api.nvim_list_wins()) do
+      local buf = vim.api.nvim_win_get_buf(win)
+      if vim.bo[buf].filetype == 'git-composer' then
+        vim.api.nvim_buf_set_lines(buf, 0, -1, false, { 'e2e commit from sidebar' })
+      end
+    end
+  ]])
+  focus_git_list()
+  request('nvim_input', 'C')
+  wait_for('commit from Git sidebar', function()
+    local result = vim.system({ 'git', '-C', vim.env.E2E_DIR .. '/repo', 'log', '-1', '--pretty=%s' }, { text = true }):wait()
+    return (result.stdout or ''):find('e2e commit from sidebar', 1, true) ~= nil
+  end)
+  wait_for('committed file leaving changes', function()
+    local text = sidebar_text()
+    return not text:find('Loading', 1, true) and sidebar_line('new.txt') == 0 and sidebar_line('changed file.txt') > 0
+  end)
+  focus_git_line('changed file.txt')
+  request('nvim_input', '<CR>')
+  wait_for('opening changed file', function()
+    return eval("return vim.api.nvim_buf_get_name(0):find('changed file.txt', 1, true) ~= nil")
+  end)
+  eval("require('config.sidebar').git()")
+  wait_for('Git sidebar after opening a file', function()
+    return sidebar_line('changed file.txt') > 0
+  end)
+  request('nvim_input', 'i')
+  wait_for('keyboard focus on commit message', function()
+    return eval("return vim.bo[vim.api.nvim_get_current_buf()].filetype == 'git-composer'")
+      and request('nvim_get_mode').mode == 'i'
+  end)
+  request('nvim_input', '<Esc>')
+  wait_for('leaving commit message insert', function()
+    local mode = request('nvim_get_mode').mode
+    return mode ~= 'i' and mode ~= 't'
+  end)
+  eval("vim.fn.confirm = function() return 1 end")
+  focus_git_line('changed file.txt')
+  request('nvim_input', 'x')
+  wait_for('reverting a changed file', function()
+    local f = io.open(vim.env.E2E_DIR .. '/repo/changed file.txt', 'r')
+    if not f then return false end
+    local text = f:read('*a')
+    f:close()
+    return text == 'before\n'
+  end)
+  wait_for('reverted file leaving changes', function()
+    local text = sidebar_text()
+    return not text:find('Loading', 1, true) and sidebar_line('changed file.txt') == 0 and sidebar_line('deleted.txt') > 0
+  end)
+  eval("require('config.sidebar').files()")
+  request('nvim_set_current_win', editor)
+  print('PASS: asynchronous Git sidebar, switching, staging and opening files')
+
+
   eval("require('config.agents').new('codex', { uuid = 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee' })")
   wait_for('codex resume argv', function()
     local f = io.open(vim.env.E2E_DIR .. '/codex-args', 'r')

@@ -7,6 +7,7 @@ Run `nvim .` in a project. Interactive startup opens the file tree at 25% width.
 | Keys | Action |
 | --- | --- |
 | Ctrl+B | Toggle file tree |
+| Ctrl+G | Open the Git source-control sidebar |
 | Ctrl+F | Search text in project folder |
 | Ctrl+T | New editor tab, or CLI selector when focused on chat |
 | Ctrl+W | Close focused editor/chat tab; protect unsaved files |
@@ -46,7 +47,18 @@ Formatting is explicit (Space f). Prettierd handles web files; Svelte projects n
 
 ## Chat panes
 
-The file sidebar is shared and has no tab bar. Click pane contents to focus the editor, tree, or chat; clicking a running chat enables terminal input. The editor and chat panes each have their own clickable tabs above their contents. Click a label to switch, **+** to add, or **×** to close the active tab. The active label is underlined in gold; **‹ / ›** navigate when tabs overflow. Ctrl+T adds a tab in the focused pane. File tabs show listed editor buffers and preserve unsaved edits when switching.
+The sidebar has **Files** and **Git** tabs. Git loads changes in the background, so you can switch back to Files while it loads. The Git view matches a typical source-control panel: a commit message at the top, **[Commit]**, then **Staged Changes** and **Changes**. Every action is on the keyboard (mouse still works). Red means deleted, yellow means modified, and green means added or untracked. Space g s opens the full Fugitive status view.
+
+| Git sidebar | Action |
+| --- | --- |
+| `i` / Tab | Edit the commit message / jump to it |
+| `C` / Ctrl+Enter | Commit staged changes |
+| Enter | Open a file, toggle a section, or run **[Commit]** / **[Stage All]** / **[Unstage All]** / **[Revert All]** |
+| `s` / `u` / `x` | Stage / unstage / revert the file (revert asks first) |
+| `S` / `U` / `X` | Stage all / unstage all / revert all |
+| `r` / `q` | Refresh / return to Files |
+
+Click pane contents to focus the editor, tree, or chat; clicking a running chat enables terminal input. The editor and chat panes each have their own clickable tabs above their contents. Click a label to switch, **+** to add, or **×** to close the active tab. The active label is underlined in gold; **‹ / ›** navigate when tabs overflow. Ctrl+T adds a tab in the focused pane. File tabs show listed editor buffers and preserve unsaved edits when switching.
 
 Chat **+** and Ctrl+] open a CLI selector for a new independent Codex or Cursor Agent session. Multiple sessions of either CLI can run at once. Switching chat tabs preserves running sessions; closing a chat tab stops that session. Space a c and Space a u toggle the corresponding assistant pane. The chat pane and file tree each use 25% of the editor width. Chats run the actual interactive CLIs in the directory where you opened them. They use existing CLI authentication and permissions; no prompts or approval bypasses are injected. Use `codex login` or `agent login` outside Neovim if login expires. They do not automatically receive editor selections: mention project-relative file paths in chat. Sessions are stored per working directory under Neovim state (`nvim-setup-sessions`); Codex resumes with `codex resume <uuid>` and Cursor Agent with `agent --resume=<uuid>`. Reopen Neovim in a different project for a separate context, or start `nvim --clean` for a blank window in the current project.
 
