@@ -100,7 +100,7 @@ Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to i
 
 Closing a chat tab stops that CLI. Switching tabs leaves it running. Unsaved files are protected when you close a tab. Quitting with Ctrl+Q snapshots unsaved buffers and resumes Codex/Agent chats by UUID on the next launch in that directory. `make install` puts a wrapper at `~/.local/bin/nvim` so `nvim --clean` still loads this config. Maintenance scripts set `NVIM_WRAPPER=0` when they need Neovim's factory `--clean`.
 
-The full shortcut list, language notes, and debugging details live in [the editor guide](docs/EDITOR.md).
+The full keybinding list, language notes, and debugging details live in [the editor guide](docs/EDITOR.md). Plugins we wrote versus plugins and tools we install are in [the plugin overview](docs/PLUGINS.md). What `make e2e` covers — and what to add when behavior changes — is in [the E2E test plan](docs/E2E-TESTPLAN.md).
 
 ## Languages, format, and debug
 
@@ -128,7 +128,7 @@ Run these from the repository:
 | `make doctor` | Check prerequisites |
 | `make install` | Back up, deploy, restore plugins, install parsers and tools, validate |
 | `make check` | Check shell syntax and compile every Lua file |
-| `make e2e` | Exercise chat focus and input with a simulated Neovim UI |
+| `make e2e` | Simulated UI e2e (chat, session, Git sidebar); see [the test plan](docs/E2E-TESTPLAN.md) |
 | `make test` | Run `make check` then `make e2e` |
 | `make validate` | Validate the installed setup |
 | `make plugins` / `make parsers` / `make tools` | Restore pinned plugins / install parsers / install missing Mason tools |
@@ -170,7 +170,7 @@ After each commit, run `make changelog`. If `CHANGELOG.md` changed, commit it as
 
 `make changelog` lints the full history with those rules and rewrites [CHANGELOG.md](CHANGELOG.md). Conventional commits are grouped by type; older messages without a type go under Other. Tagged `vX.Y.Z` releases become dated sections; untagged commits stay under Unreleased.
 
-Cursor, Claude Code, and Codex follow [AGENTS.md](AGENTS.md). After code changes they write tests, check for spaghetti, run `make test`, and review for vulnerabilities. Claude Code also reads [CLAUDE.md](CLAUDE.md); Cursor also loads `.cursor/rules/`.
+Cursor, Claude Code, and Codex follow [AGENTS.md](AGENTS.md). After code changes they write tests, check for spaghetti, run `make test`, review for vulnerabilities, and keep `docs/` in sync. Claude Code also reads [CLAUDE.md](CLAUDE.md); Cursor also loads `.cursor/rules/`.
 
 ## Backups and recovery
 
@@ -193,13 +193,15 @@ If a download fails, the new config stays installed and the backup is kept. Fix 
 | `nvim/` | Deployable config, plugin lockfile, and tool installers |
 | `.luarc.json` | lua-language-server settings so `vim` is a known global |
 | `scripts/` | Install, update, capture, and validation |
-| `docs/EDITOR.md` | Editor, language, and debug reference |
+| `docs/EDITOR.md` | Keybindings, language, chat, and debug reference |
+| `docs/PLUGINS.md` | First-party modules, Lazy plugins, Mason tools, parsers |
+| `docs/E2E-TESTPLAN.md` | What `make e2e` covers and how to extend it |
 | `docs/VALIDATION.md` | What the packaging checks cover |
 | `Makefile` / `VERSION` | Maintenance commands and the setup release version |
 | `commitlint.config.mjs` | Conventional Commits rules for `git commit` |
 | `CHANGELOG.md` | Generated history from validated commits |
 | `AGENTS.md` / `CLAUDE.md` | Shared instructions for Cursor, Claude Code, and Codex |
-| `.cursor/rules/` | Cursor agent rules for tests, E2E, and changelog commits |
+| `.cursor/rules/` | Cursor agent rules for tests, E2E, changelog commits, and docs sync |
 
 Validation checks startup, mappings, plugin modules, Mason packages, syntax parsers, highlighting, and transparency. Headless maintenance does not start chats. It does not verify CLI login, project dependencies, or every language-server operation.
 

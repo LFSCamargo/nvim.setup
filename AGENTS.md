@@ -6,14 +6,15 @@ Do not finish work that skipped a required check. Do not commit or push unless t
 
 ## Changing files
 
-After any code, script, or test change, complete all four before you stop:
+After any code, script, or test change, complete all five before you stop:
 
 1. **Write tests.** Add or update coverage in `scripts/tests/`. Extend `scripts/tests/e2e.lua` (and `e2e-init.lua` when startup setup changes) so the new behavior fails without the patch. Do not ship untested behavior.
-2. **Check for spaghetti.** Keep `nvim/lua/config/*.lua` single-purpose (`agents`, `keys`, `tabs`, `lsp`, `dap`, `appearance`, `startup`). Do not grow `nvim/init.lua`. Extract helpers instead of copy-paste. Shell belongs in `scripts/` and shares `scripts/common.sh`.
+2. **Check for spaghetti.** Keep `nvim/lua/config/*.lua` single-purpose (`agents`, `session`, `sidebar`, `keys`, `tabs`, `lsp`, `dap`, `appearance`, `startup`). Do not grow `nvim/init.lua`. Extract helpers instead of copy-paste. Shell belongs in `scripts/` and shares `scripts/common.sh`.
 3. **Run E2E tests.** Run `make check` and `make e2e` (or `make test`). Fix failures before finishing.
 4. **Check for vulnerabilities.** Review the diff for unsanitized shell, `vim.cmd` without `fnameescape`, `jobstart` via a shell string, path traversal, and secret leakage. Quote bash variables. Prefer argv arrays over `sh -c`. Do not log credentials, tokens, or `.env` files.
+5. **Keep docs in sync.** Keys and commands → `docs/EDITOR.md` (and `README.md` for user-facing global shortcuts). New/removed modules, Lazy plugins, Mason tools, or parsers → `docs/PLUGINS.md` and the spaghetti list above. E2E cases → `docs/E2E-TESTPLAN.md`. Do not invent keys, plugins, or tests that are not in the code.
 
-Docs-only or generated-file edits skip tests and E2E when no runtime behavior changed. Still scan for secrets.
+Docs-only or generated-file edits skip tests and E2E when no runtime behavior changed. Still scan for secrets. Still update the other docs if the change is documentation of existing behavior.
 
 ## Committing and pushing
 

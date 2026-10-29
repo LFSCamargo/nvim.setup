@@ -2,40 +2,109 @@
 
 Appearance uses Gruvbox syntax colors with transparent backgrounds throughout the editor, file tree, menus, and chat panes. Visual selection, search matches, and the selected completion item keep a fill so they stay visible. The terminal palette stays unchanged. Settings are in `lua/config/appearance.lua`.
 
-Run `nvim .` in a project. Interactive startup opens the file tree at 25% width. If this project has a saved session, editor tabs (including unsaved buffers) and AI chats resume by UUID; otherwise it starts one Codex and one Cursor Agent session. `nvim --clean` skips restore and save, so you get a blank editor plus two fresh chats without clobbering the last session. The chat pane also uses 25% width; keyboard focus stays in the editor. This works with `nvim`, `nvim .`, and `nvim file`. Headless maintenance does not launch chats. Press `i` to edit, `Esc` for normal mode, `:w` to save, and Ctrl+Q to quit (unsaved tabs are snapshotted and restored next time). The leader key is **Space**; press the following keys in sequence in normal mode.
+Run `nvim .` in a project. Interactive startup opens the file tree at 25% width. If this project has a saved session, editor tabs (including unsaved buffers) and AI chats resume by UUID; otherwise it starts one Codex and one Cursor Agent session. `nvim --clean` skips restore and save, so you get a blank editor plus two fresh chats without clobbering the last session. The chat pane also uses 25% width; keyboard focus stays in the editor. This works with `nvim`, `nvim .`, and `nvim file`. Headless maintenance does not launch chats.
+
+Press `i` to edit, `Esc` for normal mode, and Ctrl+Q to quit (unsaved tabs are snapshotted and restored next time). The leader key is **Space**; press leader shortcuts as a sequence in normal mode (for example Space, then `g`, then `s`).
+
+Also see [plugins and first-party modules](PLUGINS.md) and the [E2E test plan](E2E-TESTPLAN.md).
+
+## Keybindings
+
+Ctrl shortcuts in the first table work in **normal, insert, and terminal** modes unless noted. Ctrl+W replaces Vim’s window-command prefix; use Ctrl+h/j/k/l to move between windows and Space w s / Space w v to split.
+
+### Global
 
 | Keys | Action |
 | --- | --- |
-| Ctrl+B | Toggle file tree |
-| Ctrl+G | Open the Git source-control sidebar |
-| Ctrl+F | Search text in project folder |
+| Ctrl+S | Save (asks for a path if the buffer is unnamed) |
+| Ctrl+Q / `:SessionQuit` | Quit and persist this project's editor tabs and chats |
 | Ctrl+T | New editor tab, or CLI selector when focused on chat |
-| Ctrl+W | Close focused editor/chat tab; protect unsaved files |
-| Ctrl+Q | Quit and persist this project's editor tabs and chats |
-| Ctrl+S | Save file (asks for a path for unnamed files) |
-| Ctrl+] | Choose Codex or Cursor Agent |
-| Ctrl+P / Space f f | Find project files (hidden files included, build/dependency directories excluded) |
-| Space f g | Search text in project |
+| Ctrl+W | Close the focused editor or chat tab (refuses unsaved files) |
+| Ctrl+] / `:AgentSelect` | Choose Codex or Cursor Agent for a new chat |
+| Ctrl+B / Space e | Toggle the file tree |
+| Ctrl+G | Open the Git source-control sidebar |
+| Ctrl+P / Command+P / Space f f | Find project files (hidden files included; build dirs excluded) |
+| Ctrl+F / Space f g | Search text in the project |
 | Space f b | Switch open buffers |
-| Space e | Toggle file tree; Enter opens a file |
-| Space a c / `:Codex` | Toggle Codex CLI chat pane |
-| Space a u / `:CursorAgent` | Toggle Cursor Agent CLI chat pane |
-| Esc | Send Escape to the focused agent (for example, to stop output) |
-| Ctrl+\ Ctrl+N | Leave terminal input mode; Esc Esc also works in other terminals |
-| Ctrl+h/j/k/l | Move between windows; mouse clicks and border dragging also work |
+| Space w | Save (`:write`) |
+| Ctrl+h / j / k / l | Focus the window in that direction |
+| Space w s / Space w v | Split below / split right |
+| Esc Esc (terminal) | Leave terminal input (`Ctrl+\ Ctrl+N` also works) |
+| Click a pane | Focus editor, tree, or chat; clicking a running chat starts typing |
+
+### Chat
+
+| Keys | Action |
+| --- | --- |
+| Space a c / `:Codex` | Toggle the Codex pane |
+| Space a u / `:CursorAgent` | Toggle the Cursor Agent pane |
+| Esc (in a chat) | Send Escape to that CLI (stop generation). Stays in terminal mode. |
+| Ctrl+\ Ctrl+N | Leave terminal input without sending Esc to the CLI |
+
+### Git source control (Ctrl+G)
+
+The Git view matches a typical source-control panel: commit message, **[Commit]**, **Staged Changes**, **Changes**. Every action has a key. Red is deleted, yellow is modified, green is added or untracked.
+
+| Keys | Action |
+| --- | --- |
+| `i` / Tab | Edit the commit message / jump between message and file list |
+| `C` / Ctrl+Enter | Commit staged changes (empty message is rejected; nothing staged asks to stage all) |
+| Enter | Open a file, toggle a section, or run the button under the cursor |
+| `s` / `u` / `x` | Stage / unstage / revert the file (`x` asks first) |
+| `S` / `U` / `X` | Stage all / unstage all / revert all |
+| `r` / `q` | Refresh / return to Files |
+| Click `+` / `−` / `x` | Stage / unstage / revert that file |
+| Click **[Commit]** / **[Stage All]** / **[Unstage All]** / **[Revert All]** | Same as the matching key |
+
+Space g s still opens Fugitive for the full Git status UI.
+
+| Keys | Action |
+| --- | --- |
+| Space g s | Git status (`:Git`) |
+| Space g b | Git blame |
+| Space g l | Git history (oneline log) |
+| Space g d | Git diff split |
+| Space g p | Preview hunk (gitsigns) |
+| Space h s | Stage hunk (gitsigns) |
+
+### Language (when a server is attached)
+
+| Keys | Action |
+| --- | --- |
 | gd / gr / K | Definition / references / documentation |
 | Space r n / Space c a | Rename / code action |
-| Ctrl+Space / Tab / Shift+Tab / Enter | Trigger completion or indent / next suggestion / previous / accept selected item |
-| Ctrl+k (insert mode) | Signature help |
-| Space f | Format current file |
-| Space x x / Space x d | Trouble diagnostics / line diagnostic |
-| Space g s / Space g b / Space g l | Git status / blame / history |
-| Space g d / Space g p / Space h s | Git diff / preview hunk / stage hunk |
-| Space d b / F5 | Breakpoint / start or continue debugger |
-| F10 / F11 / F12 | Step over / into / out (Mac may require Fn) |
-| Space d u / Space d q | Toggle debug panels / terminate debug session |
+| Space d s | Document symbols |
+| Ctrl+k (insert) | Signature help |
+| Space f | Format the current file (not on save) |
+| Space x x / Space x d | Project diagnostics (Trouble) / line diagnostic float |
+| Ctrl+Space | Trigger completion |
+| Tab / Shift+Tab | Next / previous completion (or indent / snippet jump) |
+| Enter | Confirm the selected completion (does not auto-select) |
+| Ctrl+E | Dismiss completion |
 
-These Ctrl shortcuts work in normal, insert, and terminal modes. Ctrl+W replaces Vim’s window-command prefix; use Ctrl+h/j/k/l to move between windows and Space w s / Space w v to split. Closing a chat tab stops its CLI. Closing the last editor tab leaves a blank editor. Ctrl+Q (or `:SessionQuit`) writes the project session and quits even with unsaved buffers; closing a tab with Ctrl+W still refuses unsaved files. Use `:qa` if you want Neovim’s usual modified-buffer prompt.
+### Debug
+
+| Keys | Action |
+| --- | --- |
+| F5 | Continue / start |
+| F10 / F11 / F12 | Step over / into / out (Mac may need Fn) |
+| Space d b | Toggle breakpoint |
+| Space d u | Toggle debugger UI |
+| Space d q | Stop debugging |
+| `:DebugLoadLaunch` | Load `.vscode/launch.json` |
+
+### Commands
+
+| Command | Action |
+| --- | --- |
+| `:GitChanges` | Open Git source control |
+| `:SidebarFilesToggle` | Toggle the file tree |
+| `:PaneSave` / `:PaneNewTab` / `:ProjectCloseTab` | Save / new tab / close tab |
+| `:SessionQuit` | Save session and quit |
+| `:Codex` / `:CursorAgent` / `:AgentSelect` | Chat pane |
+| `:qa` | Neovim's usual quit prompt (does not snapshot like Ctrl+Q) |
+
+Closing a chat tab stops that CLI. Closing the last editor tab leaves a blank editor. Ctrl+Q writes the project session and quits even with unsaved buffers.
 
 ## Language support
 
@@ -45,18 +114,11 @@ Install project dependencies normally. React needs `@types/react` (and usually `
 
 Formatting is explicit (Space f). Prettierd handles web files; Svelte projects need `prettier` and `prettier-plugin-svelte` configured locally. TOML uses Taplo, Rust rustfmt, Go gofmt; other files fall back to server formatting where available. Check `:ConformInfo` for formatter details.
 
+Tab in insert mode opens completion after text, cycles and inserts suggestions when the menu is open, jumps through snippet fields, and indents on blank space. Enter confirms the selected suggestion; Ctrl+E dismisses the menu. Vimscript and Zsh use their dedicated Tree-sitter parsers, with built-in syntax as a fallback.
+
 ## Chat panes
 
-The sidebar has **Files** and **Git** tabs. Git loads changes in the background, so you can switch back to Files while it loads. The Git view matches a typical source-control panel: a commit message at the top, **[Commit]**, then **Staged Changes** and **Changes**. Every action is on the keyboard (mouse still works). Red means deleted, yellow means modified, and green means added or untracked. Space g s opens the full Fugitive status view.
-
-| Git sidebar | Action |
-| --- | --- |
-| `i` / Tab | Edit the commit message / jump to it |
-| `C` / Ctrl+Enter | Commit staged changes |
-| Enter | Open a file, toggle a section, or run **[Commit]** / **[Stage All]** / **[Unstage All]** / **[Revert All]** |
-| `s` / `u` / `x` | Stage / unstage / revert the file (revert asks first) |
-| `S` / `U` / `X` | Stage all / unstage all / revert all |
-| `r` / `q` | Refresh / return to Files |
+The sidebar has **Files** and **Git** tabs. Git loads changes in the background, so you can switch back to Files while it loads.
 
 Click pane contents to focus the editor, tree, or chat; clicking a running chat enables terminal input. The editor and chat panes each have their own clickable tabs above their contents. Click a label to switch, **+** to add, or **×** to close the active tab. The active label is underlined in gold; **‹ / ›** navigate when tabs overflow. Ctrl+T adds a tab in the focused pane. File tabs show listed editor buffers and preserve unsaved edits when switching.
 
@@ -84,5 +146,3 @@ Configuration: `~/.config/nvim/init.lua`, with language/agent/debug/key settings
 To reinstall configured tools: `make tools` from the setup repository.
 
 See [validation history](VALIDATION-HISTORY.md) for installation checks and their scope.
-
-Tab in insert mode opens completion after text, cycles and inserts suggestions when the menu is open, jumps through snippet fields, and indents on blank space. Enter confirms the selected suggestion; Ctrl+E dismisses the menu. Vimscript and Zsh use their dedicated Tree-sitter parsers, with built-in syntax as a fallback.

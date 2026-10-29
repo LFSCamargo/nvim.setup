@@ -1,0 +1,19 @@
+---
+description: Keep user docs, plugin lists, and the E2E test plan in sync with code
+alwaysApply: true
+---
+
+# Keep docs in sync
+
+Do not finish a change that leaves `docs/`, `README.md`, or `AGENTS.md` stale. Update the matching doc in the same turn as the code.
+
+| If you change | Also update |
+| --- | --- |
+| Keymaps, buffer maps, user commands, or mouse actions (`keys.lua`, `sidebar.lua`, `lsp.lua`, `dap.lua`, `agents.lua`, `tabs.lua`) | `docs/EDITOR.md` keybinding tables. User-facing global shortcuts also go in `README.md`. |
+| A `nvim/lua/config/*.lua` module, a lazy plugin in `nvim/init.lua`, or Mason/parser lists in `tooling.lua` | `docs/PLUGINS.md`. New config modules also belong in the spaghetti list in `AGENTS.md`, `CLAUDE.md`, and `.cursor/rules/changing-files.mdc`. |
+| `scripts/tests/e2e.lua`, `e2e-init.lua`, or `scripts/e2e.sh` | `docs/E2E-TESTPLAN.md` coverage matrix and “when you change X” rows. |
+| Layout, session restore, `--clean`, or Git sidebar behavior | `docs/EDITOR.md` plus `README.md` if users see it. |
+
+Example: adding `Space g c` for commit → add the row to `docs/EDITOR.md` (and README if it is a primary shortcut), extend `e2e.lua`, and add a row to `docs/E2E-TESTPLAN.md`.
+
+Docs-only edits still skip `make e2e` when runtime behavior did not change. Do not invent keys, plugins, or tests that are not in the code.
