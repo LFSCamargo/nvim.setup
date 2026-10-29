@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "hooks": {
+    "stop": [
+      {
+        "type": "prompt",
+        "timeout": 20,
+        "loop_limit": 1,
+        "prompt": "Review this turn against nvim.setup agent policy. If code, scripts, or tests changed, the agent must have written or updated tests in scripts/tests, checked for spaghetti (no extra logic in nvim/init.lua, keep lua/config modules single-purpose), run make check and make e2e, and reviewed the diff for command injection, unsanitized vim.cmd, and secrets. If the user asked to commit or push, the agent must have used Conventional Commits, run make changelog after the commit, and committed CHANGELOG.md as chore(changelog): regenerate from commits when it changed, before any push. Follow up only when a required step was skipped. If no runtime code changed, or every required step is done, do not follow up."
+      }
+    ]
+  }
+}

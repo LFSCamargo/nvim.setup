@@ -1,0 +1,16 @@
+---
+description: Conventional Commits plus changelog regeneration before every push
+alwaysApply: true
+---
+
+# Committing changes
+
+Only commit or push when the user asks. Never edit `CHANGELOG.md` by hand.
+
+1. Use Conventional Commits: `type(scope): subject` (`feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`).
+2. Commit the work.
+3. Run `make changelog`.
+4. If `CHANGELOG.md` changed, commit `chore(changelog): regenerate from commits`.
+5. Then push, and only if the user asked.
+
+The pre-push hook and CI fail on a stale changelog. `chore(changelog)` commits are omitted from the file so regeneration does not loop.
