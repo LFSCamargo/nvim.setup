@@ -1,5 +1,9 @@
+-- Headless plugin restore/upgrade used by scripts/plugins.sh.
+-- Restore keeps the lockfile revisions; upgrade lets lazy.nvim advance them.
+
 local manager = require('lazy.manage')
 local config = require('lazy.core.config')
+
 local function check_tasks()
   local failed = {}
   for name, plugin in pairs(config.plugins) do
@@ -10,12 +14,13 @@ local function check_tasks()
   end
   assert(#failed == 0, table.concat(failed, '\n'))
 end
+
 local opts = { wait = true, show = false }
 if vim.env.SETUP_PLUGIN_MODE == 'upgrade' then
   manager.sync(opts)
   check_tasks()
 else
-  -- install() rewrites the lockfile; retain the intended revisions for restore().
+  -- install() rewrites the lockfile; keep the intended revisions for restore().
   local desired = vim.json.decode(table.concat(vim.fn.readfile(config.options.lockfile), '\n'))
   manager.install({ wait = true, show = false, lockfile = true })
   check_tasks()

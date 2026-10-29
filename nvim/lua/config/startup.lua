@@ -1,5 +1,9 @@
+-- Interactive startup layout: file tree, editor focus, then one Codex and one Cursor Agent session.
+-- Headless runs (install, validate, tests) skip this so CLIs are not launched.
+
 local M = {}
 local opened = false
+
 function M.open()
   if opened then return end
   opened = true
@@ -26,14 +30,18 @@ function M.open()
   agents.new('codex')
   local codex = agents.active
   agents.new('cursor')
+  -- Show Codex as the visible chat tab while both jobs keep running.
   if codex then agents.show(codex) end
-  -- Keep the editor ready for typing, with both chat sessions running.
   api.nvim_set_current_win(editor)
   vim.cmd.stopinsert()
   require('nvim-tree.api').tree.resize()
 end
-vim.api.nvim_create_autocmd('VimEnter', { once = true, callback = function()
-  -- Headless maintenance and scripts must not start interactive CLIs.
-  if #vim.api.nvim_list_uis() > 0 then vim.schedule(M.open) end
-end })
+
+vim.api.nvim_create_autocmd('VimEnter', {
+  once = true,
+  callback = function()
+    if #vim.api.nvim_list_uis() > 0 then vim.schedule(M.open) end
+  end,
+})
+
 return M

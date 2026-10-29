@@ -1,9 +1,10 @@
+-- Headless packaging check: Neovim version, plugins, Mason tools, parsers, keys, transparency.
 local api = vim.api
 assert(vim.fn.has('nvim-0.12') == 1, 'Neovim 0.12+ required')
 assert(vim.g.colors_name == 'gruvbox', 'Gruvbox did not load')
 assert(vim.o.mouse:find('a'), 'Mouse support missing')
 assert(vim.o.showtabline == 0, 'Global tab bar must be hidden')
-for _, key in ipairs({ '<C-s>', '<C-t>', '<C-w>', '<C-]>' }) do
+for _, key in ipairs({ '<C-s>', '<C-t>', '<C-w>', '<C-]' }) do
   assert(vim.fn.maparg(key, 'n') ~= '', 'Missing keybinding: ' .. key)
 end
 for _, name in ipairs({ 'config.agents', 'config.tabs', 'cmp', 'nvim-tree.api', 'dap', 'conform', 'fzf-lua' }) do
@@ -27,9 +28,17 @@ end
 -- Let deferred plugin highlights and transparency cleanup finish before checking.
 vim.defer_fn(function()
   local ok, err = pcall(function()
-    for name, hl in pairs(api.nvim_get_hl(0, { link = false })) do
-      assert(not hl.bg and not hl.ctermbg and not hl.reverse, 'Unexpected background: ' .. name)
+    local keep = {}
+    for _, name in ipairs(require('config.appearance').selection_highlights) do
+      keep[name] = true
     end
+    for name, hl in pairs(api.nvim_get_hl(0, { link = false })) do
+      if not keep[name] then
+        assert(not hl.bg and not hl.ctermbg and not hl.reverse, 'Unexpected background: ' .. name)
+      end
+    end
+    local visual = api.nvim_get_hl(0, { name = 'Visual', link = false })
+    assert(visual.bg or visual.ctermbg or visual.reverse, 'Visual selection needs a background')
     assert(vim.tbl_isempty(require('config.agents').sessions), 'Headless startup launched chats')
     print('PASS: configuration, plugins, Mason tools, parsers, highlighting, transparency and shortcuts')
   end)

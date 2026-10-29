@@ -1,6 +1,6 @@
 # Neovim setup
 
-Appearance uses Gruvbox syntax colors with transparent backgrounds throughout the editor, file tree, menus, and chat panes. The terminal palette stays unchanged. Settings are in `lua/config/appearance.lua`.
+Appearance uses Gruvbox syntax colors with transparent backgrounds throughout the editor, file tree, menus, and chat panes. Visual selection, search matches, and the selected completion item keep a fill so they stay visible. The terminal palette stays unchanged. Settings are in `lua/config/appearance.lua`.
 
 Run `nvim .` in a project. Interactive startup opens the file tree at 25% width and starts one Codex and one Cursor Agent session in the chat tabs. The chat pane also uses 25% width; keyboard focus stays in the editor. This works with `nvim`, `nvim .`, and `nvim file`. Headless maintenance does not launch chats. Press `i` to edit, `Esc` for normal mode, `:w` to save, and `:q` to quit. The leader key is **Space**; press the following keys in sequence in normal mode.
 

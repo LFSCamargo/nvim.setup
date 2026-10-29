@@ -6,9 +6,11 @@ python3 - "$CONFIG_DIR" "$SETUP_ROOT/nvim" <<'PY'
 import shutil, sys
 from pathlib import Path
 source, dest = map(Path, sys.argv[1:])
-for name in ('init.lua', 'lazy-lock.json', 'lua', 'scripts'):
+for name in ('init.lua', 'lazy-lock.json', 'lua', 'scripts', '.luarc.json'):
     src, dst = source/name, dest/name
     if not src.exists():
+        if name == '.luarc.json':
+            continue
         raise SystemExit(f'Missing expected configuration: {src}')
     if src.resolve() == dst.resolve():
         continue
