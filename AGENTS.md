@@ -23,7 +23,7 @@ Docs-only or generated-file edits skip tests and E2E when no runtime behavior ch
 When the user asks to commit:
 
 1. Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): subject`. Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`. A scope is optional.
-2. Commit the work.
+2. Commit the work. If the user asked to commit separately / by scope, follow `.cursor/skills/commit-separately/SKILL.md` (one commit per part, then changelog).
 3. Run `make changelog`.
 4. If `CHANGELOG.md` changed, commit it as `chore(changelog): regenerate from commits`.
 5. Push only if the user asked. The pre-push hook and CI fail when the changelog is stale.
