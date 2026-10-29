@@ -36,6 +36,7 @@ Do not talk to real Codex/Agent logins. Do not use the user's `~/.config/nvim`.
 | Chat width | Chat pane is 25% of the UI width | `e2e.lua` |
 | Git mouse | Collapse/expand Changes; click `+`/`−` to stage/unstage | `e2e.lua` |
 | Git keyboard | `s` stages, `U` unstages all, `C` commits with composer message, `i` focuses message, Enter opens a file or a commit from the log pane, `x` reverts (confirm stubbed) | `e2e.lua` |
+| Git focus refresh | Clicking Git again, or focusing the Git list from the editor, reloads status | `e2e.lua` |
 | Git mid editor | Files and commits open in the mid editor without a new split; a file still opens there after a commit view | `e2e.lua` |
 | Editor `:q` / empty tabs | `:q` keeps the mid editor pane and a tab; opening from Git after wiping tabs adds a new tab | `e2e.lua` |
 | UUID resume | `codex resume <uuid>` and `agent --resume=<uuid>`; restored session keeps uuid | `e2e.lua` |
@@ -51,7 +52,7 @@ New behavior must fail in e2e without the patch. Prefer driving the UI (keys, mo
 | Chat focus, Esc, or terminal input | The first PASS block in `e2e.lua` |
 | Session save/restore, unsaved buffers, `NVIM_CLEAN` | The session `eval` block in `e2e.lua` |
 | `nvim --clean` wrapper | The wrapper probes at the top of `e2e.sh` |
-| Git sidebar UI, keys, composer, commit, revert, bulk actions, log pane, width, mid-editor opens | The Git block in `e2e.lua`; Git fixture in `e2e.sh` if you need extra files |
+| Git sidebar UI, keys, composer, commit, revert, bulk actions, log pane, width, mid-editor opens, focus refresh | The Git block in `e2e.lua`; Git fixture in `e2e.sh` if you need extra files |
 | Editor pane lifetime (`:q`, no tabs) | The Git block in `e2e.lua` after opening a file or commit |
 | Startup layout or default chats | `e2e-init.lua` and the startup wait in `e2e.lua` |
 | Codex / Cursor resume argv | The resume PASS block; fake CLI argv capture in `e2e.sh` |

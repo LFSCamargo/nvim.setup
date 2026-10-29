@@ -196,6 +196,50 @@ local ok, err = xpcall(function()
     end
     return false
   ]]), 'Git log pane should be 30% of the editor height')
+  local gen = eval("return require('config.sidebar').generation")
+  eval("require('config.sidebar').git()")
+  assert(eval("return require('config.sidebar').generation") > gen, 'clicking Git should refresh')
+  wait_for('Git sidebar after focusing Git', function()
+    return eval([[
+      for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+        local buf = vim.api.nvim_win_get_buf(win)
+        if vim.bo[buf].filetype == 'git-changes'
+          and table.concat(vim.api.nvim_buf_get_lines(buf, 0, -1, false), '\n'):find('changed file.txt', 1, true) then
+          return true
+        end
+      end
+      return false
+    ]])
+  end)
+  gen = eval("return require('config.sidebar').generation")
+  eval([[
+    local win = require('config.tabs').editor_win()
+    if win then vim.api.nvim_set_current_win(win) end
+  ]])
+  eval([[
+    for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+      if vim.bo[vim.api.nvim_win_get_buf(win)].filetype == 'git-changes' then
+        vim.api.nvim_set_current_win(win)
+        return
+      end
+    end
+    error('git list window missing')
+  ]])
+  wait_for('Git sidebar refresh after focusing from the editor', function()
+    return eval("return require('config.sidebar').generation") > gen
+  end)
+  wait_for('Git changes after focusing the git list', function()
+    return eval([[
+      for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+        local buf = vim.api.nvim_win_get_buf(win)
+        if vim.bo[buf].filetype == 'git-changes'
+          and table.concat(vim.api.nvim_buf_get_lines(buf, 0, -1, false), '\n'):find('changed file.txt', 1, true) then
+          return true
+        end
+      end
+      return false
+    ]])
+  end)
   local function focus_git_list()
     eval([[
       for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do

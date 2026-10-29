@@ -646,11 +646,16 @@ local function open_log()
   api.nvim_set_current_win(git_win)
 end
 
+local function git_side(win)
+  return win == git_win or win == composer_win or win == log_win
+end
+
 function M.git()
   if M.view == 'git' and valid(git_win) then
     open_composer()
     open_log()
     api.nvim_set_current_win(git_win)
+    M.refresh()
     return
   end
   M.view = 'git'
@@ -665,6 +670,21 @@ function M.git()
   open_log()
   M.refresh()
 end
+
+local left_git
+api.nvim_create_autocmd('WinLeave', {
+  callback = function()
+    left_git = git_side(api.nvim_get_current_win())
+  end,
+})
+api.nvim_create_autocmd('WinEnter', {
+  callback = function()
+    if M.view ~= 'git' or left_git or not git_side(api.nvim_get_current_win()) then return end
+    vim.defer_fn(function()
+      if M.view == 'git' then M.refresh() end
+    end, 20)
+  end,
+})
 
 api.nvim_create_autocmd('VimResized', {
   callback = function()
