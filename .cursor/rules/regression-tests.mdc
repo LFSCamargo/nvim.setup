@@ -1,0 +1,18 @@
+---
+description: Every bug fix needs a regression test that fails without the patch
+alwaysApply: true
+---
+
+# Regression tests for bug fixes
+
+Do not ship a bug fix without a test that reproduces it. “I checked by hand” is not enough.
+
+1. **Reproduce in a test first.** Extend `scripts/tests/e2e.lua` (and `e2e-init.lua` if startup is involved) so the case fails on the unpatched code.
+2. **Drive the user path.** Use the same keys, clicks, or commands that triggered the bug. Do not only call the helper you are about to patch.
+3. **Assert the broken outcome.** Check the window, tab, buffer, or mode that was wrong — not just that some later happy path still works.
+4. **Then patch.** The new test must pass. `make check` and `make e2e` must still pass.
+5. **Record it.** Add a row to `docs/E2E-TESTPLAN.md` so the case stays in the coverage matrix.
+
+Example: Git showed a commit, then a file opened outside the mid editor, and `:q` closed that pane. The regression asserts files and commits open in `tabs.editor_win()`, `:q` keeps the pane and a tab, and opening from Git with no tabs creates one.
+
+Docs-only fixes that do not change runtime behavior skip the test, but a behavior bug always gets one.

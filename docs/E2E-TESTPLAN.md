@@ -44,7 +44,7 @@ Do not talk to real Codex/Agent logins. Do not use the user's `~/.config/nvim`.
 
 ## When you change X, add or extend Y
 
-New behavior must fail in e2e without the patch. Prefer driving the UI (keys, mouse, commands) over calling internals.
+New behavior must fail in e2e without the patch. Prefer driving the UI (keys, mouse, commands) over calling internals. Every bug fix needs a regression in this file’s coverage matrix that reproduces the failure.
 
 | Change | Update |
 | --- | --- |
@@ -57,6 +57,7 @@ New behavior must fail in e2e without the patch. Prefer driving the UI (keys, mo
 | Codex / Cursor resume argv | The resume PASS block; fake CLI argv capture in `e2e.sh` |
 | Ctrl shortcuts that should work in terminal mode | Send the key with `nvim_input` and assert the side effect |
 | A new config module | Require it from `e2e-init.lua` if startup needs it; list it in `docs/PLUGINS.md` |
+| A bug fix | A case that fails without the patch (same user path); add a coverage-matrix row |
 
 ## Not covered here (do not pretend e2e proves them)
 
