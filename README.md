@@ -203,6 +203,7 @@ If a download fails, the new config stays installed and the backup is kept. Fix 
 | `docs/E2E-TESTPLAN.md`    | What `make e2e` covers and how to extend it                         |
 | `docs/VALIDATION.md`      | What the packaging checks cover                                     |
 | `Makefile` / `VERSION`    | Maintenance commands and the setup release version                  |
+| `scripts/scan.sh`         | Semgrep OWASP SAST and moderate-or-higher npm audit                 |
 | `commitlint.config.mjs`   | Conventional Commits rules for `git commit`                         |
 | `CHANGELOG.md`            | Generated history from validated commits                            |
 | `AGENTS.md` / `CLAUDE.md` | Shared instructions for Cursor, Claude Code, and Codex              |
@@ -223,6 +224,9 @@ pnpm build                # Nx → production site in apps/web/dist
 pnpm format               # Prettier + Tailwind class order
 pnpm test:setup           # Nx → make test and workspace checks
 pnpm test:web:e2e         # browser checks for the landing page
+pnpm scan                 # Semgrep OWASP SAST + moderate-or-higher npm audit
 ```
 
 `pnpm exec nx show projects` lists the projects. `pnpm exec nx run setup:check` and `pnpm exec nx run setup:e2e` run the existing shell/Lua and simulated Neovim UI checks. Setup tests are never served from Nx's cache. CI and Git hooks use pnpm; do not regenerate an npm lockfile.
+
+`make scan` (or `pnpm scan`) runs Semgrep Community Edition against the JavaScript/TypeScript tree with the OWASP Top Ten, JavaScript, TypeScript, React, and security-audit rulesets, then `pnpm audit --audit-level=moderate`. Findings fail the command. CI runs the same SAST job from `.github/workflows/semgrep.yml` (no Semgrep Cloud token) and the audit after `pnpm install` in the website workflow. Local SAST uses `semgrep` on PATH, or the `semgrep/semgrep` Docker image. The workspace also waits seven days before installing newly published package versions (`minimumReleaseAge`) and refuses exotic transitive dependencies.
