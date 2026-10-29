@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
-.PHONY: help deps doctor install plugins parsers tools validate update upgrade capture bump check
+.PHONY: help deps doctor install plugins parsers tools validate update upgrade capture bump check e2e
 help: ## Show available commands
 	@awk 'BEGIN {FS = ":.*## "} /^[a-z-]+:.*## / {printf "  %-12s %s\n", $$1, $$2}' Makefile
 
@@ -42,3 +42,6 @@ bump: ## Set the setup release version: make bump VERSION=1.2.3
 
 check: ## Check shell syntax and compile every Lua file without running it
 	@bash scripts/check.sh
+
+e2e: ## Exercise local chat focus and input using a simulated Neovim UI
+	@bash scripts/e2e.sh

@@ -3,6 +3,14 @@ local next_id = 0
 local function width() return math.max(1, math.floor(vim.o.columns * 0.25)) end
 local function valid_win() return M.win and vim.api.nvim_win_is_valid(M.win) end
 function M.is_chat(buf) return vim.b[buf].chat_id ~= nil end
+local function focus_input(win, buf)
+  vim.schedule(function()
+    if not vim.api.nvim_win_is_valid(win) or vim.api.nvim_get_current_win() ~= win
+      or vim.api.nvim_win_get_buf(win) ~= buf then return end
+    local session = M.sessions[vim.b[buf].chat_id]
+    if session and not session.exited and vim.bo[buf].buftype == 'terminal' then vim.cmd.startinsert() end
+  end)
+end
 function M.show(id)
   local session = M.sessions[id]
   if not session or not vim.api.nvim_buf_is_valid(session.buf) then return end
@@ -42,6 +50,9 @@ function M.new(name)
     session.exited = true
     vim.notify('Could not start ' .. command, vim.log.levels.ERROR)
   end
+  vim.keymap.set('t', '<Esc>', function()
+    if not session.exited then vim.api.nvim_chan_send(session.job, '\27') end
+  end, { buffer = buf, nowait = true, desc = 'Send Escape to agent' })
   vim.cmd.startinsert()
 end
 function M.select()
@@ -77,6 +88,9 @@ function M.close(id)
 end
 vim.api.nvim_create_autocmd('VimResized', { callback = function()
   if valid_win() then vim.api.nvim_win_set_width(M.win, width()) end
+end })
+vim.api.nvim_create_autocmd({ 'WinEnter', 'BufEnter' }, { callback = function(ev)
+  if M.is_chat(ev.buf) then focus_input(vim.api.nvim_get_current_win(), ev.buf) end
 end })
 vim.api.nvim_create_user_command('AgentSelect', M.select, {})
 vim.api.nvim_create_user_command('Codex', function() M.toggle('codex') end, {})

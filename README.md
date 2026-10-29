@@ -1,192 +1,175 @@
-<div align="center">
-
 # nvim.setup
 
-**Your editor. Your agents. One reproducible home.**
+A portable Neovim config that puts your files, editor, and AI chats in one window.
 
-Gruvbox colors · transparent backgrounds · clickable pane tabs · macOS & Linux
-
-</div>
+Codex and Cursor Agent run as real CLI sessions next to your code. Language servers, formatters, and debuggers come with the install. Gruvbox colors sit on a transparent UI, so your terminal keeps the background.
 
 ```text
-┌───────────────────┬───────────────────────────────────┬───────────────────┐
-│ FILES             │ main.ts  utils.ts  +  ×           │ Codex 1 Agent 2 + │
-│                   ├───────────────────────────────────┼───────────────────┤
-│ src/              │                                   │                   │
-│   main.ts         │          CODE EDITOR              │    CLI CHAT       │
-│   utils.ts        │                                   │                   │
-│ package.json      │   completion · LSP · debugging    │  independent      │
-│                   │                                   │  running sessions │
-│       25%         │                50%                │        25%        │
-└───────────────────┴───────────────────────────────────┴───────────────────┘
+┌──────────────┬────────────────────────────────┬─────────────────┐
+│ Files        │  main.ts   utils.ts   +   ×    │ Codex 1  Agent 2│
+│              ├────────────────────────────────┼─────────────────┤
+│ src/         │                                │                 │
+│   main.ts    │           Editor               │    CLI chat     │
+│   utils.ts   │                                │                 │
+│              │     LSP · format · debug       │  independent    │
+│     25%      │              50%               │      25%        │
+└──────────────┴────────────────────────────────┴─────────────────┘
 ```
 
-The file tree opens automatically. Codex and Cursor Agent each start in a separate clickable chat tab. Focus stays in the editor. The sidebar is shared; file tabs and chat tabs switch independently. Gruvbox supplies the colors while your terminal supplies the background.
+The file tree and chat pane each take 25% of the window. Focus stays in the editor. Click a pane to focus it; click a running chat to type into it. Click tabs to switch files or sessions without stopping them.
 
-## Get going
+This is a complete setup, not a plugin. `make install` replaces your Neovim config after backing it up.
 
-Install Git and Make first, then clone **your copy of this repository**:
+## Features
 
-```bash
-git clone https://github.com/YOUR-USER/nvim.setup.git ~/work/nvim.setup
-cd ~/work/nvim.setup
-make deps
+- Clickable file tree, editor tabs, and chat tabs
+- Independent Codex and Cursor Agent sessions (your login, your permissions)
+- TypeScript, JavaScript, React, Vue, Svelte, Rust, Go, Solidity, Lua, HTML, CSS, JSON, YAML, TOML
+- Completion, diagnostics, go-to-definition, format-on-demand, Git, and debugging
+- Pinned plugins, a lockfile, and Makefile commands for install, capture, update, and validation
+
+## Install
+
+Needs Git and Make. On macOS, install [Homebrew](https://brew.sh) and the Xcode Command Line Tools first.
+
+```sh
+git clone https://github.com/LFSCamargo/nvim.setup.git
+cd nvim.setup
+make deps        # optional if the requirements below are already installed
 make install
 nvim .
 ```
 
-Already have the prerequisites? Skip `make deps`. It installs system packages and may request sudo on Linux. Close existing Neovim instances before replacing configuration or changing plugin versions.
+Fork the repo and clone your fork if you want a copy you can customize.
 
-`make install` checks prerequisites, backs up existing configuration, copies `nvim/` into your config directory, restores locked plugins, installs syntax parsers and Mason tools, then validates the result. Installation needs internet access. CLI login and credentials stay outside this repo.
+`make deps` installs system packages with Homebrew on macOS, or apt, dnf, or pacman on Linux (sudo may be required on Linux). Distro packages can be older than this setup needs; `make doctor` reports incompatible versions.
+
+`make install` checks prerequisites, backs up the existing config, copies `nvim/`, restores pinned plugins, installs parsers and Mason tools, then validates. It needs internet access. Close other Neovim instances first, and do not run it with sudo.
+
+To try this without replacing `~/.config/nvim`:
+
+```sh
+NVIM_APPNAME=nvim-preview make install
+NVIM_APPNAME=nvim-preview nvim .
+```
+
+That preview uses its own config, data, and state directories, so plugins and tools download again.
 
 ### Requirements
 
 | Dependency | Purpose |
 | --- | --- |
-| Neovim **0.12+** | Current Tree-sitter plugin branch and editor APIs |
-| Tree-sitter CLI **0.26.1+** | Build syntax parsers; install through Homebrew/Cargo, not npm |
-| Node.js **22+**, npm | Web language servers and debug adapter |
-| Git, curl, tar, unzip | Download plugins and tools |
-| C/C++ toolchain, Make | Build native parsers/tools |
-| Go, Rust/Cargo | Go tools and parser CLI installation |
-| Python 3 | Portable configuration copy and checks |
-| ripgrep, fd, fzf | Project search and file picker |
-| `codex`, `agent` (optional) | Interactive AI chats |
+| Neovim 0.12+ | Editor and current Tree-sitter APIs |
+| Tree-sitter CLI 0.26.1+ | Parser builds (Homebrew or Cargo, not npm) |
+| Node.js 22+ and npm | Web language servers and the debug adapter |
+| Git, curl, tar, unzip, Python 3 | Downloads, installation, and checks |
+| C/C++ toolchain and Make | Native builds |
+| Go and Rust/Cargo | Go tools and the parser CLI |
+| ripgrep, fd, fzf | Search and file picking |
+| `codex` and `agent` | Optional chat CLIs |
 
-`make deps` supports Homebrew on macOS and apt, dnf, or pacman on Linux. On macOS, install [Homebrew](https://brew.sh) and the Xcode Command Line Tools first. On Linux, distro packages can be older than this setup requires: `make doctor` rejects incompatible versions. Install a current [Neovim release](https://github.com/neovim/neovim/releases), update Node with your preferred version manager, and run `cargo install --locked tree-sitter-cli` if needed. Restart your shell after updating PATH. On Debian/Ubuntu, the scripts provide an `fd` wrapper for `fdfind` in `~/.local/bin`.
+Keep `~/.local/bin` on your PATH, and `~/.cargo/bin` if you use Cargo. The terminal needs true color and mouse support. On Debian/Ubuntu, the scripts add an `fd` wrapper for `fdfind`. If Ctrl+S freezes the terminal, add `stty -ixon` to your shell startup file.
 
-Keep `~/.local/bin` and, when using Cargo, `~/.cargo/bin` on PATH. The terminal needs mouse support and true color. If Ctrl+S freezes your terminal, disable shell flow control with `stty -ixon` in your shell startup file.
+Install and authenticate the chat CLIs separately with the [Codex](https://github.com/openai/codex) and [Cursor CLI](https://cursor.com/docs/cli/overview) docs. Missing CLIs print a notice; the editor still works. Credentials and CLI permissions stay outside this repository.
 
-Install and authenticate the chat CLIs separately using the official [Codex](https://github.com/openai/codex) and [Cursor CLI](https://cursor.com/docs/cli/overview) instructions. Missing CLIs produce a notice; the editor still works. No API keys, login sessions, approval overrides or shell aliases are bundled.
+## Using the editor
 
-## Daily controls
+Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to insert, `Esc` for normal mode, and `:qa` to quit. The leader key is **Space**; press leader shortcuts as a sequence in normal mode.
 
-| Shortcut / click | Action |
+| Shortcut or click | Action |
 | --- | --- |
-| **Ctrl+S** | Save; ask for a filename when needed |
-| **Ctrl+T** | New file tab, or chat CLI selector when chat is focused |
-| **Ctrl+W** | Close active pane tab; unsaved files are protected |
-| **Ctrl+]** | New chat: choose Codex or Cursor Agent |
-| **Click tab** | Switch files or running chat sessions |
-| **+ / ×** | Add / close active tab |
-| **‹ / ›** | Navigate overflowing tabs |
-| **Ctrl+B** | Toggle sidebar |
-| **Ctrl+P / Ctrl+F** | Find files / search project text |
-| **Tab / Shift+Tab / Enter** | Completion / previous suggestion / accept |
-| **Esc Esc** | Leave terminal input mode |
-| **Ctrl+h/j/k/l** | Move between panes in normal mode |
-| **Space a c / Space a u** | Toggle Codex / Cursor Agent pane |
-| **Space f** | Format file |
-| **gd / gr / K** | Definition / references / documentation |
-| **F5 / Space d b** | Debug / toggle breakpoint |
+| Click a pane | Focus the editor, file tree, or chat |
+| Click a tab, `+`, or `×` | Switch, add, or close a file or chat tab |
+| `‹` / `›` | Scroll overflowing tabs |
+| Ctrl+S | Save (asks for a name if the buffer is unnamed) |
+| Ctrl+T / Ctrl+W | Add / close a tab in the focused pane |
+| Ctrl+] | Start a new Codex or Cursor Agent session |
+| Ctrl+B | Toggle the file tree |
+| Ctrl+P / Ctrl+F | Find files / search project text |
+| Esc | Send Escape to the focused agent (stop generation, for example) |
+| Ctrl+\ Ctrl+N | Leave terminal-input mode (`Esc Esc` also works in other terminals) |
+| Ctrl+h/j/k/l | Move between windows in normal mode |
+| Space a c / Space a u | Toggle Codex / Cursor Agent |
+| Space f | Format the current file |
+| gd / gr / K | Definition / references / documentation |
+| F5 / Space d b | Start or continue debugging / toggle a breakpoint |
 
-Closing a chat tab stops its CLI. Switching tabs keeps its process alive. Use `:qa` to quit Neovim; running terminals may require explicit closure or `:qa!` once your files are saved. See [the editor guide](docs/EDITOR.md) for all bindings, language support and debugging details.
+Closing a chat tab stops that CLI. Switching tabs leaves it running. Unsaved files are protected when you close a tab. Running terminals may need an explicit close or `:qa!` after you save.
 
-## One Makefile, the whole lifecycle
+The full shortcut list, language notes, and debugging details live in [the editor guide](docs/EDITOR.md).
 
-```bash
-make help                         # List commands
-make doctor                       # Check prerequisites
-make install                      # Back up + deploy + plugins + tools + validation
-make plugins                      # Restore plugin revisions from the installed lockfile
-make parsers                      # Install/update configured syntax parsers
-make tools                        # Install missing Mason packages
-make validate                     # Check the installed setup
-make check                        # Shell syntax + compile all Lua files
-make update                       # Fast-forward from Git upstream, then install
-make upgrade                      # Upgrade plugins, refresh parsers, validate, save lockfile
-make capture                      # Export local config edits back to this repository
-make bump VERSION=1.1.0            # Set the setup release version
-```
+## Languages, format, and debug
 
-### Save changes for your next machine
+Mason installs the language servers and debug adapters. Format with **Space f** (not on save).
 
-Prefer editing `nvim/` in this repository and running `make install`. If you edited your installed config instead:
+| Area | Tools |
+| --- | --- |
+| TypeScript / JavaScript / React / Vue | vtsls, vue_ls, prettierd |
+| Svelte | svelte-language-server, prettierd (needs project Prettier + plugin) |
+| Rust | rust-analyzer (Clippy), rustfmt, CodeLLDB |
+| Go | gopls, gofmt, Delve |
+| Solidity | Nomic Foundation language server |
+| Web / config | HTML, CSS, Tailwind, ESLint, JSON, YAML, TOML (Taplo), Lua |
+| Debug | Node launch/attach, Chrome attach, Delve, CodeLLDB |
 
-```bash
+Install project dependencies as usual (`@types/*`, a `tsconfig.json`, ESLint/Tailwind/Prettier config). Custom debug configs can live in `.vscode/launch.json`; load them with `:DebugLoadLaunch`.
+
+## Maintenance
+
+Run these from the repository:
+
+| Command | Purpose |
+| --- | --- |
+| `make help` | List commands |
+| `make doctor` | Check prerequisites |
+| `make install` | Back up, deploy, restore plugins, install parsers and tools, validate |
+| `make check` | Check shell syntax and compile every Lua file |
+| `make validate` | Validate the installed setup |
+| `make plugins` / `make parsers` / `make tools` | Restore pinned plugins / install parsers / install missing Mason tools |
+| `make update` | Fast-forward from the configured upstream, then install |
+| `make upgrade` | Upgrade plugins, refresh parsers, validate, and save the lockfile |
+| `make capture` | Copy installed config changes back into this repository |
+| `make bump VERSION=1.1.0` | Set this setup's release version |
+
+Prefer editing `nvim/` here and running `make install`. If you edited the installed config instead:
+
+```sh
 make capture
 git diff
 make check
 make validate
-git add .
-git commit -m "Customize editor setup"
-git push
 ```
 
-Capture exports only `init.lua`, `lua/`, `scripts/` and `lazy-lock.json`; it does not collect editor caches or CLI credentials. Review changes before committing.
+Capture copies only `init.lua`, `lua/`, `scripts/`, and `lazy-lock.json`. It does not collect caches or credentials.
 
-### Update versus upgrade
+`make update` refuses a dirty repository and uses fast-forward-only Git pulls. With no upstream it reapplies the local checkout. `make upgrade` advances plugin revisions and copies the new lockfile here for review. Neither command commits or pushes.
 
-**`make update`** refuses a dirty repository, pulls the configured upstream using fast-forward only, then deploys that checkout. Without an upstream, it reapplies the local checkout. It does not commit or push anything.
-
-**`make upgrade`** intentionally advances plugin versions in your installed config and copies the new lockfile into this repo after validation. Review and commit that diff. It does not upgrade Neovim or already installed Mason tools. Use `:Mason` for tool updates; use your OS package manager for Neovim and other system dependencies. Go/Rust toolchains and project dependencies remain your responsibility.
-
-**`VERSION`** identifies this setup's release, independently of Neovim's version. After a tested change:
-
-```bash
-make bump VERSION=1.1.0
-git add .
-git commit -m "Release setup 1.1.0"
-git tag v1.1.0
-git push --follow-tags
-```
-
-Plugin revisions are pinned in `nvim/lazy-lock.json`. Mason tool versions are not pinned. Parser revisions follow the pinned Tree-sitter plugin. Installing on another OS may download different native binaries.
+Plugin versions are pinned in `nvim/lazy-lock.json`. Mason tool versions are not. Use `:Mason` for tool updates, and your package manager for Neovim and system dependencies.
 
 ## Backups and recovery
 
-Configuration uses `${XDG_CONFIG_HOME:-~/.config}/${NVIM_APPNAME:-nvim}`. Backups live in `${XDG_STATE_HOME:-~/.local/state}/nvim.setup/backups/`, each containing the previous `config` directory. Symlinked configs are backed up as symlinks. Plugin binaries, caches and Mason tools stay in Neovim's standard data directories.
+The installed config lives at `${XDG_CONFIG_HOME:-~/.config}/${NVIM_APPNAME:-nvim}`. Each install moves the previous config to `${XDG_STATE_HOME:-~/.local/state}/nvim.setup/backups/`. Symlinks stay symlinks. Plugin data, caches, and Mason tools are not included.
 
-To restore a backup, close Neovim and move the current config aside before putting the backup back:
+To restore a backup, close Neovim and move the current config aside first:
 
-```bash
-# Default paths; use your XDG paths if customized.
+```sh
+# Default paths; adjust if you use XDG_CONFIG_HOME or NVIM_APPNAME.
 mv ~/.config/nvim ~/.config/nvim.before-restore
 cp -R ~/.local/state/nvim.setup/backups/CHOOSE-BACKUP/config ~/.config/nvim
 ```
 
-A failed download leaves the new config in place and retains the old backup. Fix the reported dependency/network error and rerun `make install`, or restore your backup. Earlier plugin versions can be reapplied using the corresponding Git commit and `make install`. Shared plugin data is not backed up.
+If a download fails, the new config stays installed and the backup is kept. Fix the reported issue and rerun `make install`, or restore the backup.
 
-For a completely separate preview installation:
+## Repository layout
 
-```bash
-NVIM_APPNAME=nvim-preview make install
-NVIM_APPNAME=nvim-preview nvim .
-```
+| Path | Contents |
+| --- | --- |
+| `nvim/` | Deployable config, plugin lockfile, and tool installers |
+| `scripts/` | Install, update, capture, and validation |
+| `docs/EDITOR.md` | Editor, language, and debug reference |
+| `docs/VALIDATION.md` | What the packaging checks cover |
+| `Makefile` / `VERSION` | Maintenance commands and the setup release version |
 
-This uses separate configuration, data and state directories, so plugins and tools will be downloaded again. Do not run installation using sudo; only `make deps` elevates individual system-package commands.
+Validation checks startup, mappings, plugin modules, Mason packages, syntax parsers, highlighting, and transparency. Headless maintenance does not start chats. It does not verify CLI login, project dependencies, or every language-server operation.
 
-## Put it on GitHub
-
-This folder is already a Git repository with an initial commit. Create an empty repository on GitHub, then connect and push it:
-
-```bash
-git remote add origin git@github.com:YOUR-USER/nvim.setup.git
-git push -u origin main
-```
-
-Or, if GitHub CLI is configured:
-
-```bash
-gh repo create nvim.setup --private --source=. --remote=origin --push
-```
-
-No remote is created automatically.
-
-## Inside the box
-
-```text
-nvim/                 Deployable Neovim configuration
-  init.lua            Options and plugin specifications
-  lazy-lock.json      Saved plugin revisions
-  lua/config/         Agents, pane tabs, startup, appearance, LSP, debug, keys
-  scripts/            Parser and Mason tool installers
-scripts/              macOS/Linux install, update, capture and validation
-  lua/                Headless plugin management and validation
-docs/EDITOR.md        Full editor reference
-docs/VALIDATION-HISTORY.md  Historical checks from the original machine
-Makefile              Public commands
-VERSION               Setup release version
-```
-
-Validation checks startup, keybindings, plugin modules, Mason packages, syntax parsers, Vim/Zsh highlighting and transparent highlight groups. Headless maintenance never starts chat CLIs. It does not test your authentication, project dependencies, every language-server operation or an actual Linux install unless run on Linux. For deeper troubleshooting, use `:checkhealth`, `:LspInfo`, `:MasonLog`, `:ConformInfo` and `:messages`.
+If something looks off after install, start with `:checkhealth`, `:LspInfo`, `:MasonLog`, `:ConformInfo`, and `:messages`.

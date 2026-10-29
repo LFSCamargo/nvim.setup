@@ -18,7 +18,8 @@ Run `nvim .` in a project. Interactive startup opens the file tree at 25% width 
 | Space e | Toggle file tree; Enter opens a file |
 | Space a c / `:Codex` | Toggle Codex CLI chat pane |
 | Space a u / `:CursorAgent` | Toggle Cursor Agent CLI chat pane |
-| Esc Esc | Leave terminal input mode; then use window shortcuts |
+| Esc | Send Escape to the focused agent (for example, to stop output) |
+| Ctrl+\ Ctrl+N | Leave terminal input mode; Esc Esc also works in other terminals |
 | Ctrl+h/j/k/l | Move between windows; mouse clicks and border dragging also work |
 | gd / gr / K | Definition / references / documentation |
 | Space r n / Space c a | Rename / code action |
@@ -44,7 +45,7 @@ Formatting is explicit (Space f). Prettierd handles web files; Svelte projects n
 
 ## Chat panes
 
-The file sidebar is shared and has no tab bar. The editor and chat panes each have their own clickable tabs above their contents. Click a label to switch, **+** to add, or **×** to close the active tab. The active label is underlined in gold; **‹ / ›** navigate when tabs overflow. Ctrl+T adds a tab in the focused pane. File tabs show listed editor buffers and preserve unsaved edits when switching.
+The file sidebar is shared and has no tab bar. Click pane contents to focus the editor, tree, or chat; clicking a running chat enables terminal input. The editor and chat panes each have their own clickable tabs above their contents. Click a label to switch, **+** to add, or **×** to close the active tab. The active label is underlined in gold; **‹ / ›** navigate when tabs overflow. Ctrl+T adds a tab in the focused pane. File tabs show listed editor buffers and preserve unsaved edits when switching.
 
 Chat **+** and Ctrl+] open a CLI selector for a new independent Codex or Cursor Agent session. Multiple sessions of either CLI can run at once. Switching chat tabs preserves running sessions; closing a chat tab stops that session. Space a c and Space a u toggle the corresponding assistant pane. The chat pane and file tree each use 25% of the editor width. Chats run the actual interactive CLIs in the directory where you opened them. They use existing CLI authentication and permissions; no prompts or approval bypasses are injected. Use `codex login` or `agent login` outside Neovim if login expires. They do not automatically receive editor selections: mention project-relative file paths in chat. Reopen Neovim in a different project for a separate context.
 

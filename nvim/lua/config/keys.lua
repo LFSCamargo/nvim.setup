@@ -17,6 +17,21 @@ map('n', '<leader>hs', function() require('gitsigns').stage_hunk() end, 'Stage h
 map('n', '<leader>f', function() require('conform').format({ async = true, lsp_format = 'fallback' }) end, 'Format buffer')
 map('n', '<leader>w', '<cmd>write<cr>', 'Save')
 map('t', '<Esc><Esc>', '<C-\\><C-n>', 'Leave terminal input')
+-- Let Neovim handle the click first, then make a clicked live chat writable.
+-- Winbar clicks have no buffer line and must keep their own tab actions.
+vim.keymap.set({ 'n', 'i' }, '<LeftMouse>', function()
+  local pos = vim.fn.getmousepos()
+  if pos.line > 0 and pos.winid ~= 0 then
+    vim.schedule(function()
+      if not vim.api.nvim_win_is_valid(pos.winid) or vim.api.nvim_get_current_win() ~= pos.winid then return end
+      local buf = vim.api.nvim_win_get_buf(pos.winid)
+      local agents = require('config.agents')
+      local session = agents.sessions[vim.b[buf].chat_id]
+      if session and not session.exited and vim.bo[buf].buftype == 'terminal' then vim.cmd.startinsert() end
+    end)
+  end
+  return '<LeftMouse>'
+end, { expr = true, desc = 'Focus clicked pane' })
 for _, key in ipairs({ 'h', 'j', 'k', 'l' }) do
   map('n', '<C-' .. key .. '>', '<C-w>' .. key, 'Focus window')
 end
