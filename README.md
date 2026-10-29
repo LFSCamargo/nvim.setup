@@ -32,43 +32,47 @@ This is a complete setup, not a plugin. `make install` replaces your Neovim conf
 
 ## Install
 
-Needs Git and Make. On macOS, install [Homebrew](https://brew.sh) and the Xcode Command Line Tools first.
+You do not need to clone this repository first. One command fetches the setup, installs Neovim and the other dependencies if they are missing, then deploys the config.
 
 ```sh
-git clone https://github.com/LFSCamargo/nvim.setup.git
-cd nvim.setup
-make deps        # optional if the requirements below are already installed
-make install
+curl -fsSL https://raw.githubusercontent.com/LFSCamargo/nvim.setup/main/scripts/bootstrap.sh | bash
 nvim .
 ```
-
-Fork the repo and clone your fork if you want a copy you can customize.
-
-`make deps` installs system packages with Homebrew on macOS, or apt, dnf, or pacman on Linux (sudo may be required on Linux). Distro packages can be older than this setup needs; `make doctor` reports incompatible versions.
-
-`make install` checks prerequisites, backs up the existing config, copies `nvim/`, restores pinned plugins, installs parsers and Mason tools, then validates. It needs internet access. Close other Neovim instances first, and do not run it with sudo.
 
 To try this without replacing `~/.config/nvim`:
 
 ```sh
-NVIM_APPNAME=nvim-preview make install
+curl -fsSL https://raw.githubusercontent.com/LFSCamargo/nvim.setup/main/scripts/bootstrap.sh | bash -s -- --preview
 NVIM_APPNAME=nvim-preview nvim .
 ```
 
-That preview uses its own config, data, and state directories, so plugins and tools download again.
+Do not pipe the installer to sudo. Close other Neovim instances first. Linux may ask for sudo only for system packages. On macOS, Homebrew and the Xcode Command Line Tools are installed when they are missing.
+
+The script clones into `~/.local/share/nvim.setup` (override with `NVIM_SETUP_HOME`), adds `~/.local/bin` to your shell PATH, runs `make deps`, then `make install`. Distro packages can be older than this setup needs; if Neovim is missing or below 0.12, or Node is below 22, the installer fetches a current binary into `~/.local/opt`. `make doctor` reports incompatible versions.
+
+Fork the repo and clone your fork if you want a copy you can customize, then run `./scripts/bootstrap.sh` from that checkout (or `make bootstrap`).
+
+```sh
+git clone https://github.com/YOUR_USER/nvim.setup.git
+cd nvim.setup
+./scripts/bootstrap.sh
+nvim .
+```
+
+`make install` alone still works from a checkout: it checks prerequisites, backs up the existing config, copies `nvim/`, restores pinned plugins, installs parsers and Mason tools, then validates. It needs internet access.
 
 ### Requirements
 
-| Dependency | Purpose |
-| --- | --- |
-| Neovim 0.12+ | Editor and current Tree-sitter APIs |
-| Tree-sitter CLI 0.26.1+ | Parser builds (Homebrew or Cargo, not npm) |
-| Node.js 22+ and npm | Web language servers and the debug adapter |
-| Git, curl, tar, unzip, Python 3 | Downloads, installation, and checks |
-| C/C++ toolchain and Make | Native builds |
-| Go and Rust/Cargo | Go tools and the parser CLI |
-| ripgrep, fd, fzf | Search and file picking |
-| `codex` and `agent` | Optional chat CLIs |
+| Dependency                      | Purpose                                    |
+| ------------------------------- | ------------------------------------------ |
+| Neovim 0.12+                    | Editor and current Tree-sitter APIs        |
+| Tree-sitter CLI 0.26.1+         | Parser builds (Homebrew or Cargo, not npm) |
+| Node.js 22+ and npm             | Web language servers and the debug adapter |
+| Git, curl, tar, unzip, Python 3 | Downloads, installation, and checks        |
+| C/C++ toolchain and Make        | Native builds                              |
+| Go and Rust/Cargo               | Go tools and the parser CLI                |
+| ripgrep, fd, fzf                | Search and file picking                    |
+| `codex` and `agent`             | Optional chat CLIs                         |
 
 Keep `~/.local/bin` on your PATH, and `~/.cargo/bin` if you use Cargo. Install places an `nvim` wrapper there so `nvim --clean` opens this setup without restored tabs. The terminal needs true color and mouse support. On Debian/Ubuntu, the scripts add an `fd` wrapper for `fdfind`. If Ctrl+S freezes the terminal, add `stty -ixon` to your shell startup file.
 
@@ -78,25 +82,25 @@ Install and authenticate the chat CLIs separately with the [Codex](https://githu
 
 Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to insert, `Esc` for normal mode, and Ctrl+Q to quit (unsaved tabs come back next time). `nvim --clean` skips restored tabs and chats. The leader key is **Space**; press leader shortcuts as a sequence in normal mode.
 
-| Shortcut or click | Action |
-| --- | --- |
-| Click a pane | Focus the editor, file tree, or chat |
-| Click a tab, `+`, or `×` | Switch, add, or close a file or chat tab |
-| `‹` / `›` | Scroll overflowing tabs |
-| Ctrl+S | Save (asks for a name if the buffer is unnamed) |
-| Ctrl+Q | Quit and persist this project's tabs and chats |
-| Ctrl+T / Ctrl+W | Add / close a tab in the focused pane |
-| Ctrl+] | Start a new Codex or Cursor Agent session |
-| Ctrl+B | Toggle the file tree |
-| Ctrl+G | Open Git source control (commit, stage, unstage, revert, bottom commit log; keyboard or mouse) |
-| Ctrl+P / Ctrl+F | Find files / search project text |
-| Esc | Send Escape to the focused agent (stop generation, for example) |
-| Ctrl+\ Ctrl+N | Leave terminal-input mode (`Esc Esc` also works in other terminals) |
-| Ctrl+h/j/k/l | Move between windows in normal mode |
-| Space a c / Space a u | Toggle Codex / Cursor Agent |
-| Space f | Format the current file |
-| gd / gr / K | Definition / references / documentation |
-| F5 / Space d b | Start or continue debugging / toggle a breakpoint |
+| Shortcut or click        | Action                                                                                         |
+| ------------------------ | ---------------------------------------------------------------------------------------------- |
+| Click a pane             | Focus the editor, file tree, or chat                                                           |
+| Click a tab, `+`, or `×` | Switch, add, or close a file or chat tab                                                       |
+| `‹` / `›`                | Scroll overflowing tabs                                                                        |
+| Ctrl+S                   | Save (asks for a name if the buffer is unnamed)                                                |
+| Ctrl+Q                   | Quit and persist this project's tabs and chats                                                 |
+| Ctrl+T / Ctrl+W          | Add / close a tab in the focused pane                                                          |
+| Ctrl+]                   | Start a new Codex or Cursor Agent session                                                      |
+| Ctrl+B                   | Toggle the file tree                                                                           |
+| Ctrl+G                   | Open Git source control (commit, stage, unstage, revert, bottom commit log; keyboard or mouse) |
+| Ctrl+P / Ctrl+F          | Find files / search project text                                                               |
+| Esc                      | Send Escape to the focused agent (stop generation, for example)                                |
+| Ctrl+\ Ctrl+N            | Leave terminal-input mode (`Esc Esc` also works in other terminals)                            |
+| Ctrl+h/j/k/l             | Move between windows in normal mode                                                            |
+| Space a c / Space a u    | Toggle Codex / Cursor Agent                                                                    |
+| Space f                  | Format the current file                                                                        |
+| gd / gr / K              | Definition / references / documentation                                                        |
+| F5 / Space d b           | Start or continue debugging / toggle a breakpoint                                              |
 
 Closing a chat tab stops that CLI. Switching tabs leaves it running. Unsaved files are protected when you close a tab. Git files, commits, and Fugitive views open in the mid editor; `:q` there keeps that pane and a tab. Quitting with Ctrl+Q snapshots unsaved buffers and resumes Codex/Agent chats by UUID on the next launch in that directory. `make install` puts a wrapper at `~/.local/bin/nvim` so `nvim --clean` still loads this config. Maintenance scripts set `NVIM_WRAPPER=0` when they need Neovim's factory `--clean`.
 
@@ -106,15 +110,15 @@ The full keybinding list, language notes, and debugging details live in [the edi
 
 Mason installs the language servers and debug adapters. Format with **Space f** (not on save).
 
-| Area | Tools |
-| --- | --- |
-| TypeScript / JavaScript / React / Vue | vtsls, vue_ls, prettierd |
-| Svelte | svelte-language-server, prettierd (needs project Prettier + plugin) |
-| Rust | rust-analyzer (Clippy), rustfmt, CodeLLDB |
-| Go | gopls, gofmt, Delve |
-| Solidity | Nomic Foundation language server |
-| Web / config | HTML, CSS, Tailwind, ESLint, JSON, YAML, TOML (Taplo), Lua |
-| Debug | Node launch/attach, Chrome attach, Delve, CodeLLDB |
+| Area                                  | Tools                                                               |
+| ------------------------------------- | ------------------------------------------------------------------- |
+| TypeScript / JavaScript / React / Vue | vtsls, vue_ls, prettierd                                            |
+| Svelte                                | svelte-language-server, prettierd (needs project Prettier + plugin) |
+| Rust                                  | rust-analyzer (Clippy), rustfmt, CodeLLDB                           |
+| Go                                    | gopls, gofmt, Delve                                                 |
+| Solidity                              | Nomic Foundation language server                                    |
+| Web / config                          | HTML, CSS, Tailwind, ESLint, JSON, YAML, TOML (Taplo), Lua          |
+| Debug                                 | Node launch/attach, Chrome attach, Delve, CodeLLDB                  |
 
 Install project dependencies as usual (`@types/*`, a `tsconfig.json`, ESLint/Tailwind/Prettier config). Custom debug configs can live in `.vscode/launch.json`; load them with `:DebugLoadLaunch`.
 
@@ -122,22 +126,23 @@ Install project dependencies as usual (`@types/*`, a `tsconfig.json`, ESLint/Tai
 
 Run these from the repository:
 
-| Command | Purpose |
-| --- | --- |
-| `make help` | List commands |
-| `make doctor` | Check prerequisites |
-| `make install` | Back up, deploy, restore plugins, install parsers and tools, validate |
-| `make check` | Check shell syntax and compile every Lua file |
-| `make e2e` | Simulated UI e2e (chat, session, Git sidebar); see [the test plan](docs/E2E-TESTPLAN.md) |
-| `make test` | Run `make check` then `make e2e` |
-| `make validate` | Validate the installed setup |
-| `make plugins` / `make parsers` / `make tools` | Restore pinned plugins / install parsers / install missing Mason tools |
-| `make update` | Fast-forward from the configured upstream, then install |
-| `make upgrade` | Upgrade plugins, refresh parsers, validate, and save the lockfile |
-| `make capture` | Copy installed config changes back into this repository |
-| `make bump VERSION=1.1.0` | Set this setup's release version |
-| `make commitlint` | Check the latest commit message against Conventional Commits |
-| `make changelog` | Validate every commit and regenerate `CHANGELOG.md` |
+| Command                                        | Purpose                                                                                  |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `make help`                                    | List commands                                                                            |
+| `make bootstrap`                               | Fetch the repo if needed, install Neovim and other deps, then install                    |
+| `make doctor`                                  | Check prerequisites                                                                      |
+| `make install`                                 | Back up, deploy, restore plugins, install parsers and tools, validate                    |
+| `make check`                                   | Check shell syntax and compile every Lua file                                            |
+| `make e2e`                                     | Simulated UI e2e (chat, session, Git sidebar); see [the test plan](docs/E2E-TESTPLAN.md) |
+| `make test`                                    | Run `make check` then `make e2e`                                                         |
+| `make validate`                                | Validate the installed setup                                                             |
+| `make plugins` / `make parsers` / `make tools` | Restore pinned plugins / install parsers / install missing Mason tools                   |
+| `make update`                                  | Fast-forward from the configured upstream, then install                                  |
+| `make upgrade`                                 | Upgrade plugins, refresh parsers, validate, and save the lockfile                        |
+| `make capture`                                 | Copy installed config changes back into this repository                                  |
+| `make bump VERSION=1.1.0`                      | Set this setup's release version                                                         |
+| `make commitlint`                              | Check the latest commit message against Conventional Commits                             |
+| `make changelog`                               | Validate every commit and regenerate `CHANGELOG.md`                                      |
 
 Prefer editing `nvim/` here and running `make install`. If you edited the installed config instead:
 
@@ -164,7 +169,7 @@ fix(agents): send Escape to the focused session
 docs: document the e2e check
 ```
 
-Use `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, or `revert`. After `npm install` in this repository, a `commit-msg` hook rejects messages that do not match.
+Use `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, or `revert`. After `pnpm install` in this repository, a `commit-msg` hook rejects messages that do not match.
 
 After each commit, run `make changelog`. If `CHANGELOG.md` changed, commit it as `chore(changelog): regenerate from commits` before pushing. A `pre-push` hook and CI fail when the file is stale. Regeneration commits are omitted from the changelog so that extra commit does not loop.
 
@@ -188,21 +193,36 @@ If a download fails, the new config stays installed and the backup is kept. Fix 
 
 ## Repository layout
 
-| Path | Contents |
-| --- | --- |
-| `nvim/` | Deployable config, plugin lockfile, and tool installers |
-| `.luarc.json` | lua-language-server settings so `vim` is a known global |
-| `scripts/` | Install, update, capture, and validation |
-| `docs/EDITOR.md` | Keybindings, language, chat, and debug reference |
-| `docs/PLUGINS.md` | First-party modules, Lazy plugins, Mason tools, parsers |
-| `docs/E2E-TESTPLAN.md` | What `make e2e` covers and how to extend it |
-| `docs/VALIDATION.md` | What the packaging checks cover |
-| `Makefile` / `VERSION` | Maintenance commands and the setup release version |
-| `commitlint.config.mjs` | Conventional Commits rules for `git commit` |
-| `CHANGELOG.md` | Generated history from validated commits |
-| `AGENTS.md` / `CLAUDE.md` | Shared instructions for Cursor, Claude Code, and Codex |
-| `.cursor/rules/` | Cursor agent rules for tests, E2E, changelog commits, and docs sync |
+| Path                      | Contents                                                            |
+| ------------------------- | ------------------------------------------------------------------- |
+| `nvim/`                   | Deployable config, plugin lockfile, and tool installers             |
+| `.luarc.json`             | lua-language-server settings so `vim` is a known global             |
+| `scripts/`                | Install, update, capture, and validation                            |
+| `docs/EDITOR.md`          | Keybindings, language, chat, and debug reference                    |
+| `docs/PLUGINS.md`         | First-party modules, Lazy plugins, Mason tools, parsers             |
+| `docs/E2E-TESTPLAN.md`    | What `make e2e` covers and how to extend it                         |
+| `docs/VALIDATION.md`      | What the packaging checks cover                                     |
+| `Makefile` / `VERSION`    | Maintenance commands and the setup release version                  |
+| `commitlint.config.mjs`   | Conventional Commits rules for `git commit`                         |
+| `CHANGELOG.md`            | Generated history from validated commits                            |
+| `AGENTS.md` / `CLAUDE.md` | Shared instructions for Cursor, Claude Code, and Codex              |
+| `.cursor/rules/`          | Cursor agent rules for tests, E2E, changelog commits, and docs sync |
 
 Validation checks startup, mappings, plugin modules, Mason packages, syntax parsers, highlighting, and transparency. Headless maintenance does not start chats. It does not verify CLI login, project dependencies, or every language-server operation.
 
 If something looks off after install, start with `:checkhealth`, `:LspInfo`, `:MasonLog`, `:ConformInfo`, and `:messages`.
+
+## Website workspace
+
+The marketing site lives in `apps/web` as a TypeScript React/Vite app with Tailwind CSS v4. Guides on `/docs` are static markdown under `apps/web/public/guides/`. Prettier (with the Tailwind class-sorting plugin) formats the website and related Node files. Nx runs tasks across the pnpm workspace; the existing Makefile remains the entry point for installing and maintaining Neovim. Node.js 22.12+ and pnpm 10.34.9 are needed to develop the website. npm is still required by the Neovim installer for Mason's Node-based tools.
+
+```sh
+pnpm install
+pnpm dev                  # Nx → web development server
+pnpm build                # Nx → production site in apps/web/dist
+pnpm format               # Prettier + Tailwind class order
+pnpm test:setup           # Nx → make test and workspace checks
+pnpm test:web:e2e         # browser checks for the landing page
+```
+
+`pnpm exec nx show projects` lists the projects. `pnpm exec nx run setup:check` and `pnpm exec nx run setup:e2e` run the existing shell/Lua and simulated Neovim UI checks. Setup tests are never served from Nx's cache. CI and Git hooks use pnpm; do not regenerate an npm lockfile.
