@@ -43,7 +43,7 @@ Ctrl shortcuts in the first table work in **normal, insert, and terminal** modes
 
 ### Git source control (Ctrl+G)
 
-The Git view matches a typical source-control panel: commit message, **[Commit]**, **Staged Changes**, **Changes**, and a **COMMITS** log pane at the bottom (45% of the window height) showing recent `git log --graph --oneline` history. Every action has a key. Red is deleted, yellow is modified, green is added or untracked.
+The Git view matches a typical source-control panel: commit message, **[Commit]**, **Staged Changes**, **Changes**, and a **COMMITS** log pane at the bottom (30% of the window height) showing recent `git log --graph --oneline` history. Every action has a key. Red is deleted, yellow is modified, green is added or untracked.
 
 | Keys | Action |
 | --- | --- |

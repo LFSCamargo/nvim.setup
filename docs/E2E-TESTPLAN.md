@@ -29,7 +29,7 @@ Do not talk to real Codex/Agent logins. Do not use the user's `~/.config/nvim`.
 | `NVIM_CLEAN` | Skips restore, does not overwrite `session.json`, does not spawn extra chats | `e2e.lua` |
 | Git loading | Sidebar shows Loading; switching to Files ignores a late Git result | `e2e.lua` |
 | Git sections | Staged Changes, Changes, deleted/new/modified files, red/yellow/green highlights | `e2e.lua` |
-| Git log pane | Bottom `git-log` window at 45% height with graph of recent commits; Enter opens `git show` | `e2e.lua` |
+| Git log pane | Bottom `git-log` window at 30% height with graph of recent commits; Enter opens `git show` | `e2e.lua` |
 | Git UI copy | No “Click” mouse hint; `[Commit]`, `Ctrl+Enter`, `x revert`, `i message`, Stage/Revert All | `e2e.lua` |
 | Git composer | `git-composer` window exists | `e2e.lua` |
 | Git width | Files/Git sidebar is 20% of the UI width | `e2e.lua` |

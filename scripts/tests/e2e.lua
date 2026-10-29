@@ -191,11 +191,11 @@ local ok, err = xpcall(function()
     local want = require('config.sidebar').log_height()
     for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
       if vim.bo[vim.api.nvim_win_get_buf(win)].filetype == 'git-log' then
-        return vim.api.nvim_win_get_height(win) == want and want == math.max(3, math.floor(vim.o.lines * 0.45))
+        return vim.api.nvim_win_get_height(win) == want and want == math.max(3, math.floor(vim.o.lines * 0.30))
       end
     end
     return false
-  ]]), 'Git log pane should be 45% of the editor height')
+  ]]), 'Git log pane should be 30% of the editor height')
   local function focus_git_list()
     eval([[
       for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do

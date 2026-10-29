@@ -24,7 +24,7 @@ function M.width()
 end
 
 function M.log_height()
-  return math.max(3, math.floor(vim.o.lines * 0.45))
+  return math.max(3, math.floor(vim.o.lines * 0.30))
 end
 
 local function valid(win)
