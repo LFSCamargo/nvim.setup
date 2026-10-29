@@ -23,6 +23,7 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Chores
 
+- **gitignore:** ignore Neovim runtime logs ([c4c1a12](https://github.com/LFSCamargo/nvim.setup/commit/c4c1a12377ee597fa7d973938caa5394d9940702))
 - add commitlint with conventional commits ([34f73f0](https://github.com/LFSCamargo/nvim.setup/commit/34f73f07f59af22d19595595e1699d2f2c8a13c0))
 
 ### Other
