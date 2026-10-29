@@ -11,6 +11,17 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Features
 
+- **web:** compose the marketing landing page ([2bb28da](https://github.com/LFSCamargo/nvim.setup/commit/2bb28da7d64f935782fbfdc68c5bc011f76bc509))
+- **web:** serve on-site docs from static public guides ([799d9af](https://github.com/LFSCamargo/nvim.setup/commit/799d9af4fb4a6313e775c2e715f30a915f19fe59))
+- **web:** open screenshots in an animated lightbox ([4a4e987](https://github.com/LFSCamargo/nvim.setup/commit/4a4e987c6120b69d12ba1115e2d5ab87fb5ef846))
+- **web:** loop the principles marquee without a visible jump ([e86dd34](https://github.com/LFSCamargo/nvim.setup/commit/e86dd34791b2eafb21cfc74cdda613d68b8dba2e))
+- **web:** contrast header chrome over inverted bands ([652d0fa](https://github.com/LFSCamargo/nvim.setup/commit/652d0fadfccc01fbbe31450c2da2871b277ccd43))
+- **theme:** persist light and dark color schemes ([15567b7](https://github.com/LFSCamargo/nvim.setup/commit/15567b77a7b51a1ac8bd1e5226d8bfa6e16cd6fc))
+- **web:** add landing page copy and glass UI primitives ([81a17e1](https://github.com/LFSCamargo/nvim.setup/commit/81a17e1af337a6590182a6f06dd2e390931dab23))
+- **web:** scaffold a TypeScript Vite landing page ([cbee7a4](https://github.com/LFSCamargo/nvim.setup/commit/cbee7a4fb358d182bd9447d2bc48418f50ef85ab))
+- **web:** publish static copies of the setup guides ([9a147a8](https://github.com/LFSCamargo/nvim.setup/commit/9a147a84106d553d827bfc5ec3b94e4e4acd2ab5))
+- **web:** add cropped workspace screenshots ([600aff4](https://github.com/LFSCamargo/nvim.setup/commit/600aff4b02005ab77ab466a743e059a8fdcd3619))
+- **bootstrap:** install Neovim and local tools with one script ([ea55aef](https://github.com/LFSCamargo/nvim.setup/commit/ea55aef119dd6533ae56fb553342245e3236bd20))
 - adds git log view sitting at 45% bottom on nvim view ([d578cf2](https://github.com/LFSCamargo/nvim.setup/commit/d578cf23325512d101c672deaf0497f7f427cc4b))
 - **git:** add source-control sidebar with commit and revert ([74cacf5](https://github.com/LFSCamargo/nvim.setup/commit/74cacf5e6c108affb5d71e304b26e52c24bdcb6b))
 - **session:** persist tabs, unsaved buffers, and chat UUIDs ([7b78fb4](https://github.com/LFSCamargo/nvim.setup/commit/7b78fb4fb391c7a50e9f0ea9e02f9676cb5870f6))
@@ -24,13 +35,24 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Documentation
 
+- **web:** document the website, bootstrap installer, and browser tests ([7b7154d](https://github.com/LFSCamargo/nvim.setup/commit/7b7154d01a2dc08bc13f71caa1a55f2aef76a861))
 - **agents:** require a regression test for every bug fix ([d2c8970](https://github.com/LFSCamargo/nvim.setup/commit/d2c897084b4aae5c5b495d6d1c80bf8ec5b02cc2))
 - add keybindings, plugin overview, and e2e test plan ([63ee5d3](https://github.com/LFSCamargo/nvim.setup/commit/63ee5d3f7acebd09fa69586692622a05ef8aae68))
 - **agents:** add shared contribution instructions ([ec92f0e](https://github.com/LFSCamargo/nvim.setup/commit/ec92f0e6c05ae91626424eae65844ffb272313af))
 
+### Tests
+
+- **workspace:** lock pnpm, Nx, bootstrap, and the marketing app ([61fabe0](https://github.com/LFSCamargo/nvim.setup/commit/61fabe0f439872a1ea8354ae68935885586204af))
+- **web:** cover visitor paths in Playwright ([658cf4c](https://github.com/LFSCamargo/nvim.setup/commit/658cf4ccd3b6e250a9403226c62c56f02459771f))
+
 ### Build
 
+- **workspace:** switch the repo to pnpm and Nx ([350dbf6](https://github.com/LFSCamargo/nvim.setup/commit/350dbf6c47a484394e6b7cb7702fe13277b044e4))
 - **changelog:** automate generation and validation ([85b3c42](https://github.com/LFSCamargo/nvim.setup/commit/85b3c42065a99f6f1914e71049021a76e87250be))
+
+### CI
+
+- **web:** run website typecheck, tests, and Playwright in Actions ([e31a009](https://github.com/LFSCamargo/nvim.setup/commit/e31a009b94184ddad2b6295c17c7926816a226e5))
 
 ### Chores
 
