@@ -1,0 +1,52 @@
+local map = function(mode, key, fn, desc) vim.keymap.set(mode, key, fn, { desc = desc }) end
+map({ 'n', 'i' }, '<D-p>', function() require('fzf-lua').files() end, 'Find project files')
+map('n', '<leader>ff', function() require('fzf-lua').files() end, 'Find files')
+map('n', '<leader>fg', function() require('fzf-lua').live_grep() end, 'Search project text')
+map('n', '<leader>fb', function() require('fzf-lua').buffers() end, 'Find open buffer')
+map('n', '<leader>e', '<cmd>NvimTreeToggle<cr>', 'Toggle file tree')
+map('n', '<leader>ac', '<cmd>Codex<cr>', 'Codex chat')
+map('n', '<leader>au', '<cmd>CursorAgent<cr>', 'Cursor Agent chat')
+map('n', '<leader>xx', '<cmd>Trouble diagnostics toggle<cr>', 'Project diagnostics')
+map('n', '<leader>xd', vim.diagnostic.open_float, 'Line diagnostics')
+map('n', '<leader>gs', '<cmd>Git<cr>', 'Git status')
+map('n', '<leader>gb', '<cmd>Git blame<cr>', 'Git blame')
+map('n', '<leader>gl', '<cmd>Git log --oneline<cr>', 'Git history')
+map('n', '<leader>gd', '<cmd>Gdiffsplit<cr>', 'Git diff')
+map('n', '<leader>gp', function() require('gitsigns').preview_hunk() end, 'Preview Git hunk')
+map('n', '<leader>hs', function() require('gitsigns').stage_hunk() end, 'Stage hunk')
+map('n', '<leader>f', function() require('conform').format({ async = true, lsp_format = 'fallback' }) end, 'Format buffer')
+map('n', '<leader>w', '<cmd>write<cr>', 'Save')
+map('t', '<Esc><Esc>', '<C-\\><C-n>', 'Leave terminal input')
+for _, key in ipairs({ 'h', 'j', 'k', 'l' }) do
+  map('n', '<C-' .. key .. '>', '<C-w>' .. key, 'Focus window')
+end
+map('n', '<F5>', function() require('dap').continue() end, 'Debug continue/start')
+map('n', '<F10>', function() require('dap').step_over() end, 'Debug step over')
+map('n', '<F11>', function() require('dap').step_into() end, 'Debug step into')
+map('n', '<F12>', function() require('dap').step_out() end, 'Debug step out')
+map('n', '<leader>db', function() require('dap').toggle_breakpoint() end, 'Toggle breakpoint')
+map('n', '<leader>du', function() require('dapui').toggle() end, 'Toggle debugger UI')
+map('n', '<leader>dq', function() require('dap').terminate() end, 'Stop debugging')
+
+-- Project shortcuts work while editing and inside terminal chat panes.
+vim.api.nvim_create_user_command('ProjectCloseTab', function() require('config.tabs').close() end, {})
+vim.api.nvim_create_user_command('PaneNewTab', function() require('config.tabs').new_context() end, {})
+vim.api.nvim_create_user_command('PaneSave', function() require('config.tabs').save() end, {})
+local shortcuts = {
+  ['<C-s>'] = { 'PaneSave', 'Save editor file' },
+  ['<C-b>'] = { 'NvimTreeToggle', 'Toggle file tree' },
+  ['<C-p>'] = { 'FzfLua files', 'Find project files' },
+  ['<C-f>'] = { 'FzfLua live_grep', 'Search project text' },
+  ['<C-t>'] = { 'PaneNewTab', 'New editor or chat tab' },
+  ['<C-w>'] = { 'ProjectCloseTab', 'Close current editor or chat tab' },
+  ['<C-]>'] = { 'AgentSelect', 'Choose Codex or Cursor Agent' },
+}
+for key, binding in pairs(shortcuts) do
+  map({ 'n', 'i' }, key, '<Cmd>' .. binding[1] .. '<CR>', binding[2])
+  map('t', key, '<C-\\><C-n><Cmd>' .. binding[1] .. '<CR>', binding[2])
+end
+-- Window commands remain available without the Ctrl+W prefix.
+map('n', '<leader>ws', '<Cmd>split<CR>', 'Split window below')
+map('n', '<leader>wv', '<Cmd>vsplit<CR>', 'Split window right')
+
+require('config.tabs')
