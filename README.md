@@ -88,7 +88,7 @@ Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to i
 | Ctrl+T / Ctrl+W | Add / close a tab in the focused pane |
 | Ctrl+] | Start a new Codex or Cursor Agent session |
 | Ctrl+B | Toggle the file tree |
-| Ctrl+G | Open Git source control (commit, stage, unstage, revert, commit graph; keyboard or mouse) |
+| Ctrl+G | Open Git source control (commit, stage, unstage, revert, bottom commit log; keyboard or mouse) |
 | Ctrl+P / Ctrl+F | Find files / search project text |
 | Esc | Send Escape to the focused agent (stop generation, for example) |
 | Ctrl+\ Ctrl+N | Leave terminal-input mode (`Esc Esc` also works in other terminals) |

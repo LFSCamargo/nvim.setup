@@ -43,13 +43,13 @@ Ctrl shortcuts in the first table work in **normal, insert, and terminal** modes
 
 ### Git source control (Ctrl+G)
 
-The Git view matches a typical source-control panel: commit message, **[Commit]**, **Staged Changes**, **Changes**, and a **Commits** graph of recent `git log --graph --oneline` history at the bottom. Every action has a key. Red is deleted, yellow is modified, green is added or untracked.
+The Git view matches a typical source-control panel: commit message, **[Commit]**, **Staged Changes**, **Changes**, and a **COMMITS** log pane at the bottom (45% of the window height) showing recent `git log --graph --oneline` history. Every action has a key. Red is deleted, yellow is modified, green is added or untracked.
 
 | Keys | Action |
 | --- | --- |
-| `i` / Tab | Edit the commit message / jump between message and file list |
+| `i` / Tab | Edit the commit message / cycle message, file list, and commit log |
 | `C` / Ctrl+Enter | Commit staged changes (empty message is rejected; nothing staged asks to stage all) |
-| Enter | Open a file, show a commit from the graph, toggle a section, or run the button under the cursor |
+| Enter | Open a file, show a commit from the log, toggle a section, or run the button under the cursor |
 | `s` / `u` / `x` | Stage / unstage / revert the file (`x` asks first) |
 | `S` / `U` / `X` | Stage all / unstage all / revert all |
 | `r` / `q` | Refresh / return to Files |

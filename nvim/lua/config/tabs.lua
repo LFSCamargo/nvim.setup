@@ -225,7 +225,7 @@ local function refresh()
     local buf = api.nvim_win_get_buf(win)
     if vim.bo[buf].filetype == 'NvimTree' or vim.bo[buf].filetype == 'git-composer' then
       vim.wo[win].winbar = "%!v:lua.require'config.sidebar'.winbar()"
-    elseif vim.bo[buf].filetype == 'git-changes' then
+    elseif vim.bo[buf].filetype == 'git-changes' or vim.bo[buf].filetype == 'git-log' then
       vim.wo[win].winbar = ''
     else
       vim.wo[win].winbar = (editor_buf(buf) or require('config.agents').is_chat(buf))
