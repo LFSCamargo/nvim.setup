@@ -11,6 +11,7 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Features
 
+- **security:** fail closed on OWASP SAST and npm audit ([1438b5d](https://github.com/LFSCamargo/nvim.setup/commit/1438b5d0f2c48d6394c48985754067c9cf019ce6))
 - **web:** compose the marketing landing page ([2bb28da](https://github.com/LFSCamargo/nvim.setup/commit/2bb28da7d64f935782fbfdc68c5bc011f76bc509))
 - **web:** serve on-site docs from static public guides ([799d9af](https://github.com/LFSCamargo/nvim.setup/commit/799d9af4fb4a6313e775c2e715f30a915f19fe59))
 - **web:** open screenshots in an animated lightbox ([4a4e987](https://github.com/LFSCamargo/nvim.setup/commit/4a4e987c6120b69d12ba1115e2d5ab87fb5ef846))
@@ -28,6 +29,7 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Bug Fixes
 
+- **deps:** patch npm advisories and harden the workspace ([c94e9ac](https://github.com/LFSCamargo/nvim.setup/commit/c94e9ac765aa6833b563591f61cf0877b587259b))
 - **git:** refresh source control when focusing the Git sidebar ([f63e736](https://github.com/LFSCamargo/nvim.setup/commit/f63e736bbc183625c825412d2510cb290db33021))
 - **git:** shrink the commit log pane to 30% height ([09a7dd2](https://github.com/LFSCamargo/nvim.setup/commit/09a7dd24ea56c993e656b3a4f4bf2fe996dfc36a))
 - **git:** open files and commits in the mid editor ([a40e288](https://github.com/LFSCamargo/nvim.setup/commit/a40e288815a505ca7e6b423fc7762df65c4e71aa))
@@ -35,6 +37,8 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Documentation
 
+- **agents:** add a skill to commit separately by scope ([dc3e772](https://github.com/LFSCamargo/nvim.setup/commit/dc3e77252cf64e3c7cb3bc105018152ee243d1a8))
+- **security:** document the OWASP scan and audit gate ([37beafd](https://github.com/LFSCamargo/nvim.setup/commit/37beafd817303ef3359b10d315c5df386ef3ed6f))
 - **web:** document the website, bootstrap installer, and browser tests ([7b7154d](https://github.com/LFSCamargo/nvim.setup/commit/7b7154d01a2dc08bc13f71caa1a55f2aef76a861))
 - **agents:** require a regression test for every bug fix ([d2c8970](https://github.com/LFSCamargo/nvim.setup/commit/d2c897084b4aae5c5b495d6d1c80bf8ec5b02cc2))
 - add keybindings, plugin overview, and e2e test plan ([63ee5d3](https://github.com/LFSCamargo/nvim.setup/commit/63ee5d3f7acebd09fa69586692622a05ef8aae68))
@@ -42,6 +46,7 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Tests
 
+- **security:** lock the scan scripts and advisory floor ([295c0f6](https://github.com/LFSCamargo/nvim.setup/commit/295c0f686b7ae6d043e95a27003720ced367b9ce))
 - **workspace:** lock pnpm, Nx, bootstrap, and the marketing app ([61fabe0](https://github.com/LFSCamargo/nvim.setup/commit/61fabe0f439872a1ea8354ae68935885586204af))
 - **web:** cover visitor paths in Playwright ([658cf4c](https://github.com/LFSCamargo/nvim.setup/commit/658cf4ccd3b6e250a9403226c62c56f02459771f))
 
@@ -52,6 +57,7 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### CI
 
+- **security:** run Semgrep CE and pin Actions to SHAs ([eda78b0](https://github.com/LFSCamargo/nvim.setup/commit/eda78b05a0481f9911641268fa16c885d7172b09))
 - **web:** run website typecheck, tests, and Playwright in Actions ([e31a009](https://github.com/LFSCamargo/nvim.setup/commit/e31a009b94184ddad2b6295c17c7926816a226e5))
 
 ### Chores
