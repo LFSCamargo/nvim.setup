@@ -12,7 +12,7 @@ Code we wrote. These live under `nvim/lua/config/` and `scripts/`. They are not 
 | Session | `nvim/lua/config/session.lua` | Per-project tabs, unsaved snapshots, chat UUIDs, Ctrl+Q, `NVIM_CLEAN` |
 | Sidebar | `nvim/lua/config/sidebar.lua` | Files / Git source-control panel (composer, stage, unstage, revert, commit, bottom log pane) |
 | Keys | `nvim/lua/config/keys.lua` | Global and leader maps, Ctrl shortcuts, user commands |
-| Tabs | `nvim/lua/config/tabs.lua` | Clickable editor and chat winbar tabs |
+| Tabs | `nvim/lua/config/tabs.lua` | Clickable editor and chat winbar tabs; keeps the mid editor pane and a tab |
 | LSP | `nvim/lua/config/lsp.lua` | Server configs and buffer-local LSP keys |
 | DAP | `nvim/lua/config/dap.lua` | Debug adapters and `:DebugLoadLaunch` |
 | Appearance | `nvim/lua/config/appearance.lua` | Gruvbox transparency; selection fills stay visible |

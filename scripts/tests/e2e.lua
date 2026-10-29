@@ -370,11 +370,32 @@ local ok, err = xpcall(function()
   wait_for('commit graph after sidebar commit', function()
     return log_text():find('e2e commit from sidebar', 1, true) ~= nil
   end)
+  local function in_mid_editor()
+    return eval([[
+      local tabs = require('config.tabs')
+      local win = vim.api.nvim_get_current_win()
+      local ft = vim.bo[vim.api.nvim_win_get_buf(win)].filetype
+      return win == tabs.editor_win()
+        and win ~= require('config.agents').win
+        and ft ~= 'git-changes' and ft ~= 'git-log' and ft ~= 'git-composer' and ft ~= 'NvimTree'
+    ]])
+  end
+  local function has_editor_tab()
+    return eval([[
+      for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+        if require('config.tabs').editor_buf(buf) then return true end
+      end
+      return false
+    ]])
+  end
+  local wins_before_open = eval('return #vim.api.nvim_tabpage_list_wins(0)')
   focus_git_line('changed file.txt')
   request('nvim_input', '<CR>')
   wait_for('opening changed file', function()
     return eval("return vim.api.nvim_buf_get_name(0):find('changed file.txt', 1, true) ~= nil")
   end)
+  assert(in_mid_editor(), 'git file should open in the mid editor')
+  assert(eval('return #vim.api.nvim_tabpage_list_wins(0)') == wins_before_open, 'git file should reuse the mid editor, not split')
   eval("require('config.sidebar').git()")
   wait_for('Git sidebar after opening a file', function()
     return sidebar_line('changed file.txt') > 0 and log_text():find('e2e commit from sidebar', 1, true) ~= nil
@@ -387,8 +408,49 @@ local ok, err = xpcall(function()
         and table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), '\n'):find('e2e commit from sidebar', 1, true) ~= nil
     ]])
   end)
+  assert(in_mid_editor(), 'git commit should open in the mid editor')
   eval("require('config.sidebar').git()")
   wait_for('Git sidebar after showing a commit', function()
+    return sidebar_line('changed file.txt') > 0
+  end)
+  focus_git_line('changed file.txt')
+  request('nvim_input', '<CR>')
+  wait_for('opening a file after a commit view', function()
+    return eval("return vim.api.nvim_buf_get_name(0):find('changed file.txt', 1, true) ~= nil")
+  end)
+  assert(in_mid_editor(), 'git file after a commit view should open in the mid editor')
+  eval('vim.cmd("quit")')
+  wait_for('keeping the editor pane after :q', function()
+    return eval("return require('config.tabs').editor_win() ~= nil") and has_editor_tab()
+  end)
+  eval([[
+    local tabs = require('config.tabs')
+    local win = tabs.ensure()
+    local scratch = vim.api.nvim_create_buf(false, true)
+    if win then vim.api.nvim_win_set_buf(win, scratch) end
+    for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+      if tabs.editor_buf(buf) then
+        vim.bo[buf].modified = false
+        pcall(vim.api.nvim_buf_delete, buf, { force = true })
+      end
+    end
+  ]])
+  wait_for('no editor tabs remaining', function()
+    return not has_editor_tab()
+  end)
+  eval("require('config.sidebar').git()")
+  wait_for('Git sidebar after closing editor tabs', function()
+    return sidebar_line('changed file.txt') > 0
+  end)
+  focus_git_line('changed file.txt')
+  request('nvim_input', '<CR>')
+  wait_for('opening a file when no tabs remain', function()
+    return eval("return vim.api.nvim_buf_get_name(0):find('changed file.txt', 1, true) ~= nil")
+  end)
+  assert(in_mid_editor(), 'git file should open in a new mid-editor tab')
+  assert(has_editor_tab(), 'opening from git should add a tab when none remain')
+  eval("require('config.sidebar').git()")
+  wait_for('Git sidebar after opening a file with no tabs', function()
     return sidebar_line('changed file.txt') > 0
   end)
   request('nvim_input', 'i')
@@ -416,7 +478,7 @@ local ok, err = xpcall(function()
     return not text:find('Loading', 1, true) and sidebar_line('changed file.txt') == 0 and sidebar_line('deleted.txt') > 0
   end)
   eval("require('config.sidebar').files()")
-  request('nvim_set_current_win', editor)
+  eval("require('config.tabs').focus()")
   print('PASS: asynchronous Git sidebar, switching, staging and opening files')
 
 

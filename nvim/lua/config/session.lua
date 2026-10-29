@@ -1,7 +1,7 @@
 -- Per-project session: editor tabs (including unsaved snapshots) and AI chat UUIDs.
 -- NVIM_CLEAN=1 skips restore and save so a clean window cannot clobber the last session.
 
-local M = { busy = false }
+local M = { busy = false, exiting = false }
 local api = vim.api
 
 local function editor_buf(buf)
@@ -261,6 +261,7 @@ function M.restore()
 end
 
 function M.quit()
+  M.exiting = true
   M.save()
   vim.cmd('qa!')
 end

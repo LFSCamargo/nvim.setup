@@ -251,19 +251,6 @@ local function commit()
   end)
 end
 
-local function editor_win()
-  local target
-  for _, win in ipairs(api.nvim_tabpage_list_wins(0)) do
-    local buf = api.nvim_win_get_buf(win)
-    local ft = vim.bo[buf].filetype
-    if vim.bo[buf].buftype == '' and ft ~= 'NvimTree' and ft ~= 'git-changes' and ft ~= 'git-composer' and ft ~= 'git-log' then
-      target = win
-      if vim.bo[buf].buflisted then break end
-    end
-  end
-  return target
-end
-
 local function open_file(entry)
   if entry.status == 'D' then
     vim.notify('This file was deleted; use Space g s to inspect its diff')
@@ -273,23 +260,27 @@ local function open_file(entry)
   local path = vim.fs.normalize(root .. '/' .. entry.path)
   local base = vim.fs.normalize(root)
   if path ~= base and path:sub(1, #base + 1) ~= base .. '/' then return end
-  local target = editor_win()
+  local target = require('config.tabs').focus()
   if not target then return end
-  api.nvim_set_current_win(target)
   vim.cmd('edit ' .. vim.fn.fnameescape(path))
 end
 
 local function show_commit(hash)
   if not root or type(hash) ~= 'string' or not hash:match('^%x+$') or #hash < 7 or #hash > 40 then return end
-  local target = editor_win()
+  local tabs = require('config.tabs')
+  local target = tabs.focus()
   if not target then return end
   run({ 'git', '-C', root, 'show', '--stat', '--format=medium', hash }, function(result)
     if result.code ~= 0 then git_notify(result, 'could not show commit'); return end
-    if not api.nvim_win_is_valid(target) then return end
+    if not api.nvim_win_is_valid(target) then
+      target = tabs.focus()
+      if not target then return end
+    end
     local buf = api.nvim_create_buf(true, true)
     vim.bo[buf].buftype = 'nofile'
-    vim.bo[buf].bufhidden = 'wipe'
+    vim.bo[buf].bufhidden = 'hide'
     vim.bo[buf].filetype = 'git'
+    pcall(api.nvim_buf_set_name, buf, 'git://show/' .. hash)
     api.nvim_buf_set_lines(buf, 0, -1, false, vim.split(result.stdout or '', '\n', { plain = true }))
     vim.bo[buf].modifiable = false
     api.nvim_set_current_win(target)

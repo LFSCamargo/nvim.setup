@@ -3,15 +3,151 @@
 
 local M = {}
 local api = vim.api
+local ensuring = false
+local side_ft = {
+  NvimTree = true,
+  ['git-changes'] = true,
+  ['git-composer'] = true,
+  ['git-log'] = true,
+}
+local git_editor_ft = {
+  git = true,
+  fugitive = true,
+  fugitiveblame = true,
+  gitcommit = true,
+}
 
-local function editor_buf(buf)
-  return api.nvim_buf_is_valid(buf) and vim.bo[buf].buflisted and vim.bo[buf].buftype == ''
+local function nvim_exiting()
+  if vim.v.exiting ~= vim.NIL then return true end
+  local session = package.loaded['config.session']
+  if session and session.exiting then return true end
+  local last = vim.fn.histget(':', -1)
+  return last:match('^%s*qa!?%s*$')
+    or last:match('^%s*quitall!?%s*$')
+    or last:match('^%s*wqa!?%s*$')
+    or last:match('^%s*wqall!?%s*$')
+    or last:match('^%s*xa!?%s*$')
+    or last:match('^%s*xall!?%s*$')
+    or last:match('^%s*cq!?%s*$')
 end
 
-local function editor_win()
-  for _, win in ipairs(api.nvim_tabpage_list_wins(0)) do
-    if editor_buf(api.nvim_win_get_buf(win)) then return win end
+function M.editor_buf(buf)
+  if not api.nvim_buf_is_valid(buf) or not vim.bo[buf].buflisted then return false end
+  if require('config.agents').is_chat(buf) then return false end
+  local ft = vim.bo[buf].filetype
+  if side_ft[ft] then return false end
+  local bt = vim.bo[buf].buftype
+  return bt == '' or git_editor_ft[ft] == true
+end
+
+local function editor_buf(buf)
+  return M.editor_buf(buf)
+end
+
+local function is_side(win)
+  if not api.nvim_win_is_valid(win) then return true end
+  local buf = api.nvim_win_get_buf(win)
+  local ft = vim.bo[buf].filetype
+  if side_ft[ft] then return true end
+  local agents = require('config.agents')
+  return agents.is_chat(buf) or agents.win == win
+end
+
+local function has_editor_tab()
+  for _, buf in ipairs(api.nvim_list_bufs()) do
+    if editor_buf(buf) then return true end
   end
+  return false
+end
+
+local function editor_count()
+  local n = 0
+  for _, win in ipairs(api.nvim_tabpage_list_wins(0)) do
+    if not is_side(win) then n = n + 1 end
+  end
+  return n
+end
+
+function M.editor_win()
+  local fallback
+  for _, win in ipairs(api.nvim_tabpage_list_wins(0)) do
+    if not is_side(win) then
+      if editor_buf(api.nvim_win_get_buf(win)) then return win end
+      fallback = fallback or win
+    end
+  end
+  return fallback
+end
+
+local function next_tab(except)
+  for _, buf in ipairs(api.nvim_list_bufs()) do
+    if buf ~= except and editor_buf(buf) then return buf end
+  end
+end
+
+local function recreate_editor()
+  local agents = require('config.agents')
+  local chat_id = agents.active
+  if agents.win and api.nvim_win_is_valid(agents.win) then
+    pcall(api.nvim_win_close, agents.win, false)
+    agents.win = nil
+  end
+  vim.cmd('botright vnew')
+  local win = api.nvim_get_current_win()
+  if chat_id then agents.show(chat_id) end
+  if api.nvim_win_is_valid(win) then api.nvim_set_current_win(win) end
+  local sidebar = package.loaded['config.sidebar']
+  if sidebar then
+    for _, w in ipairs(api.nvim_tabpage_list_wins(0)) do
+      local ft = vim.bo[api.nvim_win_get_buf(w)].filetype
+      if ft == 'NvimTree' or ft == 'git-changes' then
+        pcall(api.nvim_win_set_width, w, sidebar.width())
+        break
+      end
+    end
+  end
+  return win
+end
+
+function M.ensure()
+  if nvim_exiting() then return M.editor_win() end
+  if ensuring then
+    vim.wait(500, function() return not ensuring end, 10)
+    local win = M.editor_win()
+    if win and api.nvim_win_is_valid(win) then
+      if not has_editor_tab() then
+        api.nvim_win_set_buf(win, api.nvim_create_buf(true, false))
+      end
+      return win
+    end
+  end
+  ensuring = true
+  local ok, result = pcall(function()
+    local win = M.editor_win()
+    if not win or not api.nvim_win_is_valid(win) then
+      win = recreate_editor()
+    end
+    if win and api.nvim_win_is_valid(win) and not has_editor_tab() then
+      api.nvim_win_set_buf(win, api.nvim_create_buf(true, false))
+    end
+    return win
+  end)
+  ensuring = false
+  if not ok then error(result) end
+  return result
+end
+
+function M.focus()
+  local win = M.ensure()
+  if not (win and api.nvim_win_is_valid(win)) then
+    vim.wait(500, function()
+      win = M.editor_win()
+      return win ~= nil and api.nvim_win_is_valid(win)
+    end, 10)
+    win = M.ensure()
+  end
+  if win and api.nvim_win_is_valid(win) then api.nvim_set_current_win(win) end
+  return win
 end
 
 -- Winbar clicks report the window under the mouse; fall back to the current window.
@@ -95,8 +231,7 @@ function M.render()
 end
 
 function M.new()
-  local win = editor_win()
-  if win then api.nvim_set_current_win(win) else vim.cmd('topleft vsplit') end
+  M.focus()
   vim.cmd.enew()
 end
 
@@ -124,6 +259,7 @@ function M.close()
     if api.nvim_win_get_buf(win) == buf then api.nvim_win_set_buf(win, replacement) end
   end
   api.nvim_buf_delete(buf, {})
+  M.ensure()
 end
 
 -- Ctrl+T / "+" : new chat picker in the chat pane, otherwise a new editor buffer.
@@ -136,7 +272,7 @@ function M.new_context()
 end
 
 function M.save()
-  local win = editor_buf(api.nvim_get_current_buf()) and api.nvim_get_current_win() or editor_win()
+  local win = editor_buf(api.nvim_get_current_buf()) and api.nvim_get_current_win() or M.editor_win()
   if not win then return end
   api.nvim_win_call(win, function()
     if api.nvim_buf_get_name(0) == '' then
@@ -185,7 +321,7 @@ end
 _G.EditorTabClick = function(id, _, button)
   if button ~= 'l' or not editor_buf(id) then return end
   local win = clicked_win()
-  if not editor_buf(api.nvim_win_get_buf(win)) then win = editor_win() end
+  if not editor_buf(api.nvim_win_get_buf(win)) then win = M.editor_win() or M.ensure() end
   if win then
     api.nvim_set_current_win(win)
     api.nvim_win_set_buf(win, id)
@@ -219,6 +355,30 @@ highlights()
 api.nvim_create_autocmd('ColorScheme', { callback = highlights })
 vim.opt.showtabline = 0
 vim.opt.hidden = true
+
+-- :q on the last mid-editor window must not destroy the pane; keep a tab there.
+api.nvim_create_autocmd('QuitPre', {
+  callback = function()
+    if nvim_exiting() then return end
+    local win = api.nvim_get_current_win()
+    if is_side(win) or editor_count() ~= 1 then return end
+    local buf = api.nvim_win_get_buf(win)
+    if vim.bo[buf].modified then return end
+    local replacement = next_tab(buf) or api.nvim_create_buf(true, false)
+    vim.cmd('aboveleft split')
+    api.nvim_win_set_buf(api.nvim_get_current_win(), replacement)
+    api.nvim_set_current_win(win)
+  end,
+})
+
+api.nvim_create_autocmd('WinClosed', {
+  callback = function()
+    vim.schedule(function()
+      if nvim_exiting() then return end
+      M.ensure()
+    end)
+  end,
+})
 
 local function refresh()
   for _, win in ipairs(api.nvim_tabpage_list_wins(0)) do

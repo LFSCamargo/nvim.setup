@@ -49,21 +49,21 @@ The Git view matches a typical source-control panel: commit message, **[Commit]*
 | --- | --- |
 | `i` / Tab | Edit the commit message / cycle message, file list, and commit log |
 | `C` / Ctrl+Enter | Commit staged changes (empty message is rejected; nothing staged asks to stage all) |
-| Enter | Open a file, show a commit from the log, toggle a section, or run the button under the cursor |
+| Enter | Open a file or commit in the mid editor, toggle a section, or run the button under the cursor |
 | `s` / `u` / `x` | Stage / unstage / revert the file (`x` asks first) |
 | `S` / `U` / `X` | Stage all / unstage all / revert all |
 | `r` / `q` | Refresh / return to Files |
 | Click `+` / `−` / `x` | Stage / unstage / revert that file |
 | Click **[Commit]** / **[Stage All]** / **[Unstage All]** / **[Revert All]** | Same as the matching key |
 
-Space g s still opens Fugitive for the full Git status UI.
+Space g s still opens Fugitive for the full Git status UI in the mid editor. Files and commits from the Git sidebar also reuse that pane; they do not create extra splits. `:q` on the last editor window keeps the pane and leaves a tab (a blank one if none remain).
 
 | Keys | Action |
 | --- | --- |
-| Space g s | Git status (`:Git`) |
-| Space g b | Git blame |
-| Space g l | Git history (oneline log) |
-| Space g d | Git diff split |
+| Space g s | Git status in the mid editor |
+| Space g b | Git blame in the mid editor |
+| Space g l | Git history in the mid editor (oneline log) |
+| Space g d | Git diff split of the mid editor |
 | Space g p | Preview hunk (gitsigns) |
 | Space h s | Stage hunk (gitsigns) |
 
@@ -104,7 +104,7 @@ Space g s still opens Fugitive for the full Git status UI.
 | `:Codex` / `:CursorAgent` / `:AgentSelect` | Chat pane |
 | `:qa` | Neovim's usual quit prompt (does not snapshot like Ctrl+Q) |
 
-Closing a chat tab stops that CLI. Closing the last editor tab leaves a blank editor. Ctrl+Q writes the project session and quits even with unsaved buffers.
+Closing a chat tab stops that CLI. Closing the last editor tab, or `:q` in the last editor window, leaves a blank editor tab so the mid pane stays. Ctrl+Q writes the project session and quits even with unsaved buffers.
 
 ## Language support
 

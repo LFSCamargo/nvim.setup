@@ -98,7 +98,7 @@ Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to i
 | gd / gr / K | Definition / references / documentation |
 | F5 / Space d b | Start or continue debugging / toggle a breakpoint |
 
-Closing a chat tab stops that CLI. Switching tabs leaves it running. Unsaved files are protected when you close a tab. Quitting with Ctrl+Q snapshots unsaved buffers and resumes Codex/Agent chats by UUID on the next launch in that directory. `make install` puts a wrapper at `~/.local/bin/nvim` so `nvim --clean` still loads this config. Maintenance scripts set `NVIM_WRAPPER=0` when they need Neovim's factory `--clean`.
+Closing a chat tab stops that CLI. Switching tabs leaves it running. Unsaved files are protected when you close a tab. Git files, commits, and Fugitive views open in the mid editor; `:q` there keeps that pane and a tab. Quitting with Ctrl+Q snapshots unsaved buffers and resumes Codex/Agent chats by UUID on the next launch in that directory. `make install` puts a wrapper at `~/.local/bin/nvim` so `nvim --clean` still loads this config. Maintenance scripts set `NVIM_WRAPPER=0` when they need Neovim's factory `--clean`.
 
 The full keybinding list, language notes, and debugging details live in [the editor guide](docs/EDITOR.md). Plugins we wrote versus plugins and tools we install are in [the plugin overview](docs/PLUGINS.md). What `make e2e` covers — and what to add when behavior changes — is in [the E2E test plan](docs/E2E-TESTPLAN.md).
 
