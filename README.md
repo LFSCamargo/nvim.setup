@@ -23,6 +23,8 @@ This is a complete setup, not a plugin. `make install` replaces your Neovim conf
 ## Features
 
 - Clickable file tree, editor tabs, and chat tabs
+- Per-project session restore for editor tabs, unsaved buffers, and AI chats (UUID resume)
+- `nvim --clean` for a blank editor that does not restore or overwrite the last session
 - Independent Codex and Cursor Agent sessions (your login, your permissions)
 - TypeScript, JavaScript, React, Vue, Svelte, Rust, Go, Solidity, Lua, HTML, CSS, JSON, YAML, TOML
 - Completion, diagnostics, go-to-definition, format-on-demand, Git, and debugging
@@ -68,13 +70,13 @@ That preview uses its own config, data, and state directories, so plugins and to
 | ripgrep, fd, fzf | Search and file picking |
 | `codex` and `agent` | Optional chat CLIs |
 
-Keep `~/.local/bin` on your PATH, and `~/.cargo/bin` if you use Cargo. The terminal needs true color and mouse support. On Debian/Ubuntu, the scripts add an `fd` wrapper for `fdfind`. If Ctrl+S freezes the terminal, add `stty -ixon` to your shell startup file.
+Keep `~/.local/bin` on your PATH, and `~/.cargo/bin` if you use Cargo. Install places an `nvim` wrapper there so `nvim --clean` opens this setup without restored tabs. The terminal needs true color and mouse support. On Debian/Ubuntu, the scripts add an `fd` wrapper for `fdfind`. If Ctrl+S freezes the terminal, add `stty -ixon` to your shell startup file.
 
 Install and authenticate the chat CLIs separately with the [Codex](https://github.com/openai/codex) and [Cursor CLI](https://cursor.com/docs/cli/overview) docs. Missing CLIs print a notice; the editor still works. Credentials and CLI permissions stay outside this repository.
 
 ## Using the editor
 
-Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to insert, `Esc` for normal mode, and `:qa` to quit. The leader key is **Space**; press leader shortcuts as a sequence in normal mode.
+Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to insert, `Esc` for normal mode, and Ctrl+Q to quit (unsaved tabs come back next time). `nvim --clean` skips restored tabs and chats. The leader key is **Space**; press leader shortcuts as a sequence in normal mode.
 
 | Shortcut or click | Action |
 | --- | --- |
@@ -82,6 +84,7 @@ Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to i
 | Click a tab, `+`, or `×` | Switch, add, or close a file or chat tab |
 | `‹` / `›` | Scroll overflowing tabs |
 | Ctrl+S | Save (asks for a name if the buffer is unnamed) |
+| Ctrl+Q | Quit and persist this project's tabs and chats |
 | Ctrl+T / Ctrl+W | Add / close a tab in the focused pane |
 | Ctrl+] | Start a new Codex or Cursor Agent session |
 | Ctrl+B | Toggle the file tree |
@@ -94,7 +97,7 @@ Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to i
 | gd / gr / K | Definition / references / documentation |
 | F5 / Space d b | Start or continue debugging / toggle a breakpoint |
 
-Closing a chat tab stops that CLI. Switching tabs leaves it running. Unsaved files are protected when you close a tab. Running terminals may need an explicit close or `:qa!` after you save.
+Closing a chat tab stops that CLI. Switching tabs leaves it running. Unsaved files are protected when you close a tab. Quitting with Ctrl+Q snapshots unsaved buffers and resumes Codex/Agent chats by UUID on the next launch in that directory. `make install` puts a wrapper at `~/.local/bin/nvim` so `nvim --clean` still loads this config. Maintenance scripts set `NVIM_WRAPPER=0` when they need Neovim's factory `--clean`.
 
 The full shortcut list, language notes, and debugging details live in [the editor guide](docs/EDITOR.md).
 

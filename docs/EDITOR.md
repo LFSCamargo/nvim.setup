@@ -2,7 +2,7 @@
 
 Appearance uses Gruvbox syntax colors with transparent backgrounds throughout the editor, file tree, menus, and chat panes. Visual selection, search matches, and the selected completion item keep a fill so they stay visible. The terminal palette stays unchanged. Settings are in `lua/config/appearance.lua`.
 
-Run `nvim .` in a project. Interactive startup opens the file tree at 25% width and starts one Codex and one Cursor Agent session in the chat tabs. The chat pane also uses 25% width; keyboard focus stays in the editor. This works with `nvim`, `nvim .`, and `nvim file`. Headless maintenance does not launch chats. Press `i` to edit, `Esc` for normal mode, `:w` to save, and `:q` to quit. The leader key is **Space**; press the following keys in sequence in normal mode.
+Run `nvim .` in a project. Interactive startup opens the file tree at 25% width. If this project has a saved session, editor tabs (including unsaved buffers) and AI chats resume by UUID; otherwise it starts one Codex and one Cursor Agent session. `nvim --clean` skips restore and save, so you get a blank editor plus two fresh chats without clobbering the last session. The chat pane also uses 25% width; keyboard focus stays in the editor. This works with `nvim`, `nvim .`, and `nvim file`. Headless maintenance does not launch chats. Press `i` to edit, `Esc` for normal mode, `:w` to save, and Ctrl+Q to quit (unsaved tabs are snapshotted and restored next time). The leader key is **Space**; press the following keys in sequence in normal mode.
 
 | Keys | Action |
 | --- | --- |
@@ -10,6 +10,7 @@ Run `nvim .` in a project. Interactive startup opens the file tree at 25% width 
 | Ctrl+F | Search text in project folder |
 | Ctrl+T | New editor tab, or CLI selector when focused on chat |
 | Ctrl+W | Close focused editor/chat tab; protect unsaved files |
+| Ctrl+Q | Quit and persist this project's editor tabs and chats |
 | Ctrl+S | Save file (asks for a path for unnamed files) |
 | Ctrl+] | Choose Codex or Cursor Agent |
 | Ctrl+P / Space f f | Find project files (hidden files included, build/dependency directories excluded) |
@@ -33,7 +34,7 @@ Run `nvim .` in a project. Interactive startup opens the file tree at 25% width 
 | F10 / F11 / F12 | Step over / into / out (Mac may require Fn) |
 | Space d u / Space d q | Toggle debug panels / terminate debug session |
 
-These Ctrl shortcuts work in normal, insert, and terminal modes. Ctrl+W replaces Vim’s window-command prefix; use Ctrl+h/j/k/l to move between windows and Space w s / Space w v to split. Closing a chat tab stops its CLI. Closing the last editor tab leaves a blank editor; use `:qa` to quit.
+These Ctrl shortcuts work in normal, insert, and terminal modes. Ctrl+W replaces Vim’s window-command prefix; use Ctrl+h/j/k/l to move between windows and Space w s / Space w v to split. Closing a chat tab stops its CLI. Closing the last editor tab leaves a blank editor. Ctrl+Q (or `:SessionQuit`) writes the project session and quits even with unsaved buffers; closing a tab with Ctrl+W still refuses unsaved files. Use `:qa` if you want Neovim’s usual modified-buffer prompt.
 
 ## Language support
 
@@ -47,7 +48,7 @@ Formatting is explicit (Space f). Prettierd handles web files; Svelte projects n
 
 The file sidebar is shared and has no tab bar. Click pane contents to focus the editor, tree, or chat; clicking a running chat enables terminal input. The editor and chat panes each have their own clickable tabs above their contents. Click a label to switch, **+** to add, or **×** to close the active tab. The active label is underlined in gold; **‹ / ›** navigate when tabs overflow. Ctrl+T adds a tab in the focused pane. File tabs show listed editor buffers and preserve unsaved edits when switching.
 
-Chat **+** and Ctrl+] open a CLI selector for a new independent Codex or Cursor Agent session. Multiple sessions of either CLI can run at once. Switching chat tabs preserves running sessions; closing a chat tab stops that session. Space a c and Space a u toggle the corresponding assistant pane. The chat pane and file tree each use 25% of the editor width. Chats run the actual interactive CLIs in the directory where you opened them. They use existing CLI authentication and permissions; no prompts or approval bypasses are injected. Use `codex login` or `agent login` outside Neovim if login expires. They do not automatically receive editor selections: mention project-relative file paths in chat. Reopen Neovim in a different project for a separate context.
+Chat **+** and Ctrl+] open a CLI selector for a new independent Codex or Cursor Agent session. Multiple sessions of either CLI can run at once. Switching chat tabs preserves running sessions; closing a chat tab stops that session. Space a c and Space a u toggle the corresponding assistant pane. The chat pane and file tree each use 25% of the editor width. Chats run the actual interactive CLIs in the directory where you opened them. They use existing CLI authentication and permissions; no prompts or approval bypasses are injected. Use `codex login` or `agent login` outside Neovim if login expires. They do not automatically receive editor selections: mention project-relative file paths in chat. Sessions are stored per working directory under Neovim state (`nvim-setup-sessions`); Codex resumes with `codex resume <uuid>` and Cursor Agent with `agent --resume=<uuid>`. Reopen Neovim in a different project for a separate context, or start `nvim --clean` for a blank window in the current project.
 
 ## Debugging
 

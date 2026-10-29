@@ -4,10 +4,10 @@ assert(vim.fn.has('nvim-0.12') == 1, 'Neovim 0.12+ required')
 assert(vim.g.colors_name == 'gruvbox', 'Gruvbox did not load')
 assert(vim.o.mouse:find('a'), 'Mouse support missing')
 assert(vim.o.showtabline == 0, 'Global tab bar must be hidden')
-for _, key in ipairs({ '<C-s>', '<C-t>', '<C-w>', '<C-]' }) do
+for _, key in ipairs({ '<C-s>', '<C-t>', '<C-w>', '<C-]>' }) do
   assert(vim.fn.maparg(key, 'n') ~= '', 'Missing keybinding: ' .. key)
 end
-for _, name in ipairs({ 'config.agents', 'config.tabs', 'cmp', 'nvim-tree.api', 'dap', 'conform', 'fzf-lua' }) do
+for _, name in ipairs({ 'config.agents', 'config.session', 'config.tabs', 'cmp', 'nvim-tree.api', 'dap', 'conform', 'fzf-lua' }) do
   assert(pcall(require, name), 'Could not load module: ' .. name)
 end
 local registry = require('mason-registry')

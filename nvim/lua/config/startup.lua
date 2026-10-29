@@ -1,5 +1,6 @@
--- Interactive startup layout: file tree, editor focus, then one Codex and one Cursor Agent session.
+-- Interactive startup layout: file tree, editor focus, then restored or default chats.
 -- Headless runs (install, validate, tests) skip this so CLIs are not launched.
+-- NVIM_CLEAN=1 skips session restore and starts a blank editor plus two fresh chats.
 
 local M = {}
 local opened = false
@@ -27,11 +28,13 @@ function M.open()
   end
   api.nvim_set_current_win(editor)
   local agents = require('config.agents')
-  agents.new('codex')
-  local codex = agents.active
-  agents.new('cursor')
-  -- Show Codex as the visible chat tab while both jobs keep running.
-  if codex then agents.show(codex) end
+  if not require('config.session').restore() then
+    agents.new('codex')
+    local codex = agents.active
+    agents.new('cursor')
+    -- Show Codex as the visible chat tab while both jobs keep running.
+    if codex then agents.show(codex) end
+  end
   api.nvim_set_current_win(editor)
   vim.cmd.stopinsert()
   require('nvim-tree.api').tree.resize()

@@ -14,6 +14,21 @@ fi
 mv -- "$staging" "$CONFIG_DIR"
 printf '%s\n' "$(cat "$SETUP_ROOT/VERSION")" > "$CONFIG_DIR/.setup-version"
 say "Installed configuration to $CONFIG_DIR"
+wrapper_src="$SETUP_ROOT/scripts/nvim-wrapper.sh"
+wrapper_dst="$HOME/.local/bin/nvim"
+mkdir -p "$HOME/.local/bin"
+if [[ -e "$wrapper_dst" || -L "$wrapper_dst" ]]; then
+  if grep -q 'nvim.setup-wrapper' "$wrapper_dst" 2>/dev/null; then
+    cp -- "$wrapper_src" "$wrapper_dst"
+    chmod +x "$wrapper_dst"
+  else
+    say "Kept existing $wrapper_dst (not the nvim.setup wrapper). nvim --clean will use Neovim's factory reset until this path is our wrapper."
+  fi
+else
+  cp -- "$wrapper_src" "$wrapper_dst"
+  chmod +x "$wrapper_dst"
+  say "Installed nvim wrapper to $wrapper_dst so nvim --clean skips restored tabs."
+fi
 bash "$SETUP_ROOT/scripts/plugins.sh" restore
 run_lua "$CONFIG_DIR/scripts/install-parsers.lua"
 run_lua "$CONFIG_DIR/scripts/install-tools.lua"

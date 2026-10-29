@@ -67,7 +67,7 @@ local shortcuts = {
   ['<C-f>'] = { 'FzfLua live_grep', 'Search project text' },
   ['<C-t>'] = { 'PaneNewTab', 'New editor or chat tab' },
   ['<C-w>'] = { 'ProjectCloseTab', 'Close current editor or chat tab' },
-  ['<C-q>'] = { 'qa', 'Quit Neovim' },
+  ['<C-q>'] = { 'SessionQuit', 'Quit Neovim' },
   ['<C-]>'] = { 'AgentSelect', 'Choose Codex or Cursor Agent' },
 }
 for key, binding in pairs(shortcuts) do

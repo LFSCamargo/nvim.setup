@@ -163,6 +163,7 @@ require('lazy').setup({
 })
 
 require('config.agents')
+require('config.session')
 require('config.keys')
 require('config.appearance')
 require('config.startup')

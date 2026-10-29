@@ -8,7 +8,7 @@ if ! command -v fd >/dev/null 2>&1; then
     export PATH="$HOME/.local/bin:$PATH"
   else die 'Missing fd (fd-find on Debian/Ubuntu). Run make deps.'; fi
 fi
-nvim --clean --headless -n '+lua if vim.fn.has("nvim-0.12") == 0 then print("Neovim 0.12+ required"); vim.cmd("cquit 1") end' +qa
+NVIM_WRAPPER=0 nvim --clean --headless -n '+lua if vim.fn.has("nvim-0.12") == 0 then print("Neovim 0.12+ required"); vim.cmd("cquit 1") end' +qa
 node -e 'if (Number(process.versions.node.split(".")[0]) < 22) { console.error("Node.js 22+ required; update your Node installation."); process.exit(1) }'
 python3 - <<'PY'
 import re, subprocess, sys

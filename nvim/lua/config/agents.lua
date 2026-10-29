@@ -1,5 +1,6 @@
 -- Codex and Cursor Agent CLI sessions in one shared chat pane (25% width).
 -- Each session is a terminal buffer; switching tabs leaves the process running.
+-- Chats resume by UUID (`codex resume <uuid>`, `agent --resume=<uuid>`).
 
 local M = { sessions = {}, active = nil, win = nil }
 local next_id = 0
@@ -10,6 +11,75 @@ end
 
 local function valid_win()
   return M.win and vim.api.nvim_win_is_valid(M.win)
+end
+
+local function persist_uuid(value)
+  return type(value) == 'string' and value:match('^[%x%-]+$') ~= nil and #value >= 8 and #value <= 64
+end
+
+local function persist()
+  local ok, session = pcall(require, 'config.session')
+  if ok and not session.busy then session.save() end
+end
+
+local function known_codex_uuids()
+  local seen = {}
+  for _, session in pairs(M.sessions) do
+    if session.name == 'codex' and persist_uuid(session.uuid) then seen[session.uuid] = true end
+  end
+  return seen
+end
+
+local function newest_codex_uuid(cwd, known)
+  local path = vim.fn.expand('~/.codex/session_index.jsonl')
+  local fd = vim.uv.fs_open(path, 'r', 384)
+  if not fd then return nil end
+  local stat = vim.uv.fs_fstat(fd)
+  local raw = stat and vim.uv.fs_read(fd, stat.size, 0) or ''
+  vim.uv.fs_close(fd)
+  local best
+  local abs = vim.fn.fnamemodify(cwd, ':p')
+  for line in vim.gsplit(raw, '\n', { plain = true, trimempty = true }) do
+    local ok, row = pcall(vim.json.decode, line)
+    if ok and type(row) == 'table' then
+      local id = row.id or row.session_id or row.uuid
+      local row_cwd = row.cwd or row.cwd_path or row.directory or row.workdir
+      if persist_uuid(id) and not known[id] then
+        if not row_cwd or vim.fn.fnamemodify(row_cwd, ':p') == abs then best = id end
+      end
+    end
+  end
+  return best
+end
+
+local function allocate_agent_uuid()
+  if vim.fn.executable('agent') == 0 then return nil end
+  local ok, result = pcall(function()
+    return vim.system({ 'agent', 'create-chat' }, { timeout = 4000, text = true }):wait()
+  end)
+  if not ok or not result or result.code ~= 0 or type(result.stdout) ~= 'string' then return nil end
+  local id = vim.trim(result.stdout)
+  if persist_uuid(id) then return id end
+  local matched = id:match('([%x%-][%x%-][%x%-][%x%-][%x%-][%x%-][%x%-][%x%-][%x%-]*)')
+  return persist_uuid(matched) and matched or nil
+end
+
+local function capture_codex_uuid(id, cwd)
+  local known = known_codex_uuids()
+  local attempts = 0
+  local function tick()
+    attempts = attempts + 1
+    local session = M.sessions[id]
+    if not session or persist_uuid(session.uuid) then return end
+    local uuid = newest_codex_uuid(cwd, known)
+    if uuid then
+      session.uuid = uuid
+      persist()
+      return
+    end
+    if attempts < 8 then vim.defer_fn(tick, 250) end
+  end
+  vim.defer_fn(tick, 250)
 end
 
 function M.is_chat(buf)
@@ -50,13 +120,25 @@ function M.show(id)
   end
 end
 
+local function argv_for(name, uuid)
+  if name == 'codex' then
+    if persist_uuid(uuid) then return { 'codex', 'resume', uuid }, { 'codex' } end
+    return { 'codex' }, { 'codex' }
+  end
+  if persist_uuid(uuid) then return { 'agent', '--resume=' .. uuid }, { 'agent' } end
+  return { 'agent' }, { 'agent' }
+end
+
 -- Start a new CLI as an argv list (not a shell string) so the command is not interpolated.
-function M.new(name)
+function M.new(name, opts)
+  opts = opts or {}
   local command = name == 'codex' and 'codex' or 'agent'
   if vim.fn.executable(command) == 0 then
     vim.notify(command .. ' is not on PATH', vim.log.levels.ERROR)
     return
   end
+  local uuid = persist_uuid(opts.uuid) and opts.uuid or nil
+  if name ~= 'codex' and not uuid then uuid = allocate_agent_uuid() end
   next_id = next_id + 1
   local id = next_id
   local buf = vim.api.nvim_create_buf(false, true)
@@ -65,29 +147,45 @@ function M.new(name)
   local session = {
     buf = buf,
     name = name,
-    label = (name == 'codex' and 'Codex ' or 'Agent ') .. id,
+    uuid = uuid,
+    label = opts.label or ((name == 'codex' and 'Codex ' or 'Agent ') .. id),
   }
   M.sessions[id] = session
   M.show(id)
-  session.job = vim.fn.jobstart({ command }, {
+  local resume_argv, fresh_argv = argv_for(name, uuid)
+  local function on_exit()
+    vim.schedule(function()
+      session.exited = true
+      vim.cmd('redrawstatus')
+    end)
+  end
+  session.job = vim.fn.jobstart(resume_argv, {
     term = true,
     cwd = vim.fn.getcwd(),
-    on_exit = function()
-      vim.schedule(function()
-        session.exited = true
-        vim.cmd('redrawstatus')
-      end)
-    end,
+    on_exit = on_exit,
   })
+  if session.job <= 0 and persist_uuid(uuid) then
+    session.uuid = nil
+    uuid = nil
+    vim.notify('Could not resume ' .. command .. '; starting a new session', vim.log.levels.WARN)
+    session.job = vim.fn.jobstart(fresh_argv, {
+      term = true,
+      cwd = vim.fn.getcwd(),
+      on_exit = on_exit,
+    })
+  end
   if session.job <= 0 then
     session.exited = true
     vim.notify('Could not start ' .. command, vim.log.levels.ERROR)
+  elseif name == 'codex' and not persist_uuid(session.uuid) then
+    capture_codex_uuid(id, vim.fn.getcwd())
   end
   -- Esc stays in terminal mode and is forwarded to the CLI (stop generation, and so on).
   vim.keymap.set('t', '<Esc>', function()
     if not session.exited then vim.api.nvim_chan_send(session.job, '\27') end
   end, { buffer = buf, nowait = true, desc = 'Send Escape to agent' })
   vim.cmd.startinsert()
+  persist()
 end
 
 function M.select()
@@ -132,6 +230,7 @@ function M.close(id)
     end
     M.win = nil
   end
+  persist()
 end
 
 vim.api.nvim_create_autocmd('VimResized', {
