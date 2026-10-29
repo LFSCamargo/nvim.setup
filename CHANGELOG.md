@@ -17,6 +17,7 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Bug Fixes
 
+- **git:** refresh source control when focusing the Git sidebar ([f63e736](https://github.com/LFSCamargo/nvim.setup/commit/f63e736bbc183625c825412d2510cb290db33021))
 - **git:** shrink the commit log pane to 30% height ([09a7dd2](https://github.com/LFSCamargo/nvim.setup/commit/09a7dd24ea56c993e656b3a4f4bf2fe996dfc36a))
 - **git:** open files and commits in the mid editor ([a40e288](https://github.com/LFSCamargo/nvim.setup/commit/a40e288815a505ca7e6b423fc7762df65c4e71aa))
 - **editor:** preserve selection highlights and add quit shortcut ([e7d8c3c](https://github.com/LFSCamargo/nvim.setup/commit/e7d8c3c125dac9931079ff127bd8b9f1df589003))
