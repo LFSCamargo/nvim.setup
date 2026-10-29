@@ -9,12 +9,18 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ## [Unreleased]
 
+### Features
+
+- **git:** add source-control sidebar with commit and revert ([74cacf5](https://github.com/LFSCamargo/nvim.setup/commit/74cacf5e6c108affb5d71e304b26e52c24bdcb6b))
+- **session:** persist tabs, unsaved buffers, and chat UUIDs ([7b78fb4](https://github.com/LFSCamargo/nvim.setup/commit/7b78fb4fb391c7a50e9f0ea9e02f9676cb5870f6))
+
 ### Bug Fixes
 
 - **editor:** preserve selection highlights and add quit shortcut ([e7d8c3c](https://github.com/LFSCamargo/nvim.setup/commit/e7d8c3c125dac9931079ff127bd8b9f1df589003))
 
 ### Documentation
 
+- add keybindings, plugin overview, and e2e test plan ([63ee5d3](https://github.com/LFSCamargo/nvim.setup/commit/63ee5d3f7acebd09fa69586692622a05ef8aae68))
 - **agents:** add shared contribution instructions ([ec92f0e](https://github.com/LFSCamargo/nvim.setup/commit/ec92f0e6c05ae91626424eae65844ffb272313af))
 
 ### Build
