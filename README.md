@@ -130,6 +130,7 @@ Run these from the repository:
 | `make upgrade` | Upgrade plugins, refresh parsers, validate, and save the lockfile |
 | `make capture` | Copy installed config changes back into this repository |
 | `make bump VERSION=1.1.0` | Set this setup's release version |
+| `make commitlint` | Check the latest commit message against Conventional Commits |
 
 Prefer editing `nvim/` here and running `make install`. If you edited the installed config instead:
 
@@ -145,6 +146,18 @@ Capture copies only `init.lua`, `lua/`, `scripts/`, and `lazy-lock.json`. It doe
 `make update` refuses a dirty repository and uses fast-forward-only Git pulls. With no upstream it reapplies the local checkout. `make upgrade` advances plugin revisions and copies the new lockfile here for review. Neither command commits or pushes.
 
 Plugin versions are pinned in `nvim/lazy-lock.json`. Mason tool versions are not. Use `:Mason` for tool updates, and your package manager for Neovim and system dependencies.
+
+### Commit messages
+
+Commits follow [Conventional Commits](https://www.conventionalcommits.org/). A type and subject are required; a scope is optional:
+
+```text
+feat: click a chat pane to start typing
+fix(agents): send Escape to the focused session
+docs: document the e2e check
+```
+
+Use `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, or `revert`. After `npm install` in this repository, a `commit-msg` hook rejects messages that do not match.
 
 ## Backups and recovery
 
@@ -169,6 +182,7 @@ If a download fails, the new config stays installed and the backup is kept. Fix 
 | `docs/EDITOR.md` | Editor, language, and debug reference |
 | `docs/VALIDATION.md` | What the packaging checks cover |
 | `Makefile` / `VERSION` | Maintenance commands and the setup release version |
+| `commitlint.config.mjs` | Conventional Commits rules for `git commit` |
 
 Validation checks startup, mappings, plugin modules, Mason packages, syntax parsers, highlighting, and transparency. Headless maintenance does not start chats. It does not verify CLI login, project dependencies, or every language-server operation.
 

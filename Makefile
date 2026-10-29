@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
-.PHONY: help deps doctor install plugins parsers tools validate update upgrade capture bump check e2e
+.PHONY: help deps doctor install plugins parsers tools validate update upgrade capture bump check e2e commitlint
 help: ## Show available commands
 	@awk 'BEGIN {FS = ":.*## "} /^[a-z-]+:.*## / {printf "  %-12s %s\n", $$1, $$2}' Makefile
 
@@ -45,3 +45,6 @@ check: ## Check shell syntax and compile every Lua file without running it
 
 e2e: ## Exercise local chat focus and input using a simulated Neovim UI
 	@bash scripts/e2e.sh
+
+commitlint: ## Check the latest commit message against Conventional Commits
+	@npx --no -- commitlint --last --verbose
