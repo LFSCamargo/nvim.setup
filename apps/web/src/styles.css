@@ -1,0 +1,261 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: light;
+  --background: #f3f2ee;
+  --foreground: #141415;
+  --muted: #5c5c61;
+  --line: rgb(20 20 22 / 0.1);
+  --glass: rgb(20 20 22 / 0.045);
+  --surface: rgb(255 255 255 / 0.78);
+  --wash: rgb(20 20 22 / 0.08);
+  --grid: rgb(20 20 22 / 0.06);
+}
+
+.dark {
+  color-scheme: dark;
+  --background: #0b0b0c;
+  --foreground: #ececeb;
+  --muted: #8b8b90;
+  --line: rgb(255 255 255 / 0.1);
+  --glass: rgb(255 255 255 / 0.07);
+  --surface: rgb(9 9 11 / 0.78);
+  --wash: rgb(255 255 255 / 0.06);
+  --grid: rgb(255 255 255 / 0.03);
+}
+
+@theme inline {
+  --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'DM Serif Display', Georgia, serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-glass: var(--glass);
+  --color-surface: var(--surface);
+  --color-wash: var(--wash);
+  --animate-blink: blink 1.8s steps(1) infinite;
+  --animate-orbit: orbit 22s linear infinite;
+  --animate-marquee: marquee 80s linear infinite;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 6.5rem;
+    overflow-x: hidden;
+  }
+
+  #root {
+    isolation: isolate;
+    position: relative;
+    z-index: 0;
+  }
+
+  html[data-lightbox='open'] #root header {
+    visibility: hidden;
+  }
+
+  body {
+    margin: 0;
+    overflow-x: hidden;
+    font-family: var(--font-sans);
+    color: var(--color-foreground);
+    background: var(--color-background);
+    font-synthesis: none;
+  }
+
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button {
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  ::selection {
+    background: var(--foreground);
+    color: var(--background);
+  }
+}
+
+@utility glass-rim {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.22),
+    inset 0 -1px 0 rgb(255 255 255 / 0.04),
+    0 18px 50px rgb(0 0 0 / 0.28);
+}
+
+html:not(.dark) .glass-rim:not([data-rim='dark']) {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.85),
+    inset 0 -1px 0 rgb(20 20 22 / 0.05),
+    0 18px 40px rgb(20 20 22 / 0.08);
+}
+
+html:not(.dark) .glass-rim[data-rim='dark'] {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.22),
+    inset 0 -1px 0 rgb(255 255 255 / 0.04),
+    0 18px 50px rgb(0 0 0 / 0.28);
+}
+
+.glowing-effect {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.glowing-effect__beam {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.glowing-effect__beam::after {
+  content: '';
+  position: absolute;
+  inset: calc(-1 * var(--glowingeffect-border-width));
+  border-radius: inherit;
+  border: var(--glowingeffect-border-width) solid transparent;
+  background: var(--gradient);
+  background-attachment: fixed;
+  opacity: var(--active);
+  transition: opacity 300ms ease;
+  mask-clip: padding-box, border-box;
+  mask-composite: intersect;
+  -webkit-mask-composite: destination-in;
+  mask-image:
+    linear-gradient(#0000, #0000),
+    conic-gradient(
+      from calc((var(--start) - var(--spread)) * 1deg),
+      #00000000 0deg,
+      #fff,
+      #00000000 calc(var(--spread) * 2deg)
+    );
+}
+
+.hover-border-gradient__halo {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  filter: blur(2px);
+}
+
+.docs-prose h1 {
+  margin: 0;
+  font-size: clamp(2rem, 3vw, 2.6rem);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+}
+
+.docs-prose h2 {
+  margin-top: 2.5rem;
+  font-size: 1.35rem;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+}
+
+.docs-prose h3 {
+  margin-top: 1.75rem;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.docs-prose p,
+.docs-prose li {
+  color: var(--muted);
+  font-size: 0.925rem;
+  line-height: 1.75;
+}
+
+.docs-prose p {
+  margin-top: 1rem;
+}
+
+.docs-prose ul,
+.docs-prose ol {
+  margin-top: 1rem;
+  padding-left: 1.25rem;
+}
+
+.docs-prose ul {
+  list-style: disc;
+}
+
+.docs-prose ol {
+  list-style: decimal;
+}
+
+.docs-prose strong {
+  color: var(--foreground);
+  font-weight: 500;
+}
+
+.docs-prose hr {
+  margin: 2rem 0;
+  border-color: var(--line);
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes orbit {
+  to {
+    rotate: 360deg;
+  }
+}
+
+@keyframes marquee {
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.marquee-track {
+  animation-name: marquee;
+  animation-duration: 80s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+
+[data-marquee-viewport]:hover [data-marquee-track],
+[data-marquee-viewport]:focus-within [data-marquee-track] {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .marquee-track,
+  .hero-tilt {
+    animation: none !important;
+    transform: none !important;
+  }
+}

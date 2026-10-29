@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b0b0c" />
+    <script>
+      (function () {
+        var key = 'nvim.setup.theme';
+        var theme = 'dark';
+        try {
+          var stored = localStorage.getItem(key);
+          if (stored === 'light' || stored === 'dark') theme = stored;
+          else if (window.matchMedia('(prefers-color-scheme: light)').matches)
+            theme = 'light';
+        } catch (e) {}
+        var root = document.documentElement;
+        root.classList.toggle('dark', theme === 'dark');
+        root.dataset.theme = theme;
+        root.style.colorScheme = theme;
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta)
+          meta.setAttribute(
+            'content',
+            theme === 'dark' ? '#0b0b0c' : '#f3f2ee',
+          );
+      })();
+    </script>
+    <meta
+      name="description"
+      content="A considered Neovim workspace. Code, Git, and AI chats in one terminal. Explore the setup, read the documentation, and make it yours."
+    />
+    <title>nvim.setup — A quieter place to build.</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
