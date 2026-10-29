@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
-.PHONY: help bootstrap deps doctor install plugins parsers tools validate update upgrade capture bump check e2e test commitlint changelog
+.PHONY: help bootstrap deps doctor install plugins parsers tools validate update upgrade capture bump check e2e test scan commitlint changelog
 help: ## Show available commands
 	@awk 'BEGIN {FS = ":.*## "} /^[a-z0-9-]+:.*## / {printf "  %-12s %s\n", $$1, $$2}' Makefile
 
@@ -50,6 +50,9 @@ e2e: ## Exercise local chat focus and input using a simulated Neovim UI
 	@bash scripts/e2e.sh
 
 test: check e2e ## Syntax-check Lua/shell and run the simulated UI e2e tests
+
+scan: ## Fail on OWASP SAST findings and moderate-or-higher npm advisories
+	@bash scripts/scan.sh
 
 commitlint: ## Check the latest commit message against Conventional Commits
 	@pnpm exec commitlint --last --verbose

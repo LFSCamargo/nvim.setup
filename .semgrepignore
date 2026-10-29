@@ -1,0 +1,19 @@
+# Third-party and generated trees. The OWASP pass is for our JS/TS, not Neovim Lua.
+node_modules/
+dist/
+.nx/
+.pnpm-store/
+.local/
+.cache/
+test-results/
+playwright-report/
+apps/web/dist/
+apps/web/test-results/
+apps/web/playwright-report/
+apps/web/public/assets/
+apps/web/public/guides/
+nvim/
+CHANGELOG.md
+*.png
+*.jpg
+*.webp
