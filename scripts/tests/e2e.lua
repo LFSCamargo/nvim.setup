@@ -38,6 +38,10 @@ local ok, err = xpcall(function()
   local chat = eval("return require('config.agents').win")
   local editor = request('nvim_get_current_win')
   assert(editor ~= chat, 'Startup should focus the editor')
+  assert(eval([[
+    local want = math.max(1, math.floor(vim.o.columns * 0.25))
+    return vim.api.nvim_win_get_width(require('config.agents').win) == want
+  ]]), 'chat pane should be 25% of the editor width')
 
   local function click(win)
     local pos = request('nvim_win_get_position', win)
@@ -174,6 +178,15 @@ local ok, err = xpcall(function()
       return false
     ]])
   end)
+  assert(eval([[
+    local want = require('config.sidebar').width()
+    for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+      if vim.bo[vim.api.nvim_win_get_buf(win)].filetype == 'git-changes' then
+        return vim.api.nvim_win_get_width(win) == want and want == math.max(1, math.floor(vim.o.columns * 0.20))
+      end
+    end
+    return false
+  ]]), 'Git sidebar should be 20% of the editor width')
   local function focus_git_list()
     eval([[
       for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
@@ -216,6 +229,10 @@ local ok, err = xpcall(function()
     request('nvim_input_mouse', 'left', 'release', '', 0, sp.row - 1, sp.col - 1)
   end
   assert(sidebar_line('Staged Changes') > 0 and sidebar_line('deleted.txt') > 0 and sidebar_line('new.txt') > 0, 'Git sections or changes missing')
+  wait_for('commit graph', function()
+    local text = sidebar_text()
+    return sidebar_line('Commits') > 0 and text:find('initial', 1, true) ~= nil
+  end)
   local shown = sidebar_text()
   assert(not shown:find('Click', 1, true), 'mouse hint should not be shown')
   assert(shown:find('[Commit]', 1, true) and shown:find('Ctrl+Enter', 1, true), 'commit button missing')
@@ -302,6 +319,9 @@ local ok, err = xpcall(function()
     local text = sidebar_text()
     return not text:find('Loading', 1, true) and sidebar_line('new.txt') == 0 and sidebar_line('changed file.txt') > 0
   end)
+  wait_for('commit graph after sidebar commit', function()
+    return sidebar_text():find('e2e commit from sidebar', 1, true) ~= nil
+  end)
   focus_git_line('changed file.txt')
   request('nvim_input', '<CR>')
   wait_for('opening changed file', function()
@@ -309,6 +329,18 @@ local ok, err = xpcall(function()
   end)
   eval("require('config.sidebar').git()")
   wait_for('Git sidebar after opening a file', function()
+    return sidebar_line('changed file.txt') > 0 and sidebar_text():find('e2e commit from sidebar', 1, true) ~= nil
+  end)
+  focus_git_line('e2e commit from sidebar')
+  request('nvim_input', '<CR>')
+  wait_for('opening a commit from the graph', function()
+    return eval([[
+      return vim.bo.filetype == 'git'
+        and table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), '\n'):find('e2e commit from sidebar', 1, true) ~= nil
+    ]])
+  end)
+  eval("require('config.sidebar').git()")
+  wait_for('Git sidebar after showing a commit', function()
     return sidebar_line('changed file.txt') > 0
   end)
   request('nvim_input', 'i')

@@ -2,8 +2,8 @@
 local M = { view = 'files', generation = 0 }
 local api = vim.api
 local git_buf, git_win, composer_buf, composer_win, root, rows
-local groups = { staged = {}, unstaged = {} }
-local expanded = { staged = true, unstaged = true }
+local groups = { staged = {}, unstaged = {}, history = {} }
+local expanded = { staged = true, unstaged = true, history = true }
 local render_id = 0
 local current_branch = 'Git'
 local highlights = api.nvim_create_namespace('GitChanges')
@@ -18,6 +18,10 @@ local function setup_highlights()
 end
 setup_highlights()
 api.nvim_create_autocmd('ColorScheme', { callback = setup_highlights })
+
+function M.width()
+  return math.max(1, math.floor(vim.o.columns * 0.20))
+end
 
 local function valid(win)
   return win and api.nvim_win_is_valid(win)
@@ -231,15 +235,7 @@ local function commit()
   end)
 end
 
-local function open_file(entry)
-  if entry.status == 'D' then
-    vim.notify('This file was deleted; use Space g s to inspect its diff')
-    return
-  end
-  if not root or type(entry.path) ~= 'string' or entry.path == '' or entry.path:find('[\r\n]') then return end
-  local path = vim.fs.normalize(root .. '/' .. entry.path)
-  local base = vim.fs.normalize(root)
-  if path ~= base and path:sub(1, #base + 1) ~= base .. '/' then return end
+local function editor_win()
   local target
   for _, win in ipairs(api.nvim_tabpage_list_wins(0)) do
     local buf = api.nvim_win_get_buf(win)
@@ -249,9 +245,40 @@ local function open_file(entry)
       if vim.bo[buf].buflisted then break end
     end
   end
+  return target
+end
+
+local function open_file(entry)
+  if entry.status == 'D' then
+    vim.notify('This file was deleted; use Space g s to inspect its diff')
+    return
+  end
+  if not root or type(entry.path) ~= 'string' or entry.path == '' or entry.path:find('[\r\n]') then return end
+  local path = vim.fs.normalize(root .. '/' .. entry.path)
+  local base = vim.fs.normalize(root)
+  if path ~= base and path:sub(1, #base + 1) ~= base .. '/' then return end
+  local target = editor_win()
   if not target then return end
   api.nvim_set_current_win(target)
   vim.cmd('edit ' .. vim.fn.fnameescape(path))
+end
+
+local function show_commit(hash)
+  if not root or type(hash) ~= 'string' or not hash:match('^%x+$') or #hash < 7 or #hash > 40 then return end
+  local target = editor_win()
+  if not target then return end
+  run({ 'git', '-C', root, 'show', '--stat', '--format=medium', hash }, function(result)
+    if result.code ~= 0 then git_notify(result, 'could not show commit'); return end
+    if not api.nvim_win_is_valid(target) then return end
+    local buf = api.nvim_create_buf(true, true)
+    vim.bo[buf].buftype = 'nofile'
+    vim.bo[buf].bufhidden = 'wipe'
+    vim.bo[buf].filetype = 'git'
+    api.nvim_buf_set_lines(buf, 0, -1, false, vim.split(result.stdout or '', '\n', { plain = true }))
+    vim.bo[buf].modifiable = false
+    api.nvim_set_current_win(target)
+    api.nvim_win_set_buf(target, buf)
+  end, { text = true })
 end
 
 local function selected(line)
@@ -265,6 +292,10 @@ local function activate(entry, action)
     if action == 'revert' or (entry.group == 'unstaged' and action == 'revert_all') then revert_all()
     elseif entry.group == 'staged' then unstage_all()
     else stage_all() end
+    return
+  end
+  if entry.kind == 'log' then
+    if entry.hash then show_commit(entry.hash) end
     return
   end
   if not entry.path then
@@ -311,14 +342,36 @@ function M.render(branch, generation)
   api.nvim_buf_add_highlight(git_buf, highlights, 'GitHelp', 3, 0, -1)
   paint_composer_placeholder()
   local section, file_index, emitted_header, emitted_bulk, line_count = 1, 1, false, false, 5
-  local names = { 'staged', 'unstaged' }
+  local names = { 'staged', 'unstaged', 'history' }
   local function batch()
     if generation ~= M.generation or rendering ~= render_id or M.view ~= 'git' or not git_buf or not api.nvim_buf_is_valid(git_buf) then return end
     local lines, colors = {}, {}
     while section <= #names and #lines < 200 do
       local name = names[section]
-      local items = groups[name]
-      if not emitted_header then
+      local items = groups[name] or {}
+      if name == 'history' then
+        if not emitted_header then
+          lines[#lines + 1] = (' %s Commits  (%d)'):format(expanded.history and '▾' or '▸', #items)
+          rows[line_count + #lines] = { kind = 'section', group = 'history' }
+          emitted_header = true
+        elseif not expanded.history then
+          lines[#lines + 1] = ''
+          section, file_index, emitted_header, emitted_bulk = section + 1, 1, false, false
+        elseif file_index == 1 and #items == 0 then
+          lines[#lines + 1] = '     No commits'
+          lines[#lines + 1] = ''
+          section, file_index, emitted_header, emitted_bulk = section + 1, 1, false, false
+        elseif file_index <= #items then
+          local entry = items[file_index]
+          lines[#lines + 1] = '  ' .. entry.text
+          rows[line_count + #lines] = entry
+          colors[#colors + 1] = { line_count + #lines - 1, entry.hash and 'GitButton' or 'GitHelp' }
+          file_index = file_index + 1
+        else
+          lines[#lines + 1] = ''
+          section, file_index, emitted_header, emitted_bulk = section + 1, 1, false, false
+        end
+      elseif not emitted_header then
         lines[#lines + 1] = (' %s %s  (%d)'):format(expanded[name] and '▾' or '▸', name == 'staged' and 'Staged Changes' or 'Changes', #items)
         rows[line_count + #lines] = { kind = 'section', group = name }
         emitted_header = true
@@ -375,7 +428,7 @@ function M.refresh()
   M.generation = M.generation + 1
   local generation = M.generation
   root, rows = nil, {}
-  groups = { staged = {}, unstaged = {} }
+  groups = { staged = {}, unstaged = {}, history = {} }
   paint({ '  SOURCE CONTROL', '', '  Loading Git changes…' })
   run({ 'git', '-C', vim.fn.getcwd(), 'rev-parse', '--show-toplevel' }, function(result)
     if generation ~= M.generation or M.view ~= 'git' then return end
@@ -416,7 +469,25 @@ function M.refresh()
           end
           count = count + 1
         end
-        if pos <= #raw then vim.defer_fn(parse_batch, 1) else M.render(current_branch, generation) end
+        if pos <= #raw then
+          vim.defer_fn(parse_batch, 1)
+        else
+          run({ 'git', '-C', root, '-c', 'color.ui=never', 'log', '--graph', '--oneline', '--decorate', '--no-color', '--max-count=25' }, function(log)
+            if generation ~= M.generation or M.view ~= 'git' then return end
+            groups.history = {}
+            if log.code == 0 then
+              for line in (log.stdout or ''):gmatch('[^\r\n]+') do
+                local safe = line:gsub('[%c]', ' ')
+                groups.history[#groups.history + 1] = {
+                  kind = 'log',
+                  hash = safe:match('(%x%x%x%x%x%x%x+)'),
+                  text = safe,
+                }
+              end
+            end
+            M.render(current_branch, generation)
+          end, { text = true })
+        end
       end
       parse_batch()
     end)
@@ -440,7 +511,7 @@ local function map_buf(buf, mode, key, fn, desc)
 end
 
 local function bind_list_keys()
-  map_buf(git_buf, 'n', '<CR>', function() activate(selected()) end, 'Open file or toggle')
+  map_buf(git_buf, 'n', '<CR>', function() activate(selected()) end, 'Open, toggle, or show commit')
   map_buf(git_buf, 'n', 's', function()
     local entry = selected()
     if entry and entry.path and entry.group == 'unstaged' then change_index(entry)
@@ -528,7 +599,7 @@ function M.git()
   git_win = api.nvim_get_current_win()
   git_buf = api.nvim_create_buf(false, true)
   configure_side(git_win, git_buf, 'git-changes')
-  api.nvim_win_set_width(git_win, math.max(1, math.floor(vim.o.columns * 0.25)))
+  api.nvim_win_set_width(git_win, M.width())
   bind_list_keys()
   open_composer()
   M.refresh()

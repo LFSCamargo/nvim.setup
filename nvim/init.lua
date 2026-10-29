@@ -55,7 +55,7 @@ require('lazy').setup({
     'nvim-tree/nvim-tree.lua',
     config = function()
       require('nvim-tree').setup({
-        view = { width = function() return math.max(1, math.floor(vim.o.columns * 0.25)) end },
+        view = { width = function() return require('config.sidebar').width() end },
         renderer = { icons = { show = { file = false, folder = false, git = false } } },
         update_focused_file = { enable = true },
       })

@@ -2,7 +2,7 @@
 
 Appearance uses Gruvbox syntax colors with transparent backgrounds throughout the editor, file tree, menus, and chat panes. Visual selection, search matches, and the selected completion item keep a fill so they stay visible. The terminal palette stays unchanged. Settings are in `lua/config/appearance.lua`.
 
-Run `nvim .` in a project. Interactive startup opens the file tree at 25% width. If this project has a saved session, editor tabs (including unsaved buffers) and AI chats resume by UUID; otherwise it starts one Codex and one Cursor Agent session. `nvim --clean` skips restore and save, so you get a blank editor plus two fresh chats without clobbering the last session. The chat pane also uses 25% width; keyboard focus stays in the editor. This works with `nvim`, `nvim .`, and `nvim file`. Headless maintenance does not launch chats.
+Run `nvim .` in a project. Interactive startup opens the file tree at 20% width. If this project has a saved session, editor tabs (including unsaved buffers) and AI chats resume by UUID; otherwise it starts one Codex and one Cursor Agent session. `nvim --clean` skips restore and save, so you get a blank editor plus two fresh chats without clobbering the last session. The chat pane also uses 25% width; keyboard focus stays in the editor. This works with `nvim`, `nvim .`, and `nvim file`. Headless maintenance does not launch chats.
 
 Press `i` to edit, `Esc` for normal mode, and Ctrl+Q to quit (unsaved tabs are snapshotted and restored next time). The leader key is **Space**; press leader shortcuts as a sequence in normal mode (for example Space, then `g`, then `s`).
 
@@ -43,13 +43,13 @@ Ctrl shortcuts in the first table work in **normal, insert, and terminal** modes
 
 ### Git source control (Ctrl+G)
 
-The Git view matches a typical source-control panel: commit message, **[Commit]**, **Staged Changes**, **Changes**. Every action has a key. Red is deleted, yellow is modified, green is added or untracked.
+The Git view matches a typical source-control panel: commit message, **[Commit]**, **Staged Changes**, **Changes**, and a **Commits** graph of recent `git log --graph --oneline` history at the bottom. Every action has a key. Red is deleted, yellow is modified, green is added or untracked.
 
 | Keys | Action |
 | --- | --- |
 | `i` / Tab | Edit the commit message / jump between message and file list |
 | `C` / Ctrl+Enter | Commit staged changes (empty message is rejected; nothing staged asks to stage all) |
-| Enter | Open a file, toggle a section, or run the button under the cursor |
+| Enter | Open a file, show a commit from the graph, toggle a section, or run the button under the cursor |
 | `s` / `u` / `x` | Stage / unstage / revert the file (`x` asks first) |
 | `S` / `U` / `X` | Stage all / unstage all / revert all |
 | `r` / `q` | Refresh / return to Files |
@@ -122,7 +122,7 @@ The sidebar has **Files** and **Git** tabs. Git loads changes in the background,
 
 Click pane contents to focus the editor, tree, or chat; clicking a running chat enables terminal input. The editor and chat panes each have their own clickable tabs above their contents. Click a label to switch, **+** to add, or **×** to close the active tab. The active label is underlined in gold; **‹ / ›** navigate when tabs overflow. Ctrl+T adds a tab in the focused pane. File tabs show listed editor buffers and preserve unsaved edits when switching.
 
-Chat **+** and Ctrl+] open a CLI selector for a new independent Codex or Cursor Agent session. Multiple sessions of either CLI can run at once. Switching chat tabs preserves running sessions; closing a chat tab stops that session. Space a c and Space a u toggle the corresponding assistant pane. The chat pane and file tree each use 25% of the editor width. Chats run the actual interactive CLIs in the directory where you opened them. They use existing CLI authentication and permissions; no prompts or approval bypasses are injected. Use `codex login` or `agent login` outside Neovim if login expires. They do not automatically receive editor selections: mention project-relative file paths in chat. Sessions are stored per working directory under Neovim state (`nvim-setup-sessions`); Codex resumes with `codex resume <uuid>` and Cursor Agent with `agent --resume=<uuid>`. Reopen Neovim in a different project for a separate context, or start `nvim --clean` for a blank window in the current project.
+Chat **+** and Ctrl+] open a CLI selector for a new independent Codex or Cursor Agent session. Multiple sessions of either CLI can run at once. Switching chat tabs preserves running sessions; closing a chat tab stops that session. Space a c and Space a u toggle the corresponding assistant pane. The file tree uses 20% of the editor width and the chat pane uses 25%. Chats run the actual interactive CLIs in the directory where you opened them. They use existing CLI authentication and permissions; no prompts or approval bypasses are injected. Use `codex login` or `agent login` outside Neovim if login expires. They do not automatically receive editor selections: mention project-relative file paths in chat. Sessions are stored per working directory under Neovim state (`nvim-setup-sessions`); Codex resumes with `codex resume <uuid>` and Cursor Agent with `agent --resume=<uuid>`. Reopen Neovim in a different project for a separate context, or start `nvim --clean` for a blank window in the current project.
 
 ## Debugging
 

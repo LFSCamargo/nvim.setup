@@ -28,11 +28,13 @@ Do not talk to real Codex/Agent logins. Do not use the user's `~/.config/nvim`.
 | Unsaved buffers | Named and unnamed modified buffers snapshot and restore still modified | `e2e.lua` |
 | `NVIM_CLEAN` | Skips restore, does not overwrite `session.json`, does not spawn extra chats | `e2e.lua` |
 | Git loading | Sidebar shows Loading; switching to Files ignores a late Git result | `e2e.lua` |
-| Git sections | Staged Changes, Changes, deleted/new/modified files, red/yellow/green highlights | `e2e.lua` |
+| Git sections | Staged Changes, Changes, Commits graph, deleted/new/modified files, red/yellow/green highlights | `e2e.lua` |
 | Git UI copy | No “Click” mouse hint; `[Commit]`, `Ctrl+Enter`, `x revert`, `i message`, Stage/Revert All | `e2e.lua` |
 | Git composer | `git-composer` window exists | `e2e.lua` |
+| Git width | Files/Git sidebar is 20% of the UI width | `e2e.lua` |
+| Chat width | Chat pane is 25% of the UI width | `e2e.lua` |
 | Git mouse | Collapse/expand Changes; click `+`/`−` to stage/unstage | `e2e.lua` |
-| Git keyboard | `s` stages, `U` unstages all, `C` commits with composer message, `i` focuses message, Enter opens a file, `x` reverts (confirm stubbed) | `e2e.lua` |
+| Git keyboard | `s` stages, `U` unstages all, `C` commits with composer message, `i` focuses message, Enter opens a file or a commit from the graph, `x` reverts (confirm stubbed) | `e2e.lua` |
 | UUID resume | `codex resume <uuid>` and `agent --resume=<uuid>`; restored session keeps uuid | `e2e.lua` |
 | Ctrl+Q | Quits the child from terminal input with exit 0 | `e2e.lua` |
 | Wrapper | `nvim --clean` sets `NVIM_CLEAN=1` and does not pass `--clean` through; `NVIM_WRAPPER=0` is a passthrough | `e2e.sh` |
@@ -46,7 +48,7 @@ New behavior must fail in e2e without the patch. Prefer driving the UI (keys, mo
 | Chat focus, Esc, or terminal input | The first PASS block in `e2e.lua` |
 | Session save/restore, unsaved buffers, `NVIM_CLEAN` | The session `eval` block in `e2e.lua` |
 | `nvim --clean` wrapper | The wrapper probes at the top of `e2e.sh` |
-| Git sidebar UI, keys, composer, commit, revert, bulk actions | The Git block in `e2e.lua`; Git fixture in `e2e.sh` if you need extra files |
+| Git sidebar UI, keys, composer, commit, revert, bulk actions, log graph, width | The Git block in `e2e.lua`; Git fixture in `e2e.sh` if you need extra files |
 | Startup layout or default chats | `e2e-init.lua` and the startup wait in `e2e.lua` |
 | Codex / Cursor resume argv | The resume PASS block; fake CLI argv capture in `e2e.sh` |
 | Ctrl shortcuts that should work in terminal mode | Send the key with `nvim_input` and assert the side effect |

@@ -10,7 +10,7 @@ Code we wrote. These live under `nvim/lua/config/` and `scripts/`. They are not 
 | --- | --- | --- |
 | Agents | `nvim/lua/config/agents.lua` | Codex and Cursor Agent CLI panes, UUID resume, Esc forwarding |
 | Session | `nvim/lua/config/session.lua` | Per-project tabs, unsaved snapshots, chat UUIDs, Ctrl+Q, `NVIM_CLEAN` |
-| Sidebar | `nvim/lua/config/sidebar.lua` | Files / Git source-control panel (composer, stage, unstage, revert, commit) |
+| Sidebar | `nvim/lua/config/sidebar.lua` | Files / Git source-control panel (composer, stage, unstage, revert, commit, log graph) |
 | Keys | `nvim/lua/config/keys.lua` | Global and leader maps, Ctrl shortcuts, user commands |
 | Tabs | `nvim/lua/config/tabs.lua` | Clickable editor and chat winbar tabs |
 | LSP | `nvim/lua/config/lsp.lua` | Server configs and buffer-local LSP keys |

@@ -12,11 +12,11 @@ Codex and Cursor Agent run as real CLI sessions next to your code. Language serv
 │   main.ts    │           Editor               │    CLI chat     │
 │   utils.ts   │                                │                 │
 │              │     LSP · format · debug       │  independent    │
-│     25%      │              50%               │      25%        │
+│     20%      │              55%               │      25%        │
 └──────────────┴────────────────────────────────┴─────────────────┘
 ```
 
-The file tree and chat pane each take 25% of the window. Focus stays in the editor. Click a pane to focus it; click a running chat to type into it. Click tabs to switch files or sessions without stopping them.
+The file tree takes 20% of the window and the chat pane takes 25%. Focus stays in the editor. Click a pane to focus it; click a running chat to type into it. Click tabs to switch files or sessions without stopping them.
 
 This is a complete setup, not a plugin. `make install` replaces your Neovim config after backing it up.
 
@@ -88,7 +88,7 @@ Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to i
 | Ctrl+T / Ctrl+W | Add / close a tab in the focused pane |
 | Ctrl+] | Start a new Codex or Cursor Agent session |
 | Ctrl+B | Toggle the file tree |
-| Ctrl+G | Open Git source control (commit, stage, unstage, revert; keyboard or mouse) |
+| Ctrl+G | Open Git source control (commit, stage, unstage, revert, commit graph; keyboard or mouse) |
 | Ctrl+P / Ctrl+F | Find files / search project text |
 | Esc | Send Escape to the focused agent (stop generation, for example) |
 | Ctrl+\ Ctrl+N | Leave terminal-input mode (`Esc Esc` also works in other terminals) |
