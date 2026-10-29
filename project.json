@@ -19,7 +19,8 @@
         "commands": [
           "make test",
           "node --test scripts/tests/workspace.test.mjs",
-          "bash scripts/tests/bootstrap.test.sh"
+          "bash scripts/tests/bootstrap.test.sh",
+          "bash scripts/tests/scan.test.sh"
         ],
         "parallel": false
       },

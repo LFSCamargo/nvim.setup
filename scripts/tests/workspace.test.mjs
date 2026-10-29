@@ -32,6 +32,7 @@ test('Nx delegates the real setup checks without caching interactive e2e results
     'make test',
     'node --test scripts/tests/workspace.test.mjs',
     'bash scripts/tests/bootstrap.test.sh',
+    'bash scripts/tests/scan.test.sh',
   ]);
   assert.equal(setup.targets.test.options.parallel, false);
   assert.equal(json('package.json').scripts.build, 'nx run web:build');
@@ -110,9 +111,44 @@ test('docs reader loads static public guides instead of bundling markdown', () =
   }
 });
 
+function versionAtLeast(spec, min) {
+  const found = String(spec).match(/(\d+)\.(\d+)\.(\d+)/);
+  const want = min.split('.').map(Number);
+  assert.ok(found, `expected a semver in ${spec}`);
+  const got = found.slice(1).map(Number);
+  const rank = (parts) => parts[0] * 1e6 + parts[1] * 1e3 + parts[2];
+  assert.ok(rank(got) >= rank(want), `${spec} must be >= ${min} (OWASP A06)`);
+}
+
+test('patched npm advisories stay above the OWASP A06 floor', () => {
+  const overrides = json('package.json').pnpm.overrides;
+  versionAtLeast(
+    json('apps/web/package.json').devDependencies.vitest,
+    '4.1.12',
+  );
+  versionAtLeast(overrides['brace-expansion@>=4'], '5.0.12');
+  versionAtLeast(overrides['postcss-selector-parser'], '6.1.5');
+});
+
+test('OWASP Semgrep and npm audit fail the website CI', () => {
+  const semgrep = read('.github/workflows/semgrep.yml');
+  assert.match(semgrep, /image: semgrep\/semgrep/);
+  assert.match(semgrep, /scripts\/semgrep-scan\.sh/);
+  assert.doesNotMatch(semgrep, /SEMGREP_APP_TOKEN/);
+  assert.match(read('scripts/semgrep-scan.sh'), /p\/owasp-top-ten/);
+  assert.match(read('scripts/semgrep-scan.sh'), /--error/);
+  assert.match(read('.github/workflows/web.yml'), /scripts\/scan\.sh audit/);
+  assert.match(read('package.json'), /"scan": "bash scripts\/scan\.sh"/);
+  assert.match(read('Makefile'), /bash scripts\/scan\.sh/);
+  assert.match(read('.semgrepignore'), /node_modules\//);
+  assert.match(read('pnpm-workspace.yaml'), /minimumReleaseAge:\s*10080/);
+  assert.match(read('pnpm-workspace.yaml'), /trustPolicy:\s*no-downgrade/);
+  assert.match(read('pnpm-workspace.yaml'), /blockExoticSubdeps:\s*true/);
+});
+
 test('commit hooks and CI use the same pnpm workspace install', () => {
   const workflow = read('.github/workflows/commitlint.yml');
-  assert.match(workflow, /pnpm\/action-setup@v4/);
+  assert.match(workflow, /pnpm\/action-setup@[0-9a-f]{40}/);
   assert.match(workflow, /pnpm install --frozen-lockfile/);
   assert.doesNotMatch(workflow, /npm ci|cache: npm|npx /);
   assert.match(read('.husky/commit-msg'), /pnpm exec commitlint --edit "\$1"/);
