@@ -1,5 +1,35 @@
 import { test, expect } from '@playwright/test';
 
+async function overlapHeaderWith(page, selector) {
+  await page.evaluate((sel) => {
+    const target = document.querySelector(sel);
+    const header = document.querySelector('header');
+    if (!target || !header) return;
+    const targetBox = target.getBoundingClientRect();
+    const headerBox = header.getBoundingClientRect();
+    const top =
+      window.scrollY +
+      targetBox.top +
+      Math.min(160, targetBox.height * 0.35) -
+      (headerBox.top + headerBox.height / 2);
+    window.scrollTo({ top, left: 0, behavior: 'instant' });
+    window.dispatchEvent(new Event('scroll'));
+  }, selector);
+  await expect
+    .poll(() =>
+      page.evaluate((sel) => {
+        const target = document.querySelector(sel);
+        const header = document.querySelector('header');
+        if (!target || !header) return false;
+        const targetBox = target.getBoundingClientRect();
+        const headerBox = header.getBoundingClientRect();
+        const y = headerBox.top + headerBox.height / 2;
+        return y >= targetBox.top && y <= targetBox.bottom;
+      }, selector),
+    )
+    .toBe(true);
+}
+
 test('installation, screenshots, help and keyboard access work', async ({
   page,
   context,
@@ -11,6 +41,9 @@ test('installation, screenshots, help and keyboard access work', async ({
   await expect(page.getByRole('heading', { level: 1 })).toContainText('build');
   await expect(page.getByLabel('Standard installation commands')).toContainText(
     'scripts/bootstrap.sh',
+  );
+  await expect(page.getByLabel('Standard installation commands')).toHaveClass(
+    /whitespace-pre-wrap/,
   );
   await expect(
     page.getByRole('link', { name: 'Install Neovim 0.12+' }),
@@ -67,6 +100,16 @@ test('installation, screenshots, help and keyboard access work', async ({
   await page.screenshot({ path: 'test-results/screenshot-dialog.png' });
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.getByRole('button', { name: 'The layout', exact: true }).click();
+  await page
+    .getByRole('button', { name: 'Enlarge the layout screenshot' })
+    .click();
+  await expect(page.getByRole('dialog').locator('img')).toHaveAttribute(
+    'src',
+    '/assets/layout.png',
+  );
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.getByRole('button', { name: 'AI agents', exact: true }).click();
   await page
     .getByRole('button', { name: 'Enlarge ai agents screenshot' })
@@ -108,11 +151,74 @@ test('header logo turns black over the light install band', async ({
     .getByRole('banner')
     .getByRole('link', { name: 'nvim.setup home' })
     .locator('svg');
-  await expect(logo).toHaveClass(/text-zinc-100/);
-  await page.locator('#install').scrollIntoViewIfNeeded();
-  await expect(logo).toHaveClass(/text-zinc-950/);
+  await expect(logo).toHaveClass(/text-white/);
+  await overlapHeaderWith(page, '#install');
+  await expect(logo).toHaveClass(/text-black/);
   await page.evaluate(() => window.scrollTo(0, 0));
-  await expect(logo).toHaveClass(/text-zinc-100/);
+  await expect(logo).toHaveClass(/text-white/);
+});
+
+test('light mode keeps hero chrome, cards, and docs readable', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Light', exact: true }).click();
+  await expect(page.locator('html')).not.toHaveClass(/dark/);
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('build');
+  await expect(page.getByText(/The speed of Neovim/)).toBeVisible();
+  const subtitleFilter = await page
+    .locator('p')
+    .filter({ hasText: 'The speed of Neovim' })
+    .locator('span span')
+    .first()
+    .evaluate((el) => getComputedStyle(el).filter);
+  expect(subtitleFilter === 'none' || subtitleFilter === '').toBe(true);
+  const caret = page.locator('[data-hero-caret]');
+  await expect(caret).toBeVisible();
+  const caretBox = await caret.boundingBox();
+  expect(caretBox).toBeTruthy();
+  expect(caretBox.width).toBeLessThan(caretBox.height * 0.3);
+  await expect(page.getByRole('link', { name: /Make it yours/ })).toHaveClass(
+    /border-zinc-900/,
+  );
+  await expect(
+    page
+      .getByRole('navigation', { name: 'Main navigation' })
+      .getByRole('link', {
+        name: 'Workspace',
+      }),
+  ).toHaveClass(/text-black/);
+  const shell = page.locator('[data-nav-shell]');
+  await expect(shell).toHaveCount(1);
+  await expect(shell).not.toHaveClass(/border-white/);
+  await expect(shell).not.toHaveClass(/border-zinc-900/);
+  await expect(shell).not.toHaveAttribute('data-rim');
+  await expect(
+    page
+      .getByRole('button', { name: 'Enlarge workspace screenshot' })
+      .locator('xpath=ancestor::*[@data-rim][1]'),
+  ).toHaveAttribute('data-rim', 'dark');
+  await expect(
+    page.getByRole('heading', { name: 'Files, in a real tree.' }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(() => document.documentElement.scrollHeight),
+  ).toBeLessThan(9000);
+  await page.goto('/docs/getting-started');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+    'Get started',
+  );
+  await expect(
+    page
+      .getByRole('banner')
+      .getByRole('link', { name: 'nvim.setup home' })
+      .locator('svg'),
+  ).toHaveClass(/text-black/);
+  await page.screenshot({
+    path: 'test-results/docs-light.png',
+    fullPage: true,
+  });
 });
 
 test('light and dark switchers change the page theme and invert the install band', async ({
@@ -129,23 +235,58 @@ test('light and dark switchers change the page theme and invert the install band
   await light.click();
   await expect(light).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('html')).not.toHaveClass(/dark/);
-  await expect(logo).toHaveClass(/text-zinc-950/);
-  await expect(page.locator('#install')).toHaveAttribute(
-    'data-nav-contrast',
-    'dark',
-  );
+  await expect(logo).toHaveClass(/text-black/);
+  await expect(page.locator('#install')).toHaveClass(/bg-zinc-950/);
+  const shell = page.locator('[data-nav-shell]');
+  await expect(shell).not.toHaveClass(/border-white/);
+  await expect(shell).not.toHaveAttribute('data-rim');
   await page.evaluate(() => window.scrollTo(0, 0));
+  await expect(page.locator('#install h2')).toBeVisible();
+  expect(
+    await page.locator('#install h2').evaluate((node) => {
+      let opacity = 1;
+      let el = node;
+      while (el) {
+        opacity *= Number(getComputedStyle(el).opacity);
+        el = el.parentElement;
+      }
+      return opacity;
+    }),
+  ).toBeGreaterThan(0.9);
+  expect(
+    await page
+      .getByRole('heading', { name: 'Files, in a real tree.' })
+      .evaluate((node) => {
+        let opacity = 1;
+        let el = node;
+        while (el) {
+          opacity *= Number(getComputedStyle(el).opacity);
+          el = el.parentElement;
+        }
+        return opacity;
+      }),
+  ).toBeGreaterThan(0.9);
+  expect(
+    await page.evaluate(() => document.documentElement.scrollHeight),
+  ).toBeLessThan(9000);
+  await expect
+    .poll(() =>
+      page
+        .getByRole('button', { name: 'Enlarge workspace screenshot' })
+        .locator('img')
+        .evaluate((img) => img.naturalWidth),
+    )
+    .toBeGreaterThan(0);
   await page.screenshot({
     path: 'test-results/landing-light.png',
     fullPage: true,
   });
-  await page.locator('#install').scrollIntoViewIfNeeded();
-  await expect(logo).toHaveClass(/text-zinc-100/);
-  await expect(page.locator('header [data-rim]')).toHaveAttribute(
-    'data-rim',
-    'dark',
-  );
-  await expect(page.locator('header [data-rim]')).toHaveClass(/border-white/);
+  await overlapHeaderWith(page, '[aria-label="Enlarge workspace screenshot"]');
+  await expect(logo).toHaveClass(/text-white/);
+  await expect(shell).not.toHaveClass(/border-white/);
+  await overlapHeaderWith(page, '#install');
+  await expect(logo).toHaveClass(/text-white/);
+  await expect(shell).not.toHaveClass(/border-white/);
   await dark.click();
   await expect(page.locator('html')).toHaveClass(/dark/);
 });
@@ -173,13 +314,21 @@ test('mobile layout and reduced motion remain usable', async ({ page }) => {
 
 test('documentation sidebar lets visitors read guides and open GitHub', async ({
   page,
+  context,
 }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   const guide = await page.request.get('/guides/getting-started.md');
   expect(guide.ok()).toBeTruthy();
   expect(await guide.text()).toContain('# Get started');
   await page.goto('/docs');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(
     'Get started',
+  );
+  await expect(page.getByLabel('terminal code sample').first()).toBeVisible();
+  await page.getByRole('button', { name: 'Copy code' }).first().click();
+  await expect(page.getByText('Copied ✓').first()).toBeVisible();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain(
+    'scripts/bootstrap.sh',
   );
   await page
     .getByRole('navigation', { name: 'Documentation' })

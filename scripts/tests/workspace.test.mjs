@@ -32,6 +32,7 @@ test('Nx delegates the real setup checks without caching interactive e2e results
     'make test',
     'node --test scripts/tests/workspace.test.mjs',
     'bash scripts/tests/bootstrap.test.sh',
+    'bash scripts/tests/fonts.test.sh',
     'bash scripts/tests/scan.test.sh',
   ]);
   assert.equal(setup.targets.test.options.parallel, false);
@@ -62,7 +63,14 @@ test('marketing app is TypeScript with Tailwind and Prettier', () => {
     ),
     true,
   );
+  assert.equal(
+    existsSync(
+      new URL('../../apps/web/public/assets/layout.png', import.meta.url),
+    ),
+    true,
+  );
   assert.match(read('apps/web/src/content.ts'), /id: 'agents'/);
+  assert.match(read('apps/web/src/content.ts'), /id: 'layout'/);
 });
 
 test('bootstrap is a curl-pipeable installer that does not bundle markdown', () => {
@@ -85,6 +93,12 @@ test('bootstrap is a curl-pipeable installer that does not bundle markdown', () 
     ),
     true,
   );
+  assert.equal(
+    existsSync(new URL('../../scripts/tests/fonts.test.sh', import.meta.url)),
+    true,
+  );
+  assert.match(read('scripts/install.sh'), /scripts\/fonts\.sh/);
+  assert.match(bootstrap, /scripts\/fonts\.sh/);
 });
 
 test('docs reader loads static public guides instead of bundling markdown', () => {

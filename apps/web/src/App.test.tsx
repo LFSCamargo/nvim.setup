@@ -20,7 +20,17 @@ afterEach(() => {
 
 function markdownFor(url: string) {
   if (url.includes('editor.md')) return '# Neovim setup\n\nKeybindings.';
-  return '# Get started\n\nInstall the setup.';
+  return [
+    '# Get started',
+    '',
+    'Install the setup.',
+    '',
+    '```sh',
+    'curl -fsSL https://example.com/bootstrap.sh | bash',
+    'nvim .',
+    '```',
+    '',
+  ].join('\n');
 }
 
 function stubGuides() {
@@ -96,6 +106,20 @@ describe('landing page visitor paths', () => {
     expect(within(dialog).getByText('Source control')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Close screenshot' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    fireEvent.click(screen.getByRole('button', { name: 'The layout' }));
+    expect(
+      screen
+        .getByRole('button', { name: 'The layout' })
+        .getAttribute('aria-pressed'),
+    ).toBe('true');
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Enlarge the layout screenshot' }),
+    );
+    expect(
+      screen.getByRole('dialog').querySelector('img')?.getAttribute('src'),
+    ).toBe('/assets/layout.png');
+    fireEvent.click(screen.getByRole('button', { name: 'Close screenshot' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     fireEvent.click(screen.getByRole('button', { name: 'AI agents' }));
     expect(
       screen
@@ -130,6 +154,32 @@ describe('landing page visitor paths', () => {
     expect(document.documentElement.classList.contains('dark')).toBe(true);
   });
 
+  it('keeps light-mode hero chrome, screenshot rims, and inverted install contrast', () => {
+    renderApp();
+    fireEvent.click(screen.getByRole('button', { name: 'Light' }));
+    const caret = document.querySelector('[data-hero-caret]');
+    expect(caret).toBeTruthy();
+    expect(caret?.textContent).toBe('');
+    expect(
+      screen
+        .getByRole('button', { name: 'Enlarge workspace screenshot' })
+        .closest('[data-rim]')
+        ?.getAttribute('data-rim'),
+    ).toBe('dark');
+    expect(document.querySelector('[data-nav-shell]')).toBeTruthy();
+    expect(document.querySelector('header [data-rim]')).toBeNull();
+    expect(document.getElementById('install')?.className).toMatch(
+      /bg-zinc-950/,
+    );
+    expect(
+      screen.getByRole('link', { name: /Make it yours/ }).className,
+    ).toMatch(/border-zinc-900/);
+    const glow = document.querySelector(
+      '.glowing-effect',
+    ) as HTMLElement | null;
+    expect(glow?.style.getPropertyValue('--gradient')).toContain('#18181b');
+  });
+
   it('sets the workspace caption as a centered editorial line', () => {
     renderApp();
     expect(
@@ -158,10 +208,11 @@ describe('landing page visitor paths', () => {
       name: 'nvim.setup home',
     });
     expect(home.querySelector('svg')?.getAttribute('class')).toContain(
-      'text-zinc-100',
+      'text-white',
     );
     const install = document.getElementById('install');
     expect(install).toBeTruthy();
+    install!.style.backgroundColor = 'rgb(244, 244, 245)';
     header!.getBoundingClientRect = () =>
       ({
         top: 16,
@@ -194,7 +245,7 @@ describe('landing page visitor paths', () => {
       fireEvent.scroll(window);
       await waitFor(() =>
         expect(home.querySelector('svg')?.getAttribute('class')).toContain(
-          'text-zinc-950',
+          'text-black',
         ),
       );
     } finally {
@@ -281,6 +332,27 @@ describe('documentation reader', () => {
     expect(
       screen.getByRole('navigation', { name: 'Documentation' }),
     ).toBeTruthy();
+  });
+
+  it('lets visitors copy a documentation code sample', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText },
+      configurable: true,
+    });
+    stubGuides();
+    renderApp('/docs');
+    await screen.findByRole('heading', { level: 1, name: 'Get started' });
+    expect(screen.getByLabelText('terminal code sample').textContent).toContain(
+      'bootstrap.sh',
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Copy code' }));
+    await waitFor(() =>
+      expect(writeText).toHaveBeenCalledWith(
+        'curl -fsSL https://example.com/bootstrap.sh | bash\nnvim .',
+      ),
+    );
+    expect(await screen.findByText('Copied ✓')).toBeTruthy();
   });
 
   it('switches sidebar pages and keeps a GitHub destination for the editor guide', async () => {
