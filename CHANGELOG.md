@@ -9,6 +9,8 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ## [Unreleased]
 
+## [1.0.0-beta] - 2026-10-30
+
 ### Features
 
 - **web:** publish titles, Open Graph tags, and a sitemap ([e83f390](https://github.com/LFSCamargo/nvim.setup/commit/e83f390e663862bc54c10f9bb7a30a1672080e35))
@@ -87,4 +89,5 @@ Scopes are optional. Commits from before that convention are listed under Other.
 - Let clicking a chat pane enter terminal input and add a simulated UI e2e check. ([12dce18](https://github.com/LFSCamargo/nvim.setup/commit/12dce188d82256d71d64432a354c01115fec7243))
 - Package Neovim setup with portable install and maintenance scripts ([4a3edaa](https://github.com/LFSCamargo/nvim.setup/commit/4a3edaabc8c887c475080a22263e0a66af1a05f9))
 
-[Unreleased]: https://github.com/LFSCamargo/nvim.setup/commits/HEAD
+[Unreleased]: https://github.com/LFSCamargo/nvim.setup/compare/v1.0.0-beta...HEAD
+[1.0.0-beta]: https://github.com/LFSCamargo/nvim.setup/releases/tag/v1.0.0-beta
