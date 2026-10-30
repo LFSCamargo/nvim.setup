@@ -69,6 +69,7 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### CI
 
+- keep lint, build, and Semgrep only ([9c25dba](https://github.com/LFSCamargo/nvim.setup/commit/9c25dba6a3d396e0a4d647d0e6613c0f5b5047f8))
 - **security:** run Semgrep CE and pin Actions to SHAs ([eda78b0](https://github.com/LFSCamargo/nvim.setup/commit/eda78b05a0481f9911641268fa16c885d7172b09))
 - **web:** run website typecheck, tests, and Playwright in Actions ([e31a009](https://github.com/LFSCamargo/nvim.setup/commit/e31a009b94184ddad2b6295c17c7926816a226e5))
 
