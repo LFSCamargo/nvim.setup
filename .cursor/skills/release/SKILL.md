@@ -48,9 +48,10 @@ Run from the repository root. Do not skip hooks.
 
    ```sh
    git add VERSION
-   git commit -m "$(cat <<'EOF'
+   git commit -m "$(
+     cat << 'EOF'
    chore(release): v1.2.3
-
+   
    EOF
    )"
    ```
@@ -85,9 +86,10 @@ Run from the repository root. Do not skip hooks.
 9. Publish GitHub. Add `--prerelease` when the version contains `-`:
 
    ```sh
-   gh release create v1.2.3 --title "v1.2.3" --notes "$(cat <<'EOF'
+   gh release create v1.2.3 --title "v1.2.3" --notes "$(
+     cat << 'EOF'
    See CHANGELOG.md for commits in this version.
-
+   
    EOF
    )"
    ```

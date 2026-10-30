@@ -34,7 +34,7 @@ fetch_verified() {
 install_symbols() {
   local dir="$1" cache="$2" zip="$cache/NerdFontsSymbolsOnly.zip"
   fetch_verified "$SYMBOLS_URL" "$SYMBOLS_SHA" "$zip"
-  python3 - "$zip" "$dir" <<'PY'
+  python3 - "$zip" "$dir" << 'PY'
 import sys
 from pathlib import Path
 from zipfile import ZipFile
@@ -55,7 +55,7 @@ PY
 }
 
 is_sfnt() {
-  python3 - "$1" <<'PY'
+  python3 - "$1" << 'PY'
 import sys
 from pathlib import Path
 magic = Path(sys.argv[1]).read_bytes()[:4]
@@ -66,11 +66,11 @@ PY
 ensure_fonttools() {
   local dest="$STATE_DIR/python"
   export PYTHONPATH="$dest${PYTHONPATH:+:$PYTHONPATH}"
-  python3 -c 'import fontTools' 2>/dev/null && return 0
+  python3 -c 'import fontTools' 2> /dev/null && return 0
   mkdir -p -- "$dest"
   python3 -m pip install --quiet --disable-pip-version-check --target "$dest" 'fonttools==4.60.2' \
     || die 'python3 -m pip is required to bake icon glyphs into the terminal font'
-  python3 -c 'import fontTools' 2>/dev/null || die 'fonttools installed but could not be imported'
+  python3 -c 'import fontTools' 2> /dev/null || die 'fonttools installed but could not be imported'
 }
 
 install_monocraft_nerd() {
@@ -82,7 +82,7 @@ install_monocraft_nerd() {
     ensure_fonttools
     if ! python3 "$SETUP_ROOT/scripts/overlay_fonts.py" \
       "$ttc" "$dir/SymbolsNerdFontMono-Regular.ttf" "$out" \
-      2>"$cache/overlay.err"; then
+      2> "$cache/overlay.err"; then
       cat -- "$cache/overlay.err" >&2
       die 'Failed to bake Nerd Font glyphs into Monocraft Nerd Font'
     fi
@@ -97,7 +97,7 @@ replace_exact_line() {
   local file="$1" from="$2" to="$3" tmp
   grep -Fqx -- "$from" "$file" || return 0
   tmp="$(mktemp "${TMPDIR:-/tmp}/nvim-setup-font.XXXXXX")"
-  awk -v from="$from" -v to="$to" '{ if ($0 == from) print to; else print }' "$file" >"$tmp"
+  awk -v from="$from" -v to="$to" '{ if ($0 == from) print to; else print }' "$file" > "$tmp"
   mv -- "$tmp" "$file"
 }
 
@@ -117,7 +117,7 @@ append_once() {
   {
     [[ -f "$file" && -s "$file" ]] && printf '\n'
     printf '%s\n' "$marker" "$@"
-  } >>"$file"
+  } >> "$file"
 }
 
 configure_kitty() {
@@ -138,7 +138,7 @@ configure_fontconfig() {
   local file="$1"
   [[ "$(uname -s)" == Linux ]] || return 0
   mkdir -p -- "$(dirname -- "$file")"
-  cat >"$file" <<'EOF'
+  cat > "$file" << 'EOF'
 <?xml version="1.0"?>
 <!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
 <fontconfig>
@@ -158,8 +158,8 @@ mkdir -p -- "$dir" "$cache"
 say "Installing icon fonts to $dir"
 install_symbols "$dir" "$cache"
 install_monocraft_nerd "$dir" "$cache"
-if command -v fc-cache >/dev/null 2>&1; then
-  fc-cache -f "$dir" >/dev/null 2>&1 || true
+if command -v fc-cache > /dev/null 2>&1; then
+  fc-cache -f "$dir" > /dev/null 2>&1 || true
 fi
 
 configure_warp "$HOME/.warp/settings.toml"

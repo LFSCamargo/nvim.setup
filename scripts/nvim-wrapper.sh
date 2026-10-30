@@ -9,7 +9,7 @@ path_without_self() {
   local IFS=':'
   for dir in $PATH; do
     [[ -z "$dir" ]] && continue
-    resolved="$(cd -- "$dir" 2>/dev/null && pwd -P || true)"
+    resolved="$(cd -- "$dir" 2> /dev/null && pwd -P || true)"
     [[ "$resolved" == "$self_dir" ]] && continue
     out="${out:+$out:}$dir"
   done
@@ -40,7 +40,7 @@ for arg in "$@"; do
   fi
 done
 
-if (( has_clean )); then
+if ((has_clean)); then
   if [[ -f "$config_dir/init.lua" ]]; then
     export NVIM_CLEAN=1
     # Empty "${array[@]}" is unbound under `set -u`.

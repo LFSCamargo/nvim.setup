@@ -57,7 +57,8 @@ Skip empty groups. Do not commit `node_modules/`, `dist/`, `.nx/`, secrets.
 Stage only that group’s paths, then:
 
 ```sh
-git commit -m "$(cat <<'EOF'
+git commit -m "$(
+  cat << 'EOF'
 type(scope): imperative subject
 
 Why this part exists, wrapped at 100 characters.
@@ -82,7 +83,8 @@ If `CHANGELOG.md` changed:
 
 ```sh
 git add CHANGELOG.md
-git commit -m "$(cat <<'EOF'
+git commit -m "$(
+  cat << 'EOF'
 chore(changelog): regenerate from commits
 EOF
 )"

@@ -9,10 +9,13 @@ BRANCH="${NVIM_SETUP_BRANCH:-main}"
 DEST="${NVIM_SETUP_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/nvim.setup}"
 
 say() { printf '\n%s\n' "$*"; }
-die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
+die() {
+  printf 'ERROR: %s\n' "$*" >&2
+  exit 1
+}
 
 usage() {
-  cat <<'EOF'
+  cat << 'EOF'
 Install nvim.setup: fetch the repo, install Neovim and other dependencies,
 install icon fonts, then deploy the config.
 
@@ -35,7 +38,7 @@ Environment:
 EOF
 }
 
-have() { command -v "$1" >/dev/null 2>&1; }
+have() { command -v "$1" > /dev/null 2>&1; }
 
 export PATH="$HOME/.local/bin:$HOME/.local/opt/nvim/bin:$HOME/.local/opt/node/bin:$HOME/.cargo/bin:${PATH-}"
 
@@ -161,7 +164,7 @@ ensure_login_path() {
   line='export PATH="$HOME/.local/bin:$HOME/.local/opt/nvim/bin:$HOME/.local/opt/node/bin:$HOME/.cargo/bin:$PATH"'
   marker='# nvim.setup PATH'
   for rc in "$HOME/.zprofile" "$HOME/.zshrc" "$HOME/.bash_profile" "$HOME/.bashrc" "$HOME/.profile"; do
-    if [[ -f "$rc" ]] && grep -F "$marker" "$rc" >/dev/null 2>&1; then
+    if [[ -f "$rc" ]] && grep -F "$marker" "$rc" > /dev/null 2>&1; then
       return 0
     fi
   done
@@ -171,7 +174,7 @@ ensure_login_path() {
   elif [[ -f "$HOME/.bashrc" ]]; then
     rc="$HOME/.bashrc"
   fi
-  printf '\n%s\n%s\n' "$marker" "$line" >>"$rc"
+  printf '\n%s\n%s\n' "$marker" "$line" >> "$rc"
   say "Added PATH to $rc. Open a new terminal if nvim is not found."
 }
 

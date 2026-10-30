@@ -7,6 +7,7 @@ package.loaded['nvim-web-devicons'] = {
     return icons[ext or ''] or 'F', 'DevIconTest'
   end,
 }
+vim.api.nvim_set_hl(0, 'DevIconTest', { fg = 0x83a598 })
 -- nvim-tree indexes renderer.icons.web_devicons.folder.enable on every Files draw.
 package.loaded['nvim-tree.config'] = {
   g = {
@@ -16,7 +17,7 @@ package.loaded['nvim-tree.config'] = {
         padding = { icon = ' ', folder_arrow = ' ' },
         web_devicons = {
           file = { enable = true, color = true },
-          folder = { enable = false, color = true },
+          folder = { enable = false, color = false },
         },
         glyphs = {
           default = 'F',
@@ -46,6 +47,7 @@ package.loaded['nvim-tree.api'] = {
   },
 }
 require('config.appearance')
+require('config.statusline')
 require('config.session')
 require('config.keys')
 local editor = vim.api.nvim_get_current_win()

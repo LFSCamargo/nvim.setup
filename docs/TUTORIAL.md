@@ -43,17 +43,20 @@ pnpm install
 
 Stay in one area so the review stays small.
 
-| You want to change                         | Start here                                        | Also update                                      |
-| ------------------------------------------ | ------------------------------------------------- | ------------------------------------------------ |
-| A keymap, click, or user command           | `nvim/lua/config/keys.lua` (or the owning module) | `docs/EDITOR.md`, often README                   |
-| Chat CLIs, Git sidebar, tabs, session, LSP | The matching `nvim/lua/config/*.lua` file         | `docs/PLUGINS.md` if the module list changed     |
-| Install / bootstrap / fonts                | `scripts/`                                        | `docs/PLUGINS.md` if a tool changed              |
-| Landing page or `/docs` reader             | `apps/web/`                                       | `docs/E2E-TESTPLAN.md` if you add a browser case |
-| Docs only                                  | `docs/`, `README.md`, `CONTRIBUTING.md`           | Keep the other docs from going stale             |
+| You want to change                         | Start here                                        | Also update                                                  |
+| ------------------------------------------ | ------------------------------------------------- | ------------------------------------------------------------ |
+| A keymap, click, or user command           | `nvim/lua/config/keys.lua` (or the owning module) | `docs/EDITOR.md`, often README                               |
+| Chat CLIs, Git sidebar, tabs, session, LSP | The matching `nvim/lua/config/*.lua` file         | `docs/PLUGINS.md` if the module list changed                 |
+| Install / bootstrap / fonts                | `scripts/`                                        | `docs/PLUGINS.md` if a tool changed                          |
+| Landing page or `/docs` reader             | `apps/web/`                                       | `docs/E2E-TESTPLAN.md` if you add a browser case             |
+| Docs only                                  | `docs/`, `README.md`, `CONTRIBUTING.md`           | Keep the other docs from going stale                         |
+| Agent skills                               | `.cursor/skills/<name>/SKILL.md`                  | Copy the same file to `.claude/skills/` and `.codex/skills/` |
 
 Do not add a new `nvim/lua/config/` module without listing it in
 `docs/PLUGINS.md`, `AGENTS.md`, `CLAUDE.md`, and
-`.cursor/rules/changing-files.mdc`. Do not grow `nvim/init.lua`.
+`.cursor/rules/changing-files.mdc`. Do not grow `nvim/init.lua`. Project
+skills must stay identical under `.cursor/skills/`, `.claude/skills/`, and
+`.codex/skills/`.
 
 ## 4. Write the test first (runtime changes)
 
@@ -116,7 +119,7 @@ Website:
 ```sh
 pnpm --filter web test
 pnpm format:check
-pnpm test:web:e2e          # Playwright; optional in CI, run it for UI work
+pnpm test:web:e2e # Playwright; optional in CI, run it for UI work
 ```
 
 Security when you touched installers, `vim.cmd`, or npm:
@@ -131,7 +134,8 @@ Fix anything that fails before you open the pull request.
 
 ```sh
 git add path/to/changed/files
-git commit -m "$(cat <<'EOF'
+git commit -m "$(
+  cat << 'EOF'
 feat(keys): add a clearer example subject
 
 Why the change exists, wrapped at 100 characters.
@@ -144,7 +148,8 @@ If `CHANGELOG.md` changed:
 
 ```sh
 git add CHANGELOG.md
-git commit -m "$(cat <<'EOF'
+git commit -m "$(
+  cat << 'EOF'
 chore(changelog): regenerate from commits
 EOF
 )"

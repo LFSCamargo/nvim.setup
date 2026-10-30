@@ -5,11 +5,11 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "dev": "vite --host 127.0.0.1",
     "build": "vite build",
+    "dev": "vite --host 127.0.0.1",
     "preview": "vite preview --host 127.0.0.1",
-    "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "tsc --noEmit -p tsconfig.json && vitest run"
+    "test": "tsc --noEmit -p tsconfig.json && vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "clsx": "^2.1.1",

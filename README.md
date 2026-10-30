@@ -6,7 +6,7 @@ Codex, Cursor Agent, Gemini, Claude, and OpenCode run as real CLI sessions next 
 
 ```text
 ┌──────────────┬────────────────────────────────┬─────────────────┐
-│ Files        │  main.ts   utils.ts   +   ×    │ Codex 1  Agent 2│
+│ Files│Git│Set│  main.ts │ utils.ts │ + │ ×    │ Codex 1 │ Agent 2│
 │              ├────────────────────────────────┼─────────────────┤
 │ src/         │                                │                 │
 │   main.ts    │           Editor               │    CLI chat     │
@@ -25,7 +25,7 @@ Want to change it? [Contributing](CONTRIBUTING.md) is the contract;
 
 ## Features
 
-- Clickable file tree, editor tabs, and chat tabs
+- Clickable file tree, Settings tab (icons, live reload), editor tabs, and chat tabs
 - File-type Devicons in the Files tree and Git sidebar. Install puts Nerd Font files on the system and, in Warp, uses a Monocraft face with those glyphs at one cell.
 - Per-project session restore for editor tabs, unsaved buffers, and AI chats (UUID resume)
 - `nvim --clean` for a blank editor that does not restore or overwrite the last session
@@ -84,12 +84,12 @@ Install and authenticate the chat CLIs separately: [Codex](https://github.com/op
 
 ## Using the editor
 
-Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to insert, `Esc` for normal mode, and Ctrl+Q to quit (unsaved tabs come back next time). Swap files are off; the project session is what restores unsaved tabs. `nvim --clean` skips restored tabs and chats. The leader key is **Space**; press leader shortcuts as a sequence in normal mode.
+Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to insert, `Esc` for normal mode, and Ctrl+Q to quit (unsaved tabs come back next time). Swap files are off; the project session is what restores unsaved tabs. `nvim --clean` skips restored tabs and chats. The leader key is **Space**; press leader shortcuts as a sequence in normal mode. The bottom bar is one muted Gruvbox strip for the whole UI: colored mode, git branch and hunks, the focused file or chat, diagnostics, and cursor position.
 
 | Shortcut or click                 | Action                                                                                         |
 | --------------------------------- | ---------------------------------------------------------------------------------------------- |
 | Click a pane                      | Focus the editor, file tree, or chat                                                           |
-| Click a tab, `+`, or `×`          | Switch, add, or close a file or chat tab                                                       |
+| Click a tab, its `×`, or `+`      | Switch, close that tab, or add a file or chat tab                                              |
 | `‹` / `›`                         | Scroll overflowing tabs                                                                        |
 | Ctrl+S                            | Save (asks for a name if the buffer is unnamed)                                                |
 | Ctrl+Q                            | Quit and persist this project's tabs and chats                                                 |
@@ -97,6 +97,7 @@ Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to i
 | Ctrl+]                            | Start a new Codex, Cursor Agent, Gemini, Claude, or OpenCode session                           |
 | Ctrl+B                            | Toggle the file tree                                                                           |
 | Ctrl+G                            | Open Git source control (commit, stage, unstage, revert, bottom commit log; keyboard or mouse) |
+| Ctrl+, / `:SetupSettings`         | Open Settings (file icons, live reload)                                                        |
 | Ctrl+P / Ctrl+F                   | Find files / search project text (opens a new editor tab)                                      |
 | Esc                               | Send Escape to the focused agent (stop generation, for example)                                |
 | Ctrl+\ Ctrl+N                     | Leave terminal-input mode (`Esc Esc` also works in other terminals)                            |
@@ -118,10 +119,12 @@ Mason installs the language servers and debug adapters. Format with **Space f** 
 | ------------------------------------- | ------------------------------------------------------------------- |
 | TypeScript / JavaScript / React / Vue | vtsls, vue_ls, prettierd                                            |
 | Svelte                                | svelte-language-server, prettierd (needs project Prettier + plugin) |
+| Lua                                   | lua-language-server, StyLua                                         |
+| Shell                                 | shfmt                                                               |
 | Rust                                  | rust-analyzer (Clippy), rustfmt, CodeLLDB                           |
 | Go                                    | gopls, gofmt, Delve                                                 |
 | Solidity                              | Nomic Foundation language server                                    |
-| Web / config                          | HTML, CSS, Tailwind, ESLint, JSON, YAML, TOML (Taplo), Lua          |
+| Web / config                          | HTML, CSS, Markdown, Tailwind, ESLint, JSON, YAML, TOML (Taplo)     |
 | Debug                                 | Node launch/attach, Chrome attach, Delve, CodeLLDB                  |
 
 Install project dependencies as usual (`@types/*`, a `tsconfig.json`, ESLint/Tailwind/Prettier config). Custom debug configs can live in `.vscode/launch.json`; load them with `:DebugLoadLaunch`.
@@ -178,9 +181,9 @@ Use `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `
 
 After each commit, run `make changelog`. If `CHANGELOG.md` changed, commit it as `chore(changelog): regenerate from commits` before pushing. A `pre-push` hook and CI fail when the file is stale. Regeneration commits are omitted from the changelog so that extra commit does not loop.
 
-`make changelog` lints the full history with those rules and rewrites [CHANGELOG.md](CHANGELOG.md). Conventional commits are grouped by type; older messages without a type go under Other. Tagged `vX.Y.Z` or `vX.Y.Z-beta` releases become dated sections; untagged commits stay under Unreleased. Agents fold Unreleased into a version with `.cursor/skills/release/SKILL.md`.
+`make changelog` lints the full history with those rules and rewrites [CHANGELOG.md](CHANGELOG.md). Conventional commits are grouped by type; older messages without a type go under Other. Tagged `vX.Y.Z` or `vX.Y.Z-beta` releases become dated sections; untagged commits stay under Unreleased. Agents fold Unreleased into a version with the `release` skill.
 
-Cursor, Claude Code, and Codex follow [AGENTS.md](AGENTS.md). After code changes they write tests, check for spaghetti, run `make test`, review for vulnerabilities, and keep `docs/` in sync. Claude Code also reads [CLAUDE.md](CLAUDE.md); Cursor also loads `.cursor/rules/`. If you ask to commit separately, they follow `.cursor/skills/commit-separately/SKILL.md`. If you ask to release or bump the version, they follow `.cursor/skills/release/SKILL.md`. Humans follow [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/TUTORIAL.md](docs/TUTORIAL.md).
+Cursor, Claude Code, and Codex follow [AGENTS.md](AGENTS.md). After code changes they write tests, check for spaghetti, run `make test`, review for vulnerabilities, and keep `docs/` in sync. Claude Code also reads [CLAUDE.md](CLAUDE.md); Cursor also loads `.cursor/rules/`. Project skills (`commit-separately`, `release`) are identical copies under `.cursor/skills/`, `.claude/skills/`, and `.codex/skills/`. If you ask to commit separately, they follow `commit-separately`. If you ask to release or bump the version, they follow `release`. Humans follow [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/TUTORIAL.md](docs/TUTORIAL.md).
 
 ## Backups and recovery
 
@@ -198,24 +201,25 @@ If a download fails, the new config stays installed and the backup is kept. Fix 
 
 ## Repository layout
 
-| Path                      | Contents                                                            |
-| ------------------------- | ------------------------------------------------------------------- |
-| `nvim/`                   | Deployable config, plugin lockfile, and tool installers             |
-| `.luarc.json`             | lua-language-server settings so `vim` is a known global             |
-| `scripts/`                | Install, update, capture, and validation                            |
-| `docs/EDITOR.md`          | Keybindings, language, chat, and debug reference                    |
-| `docs/PLUGINS.md`         | First-party modules, Lazy plugins, Mason tools, parsers             |
-| `docs/E2E-TESTPLAN.md`    | What `make e2e` covers and how to extend it                         |
-| `docs/TUTORIAL.md`        | First-change walkthrough from clone to pull request                 |
-| `docs/VALIDATION.md`      | What the packaging checks cover                                     |
-| `CONTRIBUTING.md`         | How to test, commit, and open a pull request                        |
-| `LICENSE`                 | MIT License                                                         |
-| `Makefile` / `VERSION`    | Maintenance commands and the setup release version                  |
-| `scripts/scan.sh`         | Semgrep OWASP SAST and moderate-or-higher npm audit                 |
-| `commitlint.config.mjs`   | Conventional Commits rules for `git commit`                         |
-| `CHANGELOG.md`            | Generated history from validated commits                            |
-| `AGENTS.md` / `CLAUDE.md` | Shared instructions for Cursor, Claude Code, and Codex              |
-| `.cursor/rules/`          | Cursor agent rules for tests, E2E, changelog commits, and docs sync |
+| Path                                                   | Contents                                                            |
+| ------------------------------------------------------ | ------------------------------------------------------------------- |
+| `nvim/`                                                | Deployable config, plugin lockfile, and tool installers             |
+| `.luarc.json`                                          | lua-language-server settings so `vim` is a known global             |
+| `scripts/`                                             | Install, update, capture, and validation                            |
+| `docs/EDITOR.md`                                       | Keybindings, language, chat, and debug reference                    |
+| `docs/PLUGINS.md`                                      | First-party modules, Lazy plugins, Mason tools, parsers             |
+| `docs/E2E-TESTPLAN.md`                                 | What `make e2e` covers and how to extend it                         |
+| `docs/TUTORIAL.md`                                     | First-change walkthrough from clone to pull request                 |
+| `docs/VALIDATION.md`                                   | What the packaging checks cover                                     |
+| `CONTRIBUTING.md`                                      | How to test, commit, and open a pull request                        |
+| `LICENSE`                                              | MIT License                                                         |
+| `Makefile` / `VERSION`                                 | Maintenance commands and the setup release version                  |
+| `scripts/scan.sh`                                      | Semgrep OWASP SAST and moderate-or-higher npm audit                 |
+| `commitlint.config.mjs`                                | Conventional Commits rules for `git commit`                         |
+| `CHANGELOG.md`                                         | Generated history from validated commits                            |
+| `AGENTS.md` / `CLAUDE.md`                              | Shared instructions for Cursor, Claude Code, and Codex              |
+| `.cursor/skills/`, `.claude/skills/`, `.codex/skills/` | Identical `commit-separately` and `release` skills for each agent   |
+| `.cursor/rules/`                                       | Cursor agent rules for tests, E2E, changelog commits, and docs sync |
 
 Validation checks startup, mappings, plugin modules, Mason packages, syntax parsers, highlighting, and transparency. Headless maintenance does not start chats. It does not verify CLI login, project dependencies, or every language-server operation.
 
@@ -223,16 +227,16 @@ If something looks off after install, start with `:checkhealth`, `:LspInfo`, `:M
 
 ## Website workspace
 
-The marketing site lives in `apps/web` as a TypeScript React/Vite app with Tailwind CSS v4. Guides on `/docs` are static markdown under `apps/web/public/guides/`. Each public route sets a unique title, description, canonical, and Open Graph tags; `robots.txt` and `sitemap.xml` list those routes and hide the raw markdown copies. Refreshing a `/docs` URL still serves the app (`404.html` plus `_redirects`). Prettier (with the Tailwind class-sorting plugin) formats the website and related Node files. Nx runs tasks across the pnpm workspace; the existing Makefile remains the entry point for installing and maintaining Neovim. Node.js 22.12+ and pnpm 10.34.9 are needed to develop the website. npm is still required by the Neovim installer for Mason's Node-based tools.
+The marketing site lives in `apps/web` as a TypeScript React/Vite app with Tailwind CSS v4. Guides on `/docs` are static markdown under `apps/web/public/guides/`. Each public route sets a unique title, description, canonical, and Open Graph tags; `robots.txt` and `sitemap.xml` list those routes and hide the raw markdown copies. Refreshing a `/docs` URL still serves the app (`404.html` plus `_redirects`). Prettier (with package.json sorting, shell, and Tailwind class-sorting plugins) formats the website, Node files, and shell scripts. StyLua formats Lua. Nx runs tasks across the pnpm workspace; the existing Makefile remains the entry point for installing and maintaining Neovim. Node.js 22.12+ and pnpm 10.34.9 are needed to develop the website. npm is still required by the Neovim installer for Mason's Node-based tools.
 
 ```sh
 pnpm install
-pnpm dev                  # Nx → web development server
-pnpm build                # Nx → production site in apps/web/dist
-pnpm format               # Prettier + Tailwind class order
-pnpm test:setup           # Nx → make test and workspace checks
-pnpm test:web:e2e         # browser checks for the landing page
-pnpm scan                 # Semgrep OWASP SAST + moderate-or-higher npm audit
+pnpm dev          # Nx → web development server
+pnpm build        # Nx → production site in apps/web/dist
+pnpm format       # Prettier (JS/CSS/shell/package.json) + StyLua (Lua)
+pnpm test:setup   # Nx → make test and workspace checks
+pnpm test:web:e2e # browser checks for the landing page
+pnpm scan         # Semgrep OWASP SAST + moderate-or-higher npm audit
 ```
 
 `pnpm exec nx show projects` lists the projects. `pnpm exec nx run setup:check` and `pnpm exec nx run setup:e2e` run the existing shell/Lua and simulated Neovim UI checks. Setup tests are never served from Nx's cache. CI and Git hooks use pnpm; do not regenerate an npm lockfile.

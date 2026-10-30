@@ -8,7 +8,7 @@ alwaysApply: true
 Do not finish a code, script, or test change until all five are done:
 
 1. **Write tests** in `scripts/tests/`. Extend `e2e.lua` (and `e2e-init.lua` if startup changed) so the new behavior fails without the patch. Every bug fix needs a regression that reproduces the failure; see `.cursor/rules/regression-tests.mdc`.
-2. **Check spaghetti.** Keep `nvim/lua/config/*.lua` single-purpose (`agents`, `session`, `sidebar`, `keys`, `tabs`, `lsp`, `dap`, `appearance`, `startup`, `icons`). Do not grow `nvim/init.lua`. Extract helpers instead of copy-paste. Shell lives in `scripts/` and uses `scripts/common.sh`.
+2. **Check spaghetti.** Keep `nvim/lua/config/*.lua` single-purpose (`agents`, `session`, `sidebar`, `keys`, `tabs`, `lsp`, `dap`, `appearance`, `statusline`, `startup`, `icons`, `format`, `settings`). Do not grow `nvim/init.lua`. Extract helpers instead of copy-paste. Shell lives in `scripts/` and uses `scripts/common.sh`.
 3. **Run E2E.** `make check` and `make e2e` (or `make test`) must pass.
 4. **Check vulnerabilities.** No unsanitized shell, `vim.cmd` without `fnameescape`, `jobstart` via a shell string, path traversal, or secret leakage. Quote bash variables. Prefer argv arrays.
 5. **Keep docs in sync.** Keys → `docs/EDITOR.md`. Modules/plugins/tools → `docs/PLUGINS.md`. E2E cases → `docs/E2E-TESTPLAN.md`. See `.cursor/rules/docs.mdc`.

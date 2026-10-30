@@ -32,10 +32,16 @@ vim.g.loaded_netrwPlugin = 1
 local lazy = vim.fn.stdpath('data') .. '/lazy/lazy.nvim'
 if not vim.uv.fs_stat(lazy) then
   local out = vim.fn.system({
-    'git', 'clone', '--filter=blob:none', '--branch=stable',
-    'https://github.com/folke/lazy.nvim.git', lazy,
+    'git',
+    'clone',
+    '--filter=blob:none',
+    '--branch=stable',
+    'https://github.com/folke/lazy.nvim.git',
+    lazy,
   })
-  if vim.v.shell_error ~= 0 then error(out) end
+  if vim.v.shell_error ~= 0 then
+    error(out)
+  end
 end
 vim.opt.rtp:prepend(lazy)
 
@@ -56,12 +62,7 @@ require('lazy').setup({
     'nvim-tree/nvim-tree.lua',
     dependencies = { 'nvim-tree/nvim-web-devicons' },
     config = function()
-      require('config.icons')
-      require('nvim-tree').setup({
-        view = { width = function() return require('config.sidebar').width() end },
-        renderer = { icons = require('config.icons').tree_icons() },
-        update_focused_file = { enable = true },
-      })
+      require('nvim-tree').setup(require('config.sidebar').tree_setup())
     end,
   },
   {
@@ -87,7 +88,9 @@ require('lazy').setup({
     config = function()
       vim.cmd('syntax enable')
       vim.api.nvim_create_autocmd('FileType', {
-        callback = function(ev) pcall(vim.treesitter.start, ev.buf) end,
+        callback = function(ev)
+          pcall(vim.treesitter.start, ev.buf)
+        end,
       })
     end,
   },
@@ -95,7 +98,9 @@ require('lazy').setup({
   {
     'neovim/nvim-lspconfig',
     dependencies = { 'mason-org/mason.nvim', 'hrsh7th/cmp-nvim-lsp' },
-    config = function() require('config.lsp') end,
+    config = function()
+      require('config.lsp')
+    end,
   },
   {
     'hrsh7th/nvim-cmp',
@@ -103,7 +108,11 @@ require('lazy').setup({
     config = function()
       local cmp = require('cmp')
       cmp.setup({
-        snippet = { expand = function(args) vim.snippet.expand(args.body) end },
+        snippet = {
+          expand = function(args)
+            vim.snippet.expand(args.body)
+          end,
+        },
         mapping = cmp.mapping.preset.insert({
           ['<C-Space>'] = cmp.mapping.complete(),
           ['<CR>'] = cmp.mapping.confirm({ select = false }),
@@ -116,7 +125,11 @@ require('lazy').setup({
               vim.snippet.jump(1)
             else
               local before = vim.api.nvim_get_current_line():sub(1, vim.api.nvim_win_get_cursor(0)[2])
-              if before:match('%S$') then cmp.complete() else fallback() end
+              if before:match('%S$') then
+                cmp.complete()
+              else
+                fallback()
+              end
             end
           end, { 'i', 's' }),
           ['<S-Tab>'] = cmp.mapping(function(fallback)
@@ -138,26 +151,16 @@ require('lazy').setup({
   },
   {
     'stevearc/conform.nvim',
-    opts = {
-      formatters_by_ft = {
-        javascript = { 'prettierd' },
-        typescript = { 'prettierd' },
-        javascriptreact = { 'prettierd' },
-        typescriptreact = { 'prettierd' },
-        vue = { 'prettierd' },
-        svelte = { 'prettierd' },
-        json = { 'prettierd' },
-        yaml = { 'prettierd' },
-        toml = { 'taplo' },
-        rust = { 'rustfmt' },
-        go = { 'gofmt' },
-      },
-    },
+    opts = function()
+      return require('config.format')
+    end,
   },
   {
     'mfussenegger/nvim-dap',
     dependencies = { 'rcarriga/nvim-dap-ui', 'nvim-neotest/nvim-nio', 'leoluz/nvim-dap-go' },
-    config = function() require('config.dap') end,
+    config = function()
+      require('config.dap')
+    end,
   },
 }, {
   rocks = { enabled = false },
@@ -169,4 +172,5 @@ require('config.agents')
 require('config.session')
 require('config.keys')
 require('config.appearance')
+require('config.statusline')
 require('config.startup')

@@ -48,6 +48,7 @@ Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to i
 | Click a pane    | Focus the editor, file tree, or chat                                 |
 | Ctrl+B          | Toggle the file tree                                                 |
 | Ctrl+G          | Open Git source control                                              |
+| Ctrl+,          | Open Settings (icons, live reload)                                   |
 | Ctrl+P / Ctrl+F | Find files / search project text (new editor tab)                    |
 | Ctrl+]          | Start a new Codex, Cursor Agent, Gemini, Claude, or OpenCode session |
 | Space f         | Format the current file                                              |

@@ -18,7 +18,7 @@ wrapper_src="$SETUP_ROOT/scripts/nvim-wrapper.sh"
 wrapper_dst="$HOME/.local/bin/nvim"
 mkdir -p "$HOME/.local/bin"
 if [[ -e "$wrapper_dst" || -L "$wrapper_dst" ]]; then
-  if grep -q 'nvim.setup-wrapper' "$wrapper_dst" 2>/dev/null; then
+  if grep -q 'nvim.setup-wrapper' "$wrapper_dst" 2> /dev/null; then
     cp -- "$wrapper_src" "$wrapper_dst"
     chmod +x "$wrapper_dst"
   else

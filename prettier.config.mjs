@@ -1,6 +1,10 @@
 /** @type {import('prettier').Config} */
 const config = {
-  plugins: ['prettier-plugin-tailwindcss'],
+  plugins: [
+    'prettier-plugin-packagejson',
+    'prettier-plugin-sh',
+    'prettier-plugin-tailwindcss',
+  ],
   tailwindStylesheet: './apps/web/src/styles.css',
   tailwindFunctions: ['cn'],
   semi: true,

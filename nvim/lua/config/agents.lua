@@ -22,9 +22,13 @@ end
 -- A failed wipe can drop the session while the terminal buffer remains.
 local function buf_for(id)
   local session = M.sessions[id]
-  if session and vim.api.nvim_buf_is_valid(session.buf) then return session.buf end
+  if session and vim.api.nvim_buf_is_valid(session.buf) then
+    return session.buf
+  end
   for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-    if vim.api.nvim_buf_is_valid(buf) and vim.b[buf].chat_id == id then return buf end
+    if vim.api.nvim_buf_is_valid(buf) and vim.b[buf].chat_id == id then
+      return buf
+    end
   end
 end
 
@@ -39,20 +43,28 @@ end
 
 local function persist()
   local ok, session = pcall(require, 'config.session')
-  if ok and not session.busy then session.save() end
+  if ok and not session.busy then
+    session.save()
+  end
 end
 
 local function make_uuid()
   local hex = vim.fn.sha256(('%s:%s:%s'):format(vim.uv.hrtime(), math.random(), vim.uv.os_getpid()))
   return table.concat({
-    hex:sub(1, 8), hex:sub(9, 12), hex:sub(13, 16), hex:sub(17, 20), hex:sub(21, 32),
+    hex:sub(1, 8),
+    hex:sub(9, 12),
+    hex:sub(13, 16),
+    hex:sub(17, 20),
+    hex:sub(21, 32),
   }, '-')
 end
 
 local function known_ids(name)
   local seen = {}
   for _, session in pairs(M.sessions) do
-    if session.name == name and persist_id(session.uuid) then seen[session.uuid] = true end
+    if session.name == name and persist_id(session.uuid) then
+      seen[session.uuid] = true
+    end
   end
   return seen
 end
@@ -60,7 +72,9 @@ end
 local function newest_codex_uuid(cwd, known)
   local path = vim.fn.expand('~/.codex/session_index.jsonl')
   local fd = vim.uv.fs_open(path, 'r', 384)
-  if not fd then return nil end
+  if not fd then
+    return nil
+  end
   local stat = vim.uv.fs_fstat(fd)
   local raw = stat and vim.uv.fs_read(fd, stat.size, 0) or ''
   vim.uv.fs_close(fd)
@@ -72,7 +86,9 @@ local function newest_codex_uuid(cwd, known)
       local id = row.id or row.session_id or row.uuid
       local row_cwd = row.cwd or row.cwd_path or row.directory or row.workdir
       if persist_uuid(id) and not known[id] then
-        if not row_cwd or vim.fn.fnamemodify(row_cwd, ':p') == abs then best = id end
+        if not row_cwd or vim.fn.fnamemodify(row_cwd, ':p') == abs then
+          best = id
+        end
       end
     end
   end
@@ -86,7 +102,9 @@ local function newest_claude_uuid(cwd, known)
   local best, best_mtime
   while handle do
     local name = vim.uv.fs_scandir_next(handle)
-    if not name then break end
+    if not name then
+      break
+    end
     local id = name:match('^([%x%-]+)%.jsonl$')
     if persist_uuid(id) and not known[id] then
       local stat = vim.uv.fs_stat(dir .. '/' .. name)
@@ -100,13 +118,19 @@ local function newest_claude_uuid(cwd, known)
 end
 
 local function allocate_agent_uuid()
-  if vim.fn.executable('agent') == 0 then return nil end
+  if vim.fn.executable('agent') == 0 then
+    return nil
+  end
   local ok, result = pcall(function()
     return vim.system({ 'agent', 'create-chat' }, { timeout = 4000, text = true }):wait()
   end)
-  if not ok or not result or result.code ~= 0 or type(result.stdout) ~= 'string' then return nil end
+  if not ok or not result or result.code ~= 0 or type(result.stdout) ~= 'string' then
+    return nil
+  end
   local id = vim.trim(result.stdout)
-  if persist_uuid(id) then return id end
+  if persist_uuid(id) then
+    return id
+  end
   local matched = id:match('([%x%-][%x%-][%x%-][%x%-][%x%-][%x%-][%x%-][%x%-][%x%-]*)')
   return persist_uuid(matched) and matched or nil
 end
@@ -116,14 +140,18 @@ local function capture_after_start(id, finder)
   local function tick()
     attempts = attempts + 1
     local session = M.sessions[id]
-    if not session or persist_id(session.uuid) then return end
+    if not session or persist_id(session.uuid) then
+      return
+    end
     local uuid = finder(vim.fn.getcwd(), known_ids(session.name))
     if uuid then
       session.uuid = uuid
       persist()
       return
     end
-    if attempts < 8 then vim.defer_fn(tick, 250) end
+    if attempts < 8 then
+      vim.defer_fn(tick, 250)
+    end
   end
   vim.defer_fn(tick, 250)
 end
@@ -136,8 +164,12 @@ local CLIS = {
     prompt = 'Codex',
     command = 'Codex',
     prefix = 'Codex ',
-    start = function() return { 'codex' } end,
-    resume = function(id) return { 'codex', 'resume', id } end,
+    start = function()
+      return { 'codex' }
+    end,
+    resume = function(id)
+      return { 'codex', 'resume', id }
+    end,
     capture = newest_codex_uuid,
   },
   cursor = {
@@ -147,10 +179,14 @@ local CLIS = {
     prefix = 'Agent ',
     allocate = allocate_agent_uuid,
     start = function(id)
-      if persist_id(id) then return { 'agent', '--resume=' .. id } end
+      if persist_id(id) then
+        return { 'agent', '--resume=' .. id }
+      end
       return { 'agent' }
     end,
-    resume = function(id) return { 'agent', '--resume=' .. id } end,
+    resume = function(id)
+      return { 'agent', '--resume=' .. id }
+    end,
   },
   gemini = {
     bin = 'gemini',
@@ -159,18 +195,26 @@ local CLIS = {
     prefix = 'Gemini ',
     allocate = make_uuid,
     start = function(id)
-      if persist_id(id) then return { 'gemini', '--session-id', id } end
+      if persist_id(id) then
+        return { 'gemini', '--session-id', id }
+      end
       return { 'gemini' }
     end,
-    resume = function(id) return { 'gemini', '--resume', id } end,
+    resume = function(id)
+      return { 'gemini', '--resume', id }
+    end,
   },
   claude = {
     bin = 'claude',
     prompt = 'Claude',
     command = 'Claude',
     prefix = 'Claude ',
-    start = function() return { 'claude' } end,
-    resume = function(id) return { 'claude', '--resume', id } end,
+    start = function()
+      return { 'claude' }
+    end,
+    resume = function(id)
+      return { 'claude', '--resume', id }
+    end,
     capture = newest_claude_uuid,
   },
   opencode = {
@@ -182,10 +226,14 @@ local CLIS = {
       return 'ses_' .. vim.fn.sha256(('%s:%s'):format(vim.uv.hrtime(), math.random())):sub(1, 16)
     end,
     start = function(id)
-      if persist_id(id) then return { 'opencode', '--session', id } end
+      if persist_id(id) then
+        return { 'opencode', '--session', id }
+      end
       return { 'opencode' }
     end,
-    resume = function(id) return { 'opencode', '--session', id } end,
+    resume = function(id)
+      return { 'opencode', '--session', id }
+    end,
   },
 }
 
@@ -202,9 +250,11 @@ end
 -- Enter terminal-input mode after the window actually owns the buffer.
 local function focus_input(win, buf)
   vim.schedule(function()
-    if not vim.api.nvim_win_is_valid(win)
+    if
+      not vim.api.nvim_win_is_valid(win)
       or vim.api.nvim_get_current_win() ~= win
-      or vim.api.nvim_win_get_buf(win) ~= buf then
+      or vim.api.nvim_win_get_buf(win) ~= buf
+    then
       return
     end
     local id = vim.b[buf].chat_id
@@ -213,14 +263,18 @@ local function focus_input(win, buf)
       M.close(id)
       return
     end
-    if vim.bo[buf].buftype == 'terminal' then vim.cmd.startinsert() end
+    if vim.bo[buf].buftype == 'terminal' then
+      vim.cmd.startinsert()
+    end
   end)
 end
 
 -- Show an existing session, creating the sidebar split if needed.
 function M.show(id)
   local session = M.sessions[id]
-  if not session then return end
+  if not session then
+    return
+  end
   if session.exited or not vim.api.nvim_buf_is_valid(session.buf) then
     M.close(id)
     return
@@ -235,11 +289,15 @@ function M.show(id)
   vim.wo[M.win].winfixwidth = true
   M.active = id
   vim.cmd('redrawstatus')
-  if vim.bo[session.buf].buftype == 'terminal' then vim.cmd.startinsert() end
+  if vim.bo[session.buf].buftype == 'terminal' then
+    vim.cmd.startinsert()
+  end
 end
 
 local function argv_for(cli, id, restoring)
-  if restoring and persist_id(id) then return cli.resume(id), cli.start(nil) end
+  if restoring and persist_id(id) then
+    return cli.resume(id), cli.start(nil)
+  end
   return cli.start(id), cli.start(nil)
 end
 
@@ -257,7 +315,9 @@ function M.new(name, opts)
   end
   local restoring = persist_id(opts.uuid)
   local uuid = restoring and opts.uuid or nil
-  if not uuid and cli.allocate then uuid = cli.allocate() end
+  if not uuid and cli.allocate then
+    uuid = cli.allocate()
+  end
   next_id = next_id + 1
   local id = next_id
   local buf = vim.api.nvim_create_buf(false, true)
@@ -276,7 +336,9 @@ function M.new(name, opts)
   -- and used to leave a stuck "(exited)" tab that close could not retry.
   local function finish()
     session.exited = true
-    if shutting_down() then return end
+    if shutting_down() then
+      return
+    end
     M.close(id)
   end
   local function on_exit()
@@ -312,7 +374,9 @@ function M.new(name, opts)
   end
   -- Esc stays in terminal mode and is forwarded to the CLI (stop generation, and so on).
   vim.keymap.set('t', '<Esc>', function()
-    if not session.exited then vim.api.nvim_chan_send(session.job, '\27') end
+    if not session.exited then
+      vim.api.nvim_chan_send(session.job, '\27')
+    end
   end, { buffer = buf, nowait = true, desc = 'Send Escape to agent' })
   vim.cmd.startinsert()
   persist()
@@ -354,24 +418,32 @@ end
 -- Switch away before wiping: deleting the current terminal often fails and
 -- used to drop the session while the "(exited)" tab stayed on screen.
 function M.close(id)
-  if shutting_down() then return end
+  if shutting_down() then
+    return
+  end
   local session = M.sessions[id]
   local buf = buf_for(id)
   if session then
     M.sessions[id] = nil
-    if session.job then pcall(vim.fn.jobstop, session.job) end
+    if session.job then
+      pcall(vim.fn.jobstop, session.job)
+    end
     session.exited = true
   elseif not buf then
     return
   end
-  if M.active == id then M.active = nil end
+  if M.active == id then
+    M.active = nil
+  end
   pcall(vim.cmd.stopinsert)
 
   local ids = vim.tbl_keys(M.sessions)
   table.sort(ids)
   if #ids > 0 then
     local showing = valid_win() and buf and vim.api.nvim_win_get_buf(M.win) == buf
-    if showing or not M.sessions[M.active] then M.show(ids[#ids]) end
+    if showing or not M.sessions[M.active] then
+      M.show(ids[#ids])
+    end
   else
     M.active = nil
     if valid_win() and #vim.api.nvim_list_wins() > 1 then
@@ -388,16 +460,22 @@ end
 
 vim.api.nvim_create_autocmd('VimResized', {
   callback = function()
-    if valid_win() then vim.api.nvim_win_set_width(M.win, width()) end
+    if valid_win() then
+      vim.api.nvim_win_set_width(M.win, width())
+    end
   end,
 })
 vim.api.nvim_create_autocmd({ 'WinEnter', 'BufEnter' }, {
   callback = function(ev)
-    if M.is_chat(ev.buf) then focus_input(vim.api.nvim_get_current_win(), ev.buf) end
+    if M.is_chat(ev.buf) then
+      focus_input(vim.api.nvim_get_current_win(), ev.buf)
+    end
   end,
 })
 vim.api.nvim_create_user_command('AgentSelect', M.select, {})
 for _, name in ipairs(M.order) do
-  vim.api.nvim_create_user_command(CLIS[name].command, function() M.toggle(name) end, {})
+  vim.api.nvim_create_user_command(CLIS[name].command, function()
+    M.toggle(name)
+  end, {})
 end
 return M

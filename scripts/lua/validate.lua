@@ -4,10 +4,24 @@ assert(vim.fn.has('nvim-0.12') == 1, 'Neovim 0.12+ required')
 assert(vim.g.colors_name == 'gruvbox', 'Gruvbox did not load')
 assert(vim.o.mouse:find('a'), 'Mouse support missing')
 assert(vim.o.showtabline == 0, 'Global tab bar must be hidden')
-for _, key in ipairs({ '<C-s>', '<C-t>', '<C-w>', '<C-]>' }) do
+for _, key in ipairs({ '<C-s>', '<C-t>', '<C-w>', '<C-]>', '<C-,>' }) do
   assert(vim.fn.maparg(key, 'n') ~= '', 'Missing keybinding: ' .. key)
 end
-for _, name in ipairs({ 'config.agents', 'config.session', 'config.tabs', 'config.icons', 'cmp', 'nvim-tree.api', 'dap', 'conform', 'fzf-lua', 'nvim-web-devicons' }) do
+for _, name in ipairs({
+  'config.agents',
+  'config.session',
+  'config.tabs',
+  'config.icons',
+  'config.statusline',
+  'config.format',
+  'config.settings',
+  'cmp',
+  'nvim-tree.api',
+  'dap',
+  'conform',
+  'fzf-lua',
+  'nvim-web-devicons',
+}) do
   assert(pcall(require, name), 'Could not load module: ' .. name)
 end
 local registry = require('mason-registry')
@@ -28,19 +42,36 @@ end
 -- Let deferred plugin highlights and transparency cleanup finish before checking.
 vim.defer_fn(function()
   local ok, err = pcall(function()
-    local keep = {}
-    for _, name in ipairs(require('config.appearance').selection_highlights) do
-      keep[name] = true
-    end
+    local appearance = require('config.appearance')
     for name, hl in pairs(api.nvim_get_hl(0, { link = false })) do
-      if not keep[name] then
+      if not appearance.keeps_fill(name) then
         assert(not hl.bg and not hl.ctermbg and not hl.reverse, 'Unexpected background: ' .. name)
       end
     end
     local visual = api.nvim_get_hl(0, { name = 'Visual', link = false })
     assert(visual.bg or visual.ctermbg or visual.reverse, 'Visual selection needs a background')
+    for _, name in ipairs(require('config.statusline').fill_highlights) do
+      local hl = api.nvim_get_hl(0, { name = name, link = false })
+      assert(hl.bg or hl.ctermbg, 'statusline fill missing: ' .. name)
+    end
+    assert(vim.o.laststatus == 3, 'statusline must be global')
+    assert(vim.o.showmode == false, 'mode must live in the statusline')
+    local winbar = api.nvim_get_hl(0, { name = 'WinBar', link = false })
+    local sep = api.nvim_get_hl(0, { name = 'PaneTabSep', link = false })
+    assert(not winbar.bg and not winbar.ctermbg, 'WinBar must stay transparent')
+    assert(not sep.bg and not sep.ctermbg, 'PaneTabSep must stay transparent')
+    assert(not winbar.underline, 'WinBar must not use a bright underline')
+    local formatters = require('config.format').formatters_by_ft
+    assert(formatters.lua[1] == 'stylua', 'Lua must format with StyLua')
+    assert(formatters.html[1] == 'prettierd', 'HTML must format with prettierd')
+    assert(formatters.sh[1] == 'shfmt', 'shell must format with shfmt')
     assert(vim.tbl_isempty(require('config.agents').sessions), 'Headless startup launched chats')
     print('PASS: configuration, plugins, Mason tools, parsers, highlighting, transparency and shortcuts')
   end)
-  if not ok then print(err); vim.cmd('cquit 1') else vim.cmd('qa!') end
+  if not ok then
+    print(err)
+    vim.cmd('cquit 1')
+  else
+    vim.cmd('qa!')
+  end
 end, 1300)

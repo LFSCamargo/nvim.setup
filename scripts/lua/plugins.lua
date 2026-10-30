@@ -8,7 +8,9 @@ local function check_tasks()
   local failed = {}
   for name, plugin in pairs(config.plugins) do
     for _, task in ipairs(plugin._.tasks or {}) do
-      if task:has_errors() then failed[#failed + 1] = name .. ': ' .. task:output() end
+      if task:has_errors() then
+        failed[#failed + 1] = name .. ': ' .. task:output()
+      end
     end
     assert(vim.uv.fs_stat(plugin.dir), 'Plugin not installed: ' .. name)
   end

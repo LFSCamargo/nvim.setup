@@ -2,13 +2,13 @@
 source "$(dirname -- "$0")/common.sh"
 
 nvim_meets_min() {
-  command -v nvim >/dev/null 2>&1 || return 1
-  NVIM_WRAPPER=0 nvim --clean --headless -n '+lua if vim.fn.has("nvim-0.12") == 0 then vim.cmd("cquit 1") end' +qa >/dev/null 2>&1
+  command -v nvim > /dev/null 2>&1 || return 1
+  NVIM_WRAPPER=0 nvim --clean --headless -n '+lua if vim.fn.has("nvim-0.12") == 0 then vim.cmd("cquit 1") end' +qa > /dev/null 2>&1
 }
 
 node_meets_min() {
-  command -v node >/dev/null 2>&1 || return 1
-  node -e 'if (Number(process.versions.node.split(".")[0]) < 22) process.exit(1)' >/dev/null 2>&1
+  command -v node > /dev/null 2>&1 || return 1
+  node -e 'if (Number(process.versions.node.split(".")[0]) < 22) process.exit(1)' > /dev/null 2>&1
 }
 
 target_arch() {
@@ -70,7 +70,7 @@ install_node_release() {
 
 ensure_supported_nvim() {
   nvim_meets_min && return 0
-  if command -v brew >/dev/null 2>&1; then
+  if command -v brew > /dev/null 2>&1; then
     brew install neovim
     nvim_meets_min && return 0
   fi
@@ -80,7 +80,7 @@ ensure_supported_nvim() {
 
 ensure_supported_node() {
   node_meets_min && return 0
-  if command -v brew >/dev/null 2>&1; then
+  if command -v brew > /dev/null 2>&1; then
     brew install node
     node_meets_min && return 0
   fi
@@ -95,23 +95,26 @@ case "$(uname -s)" in
     ;;
   Linux)
     elevated=()
-    if [[ $(id -u) != 0 ]]; then need sudo; elevated=(sudo); fi
-    if command -v apt-get >/dev/null 2>&1; then
+    if [[ $(id -u) != 0 ]]; then
+      need sudo
+      elevated=(sudo)
+    fi
+    if command -v apt-get > /dev/null 2>&1; then
       "${elevated[@]}" apt-get update
       "${elevated[@]}" apt-get install -y neovim git curl tar unzip build-essential ripgrep fd-find fzf nodejs npm golang-go cargo python3 python3-pip
-    elif command -v dnf >/dev/null 2>&1; then
+    elif command -v dnf > /dev/null 2>&1; then
       "${elevated[@]}" dnf install -y neovim git curl tar unzip gcc gcc-c++ make ripgrep fd-find fzf nodejs npm golang cargo python3 python3-pip
-    elif command -v pacman >/dev/null 2>&1; then
+    elif command -v pacman > /dev/null 2>&1; then
       "${elevated[@]}" pacman -Syu --needed neovim git curl tar unzip base-devel ripgrep fd fzf tree-sitter-cli nodejs npm go rust python python-pip
     else die 'Supported package managers: Homebrew, apt, dnf, pacman. See README for manual prerequisites.'; fi
     export PATH="$HOME/.cargo/bin:$HOME/.local/bin:$PATH"
     need cargo
-    if ! command -v tree-sitter >/dev/null 2>&1; then
+    if ! command -v tree-sitter > /dev/null 2>&1; then
       cargo install --locked tree-sitter-cli
     fi
     export PATH="$HOME/.cargo/bin:$HOME/.local/bin:$PATH"
     ;;
-  *) die 'Supported platforms: macOS and Linux';;
+  *) die 'Supported platforms: macOS and Linux' ;;
 esac
 
 ensure_supported_nvim

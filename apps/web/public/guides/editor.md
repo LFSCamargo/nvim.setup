@@ -1,6 +1,6 @@
 # Neovim setup
 
-Appearance uses Gruvbox syntax colors with transparent backgrounds throughout the editor, file tree, menus, and chat panes. Visual selection, search matches, and the selected completion item keep a fill so they stay visible. The terminal palette stays unchanged. Settings are in `lua/config/appearance.lua`. The Files tree and Git sidebar show a Devicon for each extension so you can tell `.ts` from `.rs` at a glance. Folders use nvim-tree folder glyphs, not file Devicons. Expand markers are `>` and `v`. `make install` installs Symbols Nerd Font and bakes those glyphs into a Regular face named **Monocraft Nerd Font** (Warp has no fallback list). Those icons occupy one terminal cell. If Warp’s font is Monocraft, that setting becomes Monocraft Nerd Font.
+Appearance uses Gruvbox syntax colors with transparent backgrounds throughout the editor, file tree, menus, and chat panes. Visual selection, search matches, and the selected completion item keep a fill so they stay visible. The terminal palette stays unchanged. Colors live in `lua/config/appearance.lua`. File icons are in the Settings sidebar (`lua/config/settings.lua`). A single bottom bar (`lua/config/statusline.lua`) spans the tree, editor, and chat: a muted Gruvbox yellow NORMAL pill and faded red INSERT pill (VISUAL orange, REPLACE / TERMINAL red, COMMAND gold), git branch and hunk counts, the focused file (or Files / Git / chat session name) with a modified marker, LSP diagnostics (`E:` / `W:` / `I:` / `H:`), recording and debug flags, search match index, attached language servers, filetype, and cursor `line:col` plus TOP/BOT/percent. Encoding, line endings, and indent only appear when they are not the defaults (`utf-8`, Unix, two spaces). The Files tree and Git sidebar show a Devicon for each extension so you can tell `.ts` from `.rs` at a glance. Devicons keep their type colors; names stay the default foreground unless git marks them (yellow modified, green added or untracked, red deleted). Folders use nvim-tree folder glyphs, not file Devicons. Expand markers are `>` and `v`. The tree does not print the project path/`..` root label. `make install` installs Symbols Nerd Font and bakes those glyphs into a Regular face named **Monocraft Nerd Font** (Warp has no fallback list). Those icons occupy one terminal cell. If Warp’s font is Monocraft, that setting becomes Monocraft Nerd Font.
 
 Run `nvim .` in a project. Interactive startup opens the file tree at 20% width. If this project has a saved session, editor tabs (including unsaved buffers) and AI chats resume by UUID; otherwise it starts one Codex and one Cursor Agent session. `nvim --clean` skips restore and save, so you get a blank editor plus two fresh chats without clobbering the last session. The chat pane also uses 25% width; keyboard focus stays in the editor. This works with `nvim`, `nvim .`, and `nvim file`. Headless maintenance does not launch chats.
 
@@ -23,6 +23,7 @@ Ctrl shortcuts in the first table work in **normal, insert, and terminal** modes
 | Ctrl+] / `:AgentSelect` | Choose a chat CLI (Codex, Cursor Agent, Gemini, Claude, OpenCode) |
 | Ctrl+B / Space e | Toggle the file tree |
 | Ctrl+G | Open the Git source-control sidebar |
+| Ctrl+, / `:SetupSettings` | Open the Settings sidebar |
 | Ctrl+P / Command+P / Space f f | Find project files (hidden files included; build dirs excluded); opens a new mid-editor tab, or focuses the existing tab for that file |
 | Ctrl+F / Space f g | Search text in the project; results open as a mid-editor tab |
 | Space f b | Switch open buffers |
@@ -44,9 +45,20 @@ Ctrl shortcuts in the first table work in **normal, insert, and terminal** modes
 | Esc (in a chat) | Send Escape to that CLI (stop generation). Stays in terminal mode. |
 | Ctrl+\ Ctrl+N | Leave terminal input without sending Esc to the CLI |
 
+### Settings (Ctrl+,)
+
+The Settings tab sits next to Files and Git. File icons apply immediately and persist in `stdpath('state')/nvim-setup/settings.json` (or `$E2E_DIR/settings.json` in tests). **[Reload config]** re-reads that file and refreshes icons without quitting; Lua/keymap edits still need a restart. Enter or click a row to change it; `q` returns to Files.
+
+| Keys | Action |
+| --- | --- |
+| Enter / click | Toggle the row under the cursor |
+| `r` | Reload saved settings |
+| `q` | Return to Files |
+| Click **Settings** | Open Settings, or focus it if it is already showing |
+
 ### Git source control (Ctrl+G)
 
-The Git view matches a typical source-control panel: commit message, **[Commit]**, **Staged Changes**, **Changes**, and a **COMMITS** log pane at the bottom (30% of the window height) showing recent `git log --graph --oneline` history. Clicking **Git** (or focusing the Git sidebar from another pane) reloads status and history. Every action has a key. Red is deleted, yellow is modified, green is added or untracked. Each changed file shows a Devicon for its type or extension.
+The Git view matches a typical source-control panel: commit message, **[Commit]**, **Staged Changes**, **Changes**, and a **COMMITS** log pane at the bottom (30% of the window height) showing recent `git log --graph --oneline` history. Clicking **Git** (or focusing the Git sidebar from another pane) reloads status and history. Every action has a key. Red is deleted, yellow is modified, green is added or untracked. Each changed file shows a Devicon for its type or extension; the icon keeps its type color and the filename follows git status.
 
 | Keys | Action |
 | --- | --- |
@@ -102,6 +114,7 @@ Space g s still opens Fugitive for the full Git status UI in the mid editor. Fil
 | Command | Action |
 | --- | --- |
 | `:GitChanges` | Open Git source control |
+| `:SetupSettings` | Open the Settings sidebar |
 | `:SidebarFilesToggle` | Toggle the file tree |
 | `:PaneSave` / `:PaneNewTab` / `:ProjectCloseTab` | Save / new tab / close tab |
 | `:FindProjectFiles` / `:FindProjectText` | Find files / search project text (same as Ctrl+P / Ctrl+F) |
@@ -117,15 +130,15 @@ TypeScript/JavaScript/React/Node/Bun use vtsls; Vue uses vtsls plus vue_ls; Svel
 
 Install project dependencies normally. React needs `@types/react` (and usually `@types/react-dom`); Node needs `@types/node`; Bun needs `@types/bun`. Keep a project tsconfig.json. Framework projects should retain their generated TypeScript configs and local framework dependencies. Vue defaults target Vue 3. ESLint and Tailwind require their project configuration/dependencies. Rust uses rust-analyzer and Clippy, Go uses gopls, Solidity uses Nomic Foundation's server and project compiler configuration.
 
-Formatting is explicit (Space f). Prettierd handles web files; Svelte projects need `prettier` and `prettier-plugin-svelte` configured locally. TOML uses Taplo, Rust rustfmt, Go gofmt; other files fall back to server formatting where available. Check `:ConformInfo` for formatter details.
+Formatting is explicit (Space f). Prettierd handles web files (JS/TS/Vue/Svelte/HTML/CSS/JSON/YAML/Markdown); Svelte projects need `prettier` and `prettier-plugin-svelte` configured locally. Lua uses StyLua (Prettier’s Lua plugin is unmaintained). Shell uses shfmt, TOML Taplo, Rust rustfmt, Go gofmt; other files fall back to server formatting where available. Check `:ConformInfo` for formatter details. The repo pre-commit hook runs Prettier (with `prettier-plugin-packagejson`, `prettier-plugin-sh`, and Tailwind class sorting) plus StyLua on staged Lua.
 
 Tab in insert mode opens completion after text, cycles and inserts suggestions when the menu is open, jumps through snippet fields, and indents on blank space. Enter confirms the selected suggestion; Ctrl+E dismisses the menu. Vimscript and Zsh use their dedicated Tree-sitter parsers, with built-in syntax as a fallback.
 
 ## Chat panes
 
-The sidebar has **Files** and **Git** tabs. Git loads changes in the background, so you can switch back to Files while it loads.
+The sidebar has **Files**, **Git**, and **Settings** tabs. Git loads changes in the background, so you can switch back to Files while it loads.
 
-Click pane contents to focus the editor, tree, or chat; clicking a running chat enables terminal input. The editor and chat panes each have their own clickable tabs above their contents. Click a label to switch, **+** to add, or **×** to close the active tab. The active label is underlined in gold; **‹ / ›** navigate when tabs overflow. Ctrl+T adds a tab in the focused pane. File tabs show listed editor buffers and preserve unsaved edits when switching.
+Click pane contents to focus the editor, tree, or chat; clicking a running chat enables terminal input. The editor and chat panes each have their own clickable tabs above their contents, laid out as `icon name × │ icon name × │ + │`. Click a label to switch, **×** on that tab to close it, or **+** to add. File tabs show the same colored Devicon as the Files tree; chat tabs stay text-only. Labels use the same `│` as the pane splits. The tab bar stays transparent like the rest of the UI; the active label is muted gold and bold. **‹ / ›** navigate when tabs overflow. Ctrl+T adds a tab in the focused pane; Ctrl+W closes the current file or chat. File tabs show listed editor buffers and preserve unsaved edits when switching. The Files / Git / Settings sidebar tabs use that divider too.
 
 Chat **+** and Ctrl+] open a CLI selector for a new independent Codex, Cursor Agent, Gemini, Claude, or OpenCode session. Multiple sessions of any CLI can run at once. Switching chat tabs preserves running sessions; closing a chat tab stops that session. If the CLI itself exits, the tab closes the same way. Space a c / a u / a g / a l / a o toggle the Codex, Cursor Agent, Gemini, Claude, and OpenCode panes. The file tree uses 20% of the editor width and the chat pane uses 25%. Chats run the actual interactive CLIs in the directory where you opened them. They use existing CLI authentication and permissions; no prompts or approval bypasses are injected. Use `codex login`, `agent login`, `gemini`, `claude`, or `opencode` outside Neovim if login expires. They do not automatically receive editor selections: mention project-relative file paths in chat. Sessions are stored per working directory under Neovim state (`nvim-setup-sessions`). Resume is `codex resume <uuid>`, `agent --resume=<uuid>`, `gemini --resume <uuid>`, `claude --resume <uuid>`, and `opencode --session <id>`. Reopen Neovim in a different project for a separate context, or start `nvim --clean` for a blank window in the current project.
 

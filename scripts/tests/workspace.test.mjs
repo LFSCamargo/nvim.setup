@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync, existsSync } from 'node:fs';
+import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { test } from 'node:test';
 
 const read = (path) =>
@@ -56,8 +56,15 @@ test('marketing app is TypeScript with Tailwind and Prettier', () => {
   );
   assert.match(read('apps/web/src/styles.css'), /@import ['"]tailwindcss['"]/);
   assert.match(read('apps/web/vite.config.ts'), /@tailwindcss\/vite/);
+  assert.match(read('prettier.config.mjs'), /prettier-plugin-packagejson/);
+  assert.match(read('prettier.config.mjs'), /prettier-plugin-sh/);
   assert.match(read('prettier.config.mjs'), /prettier-plugin-tailwindcss/);
-  assert.match(read('package.json'), /"format": "prettier --write \."/);
+  assert.match(
+    read('package.json'),
+    /prettier --write \. && stylua nvim scripts/,
+  );
+  assert.match(read('package.json'), /@johnnymorganz\/stylua-bin/);
+  assert.equal(existsSync(new URL('../../stylua.toml', import.meta.url)), true);
   assert.match(read('.github/workflows/ci.yml'), /pnpm format:check/);
   assert.match(read('.github/workflows/ci.yml'), /pnpm --filter web typecheck/);
   assert.match(read('.github/workflows/ci.yml'), /pnpm build/);
@@ -223,4 +230,34 @@ test('commit hooks and CI use the same pnpm workspace install', () => {
   );
   assert.match(read('scripts/format-staged.sh'), /--write --ignore-unknown/);
   assert.match(read('Makefile'), /pnpm exec commitlint --last/);
+});
+
+test('Cursor, Claude, and Codex ship the same project skills', () => {
+  const dirs = ['.cursor/skills', '.claude/skills', '.codex/skills'];
+  const names = dirs.map((dir) => {
+    const abs = new URL(`../../${dir}`, import.meta.url);
+    assert.equal(existsSync(abs), true, `missing ${dir}`);
+    return readdirSync(abs, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
+      .sort();
+  });
+  for (let i = 1; i < names.length; i += 1) {
+    assert.deepEqual(
+      names[i],
+      names[0],
+      `${dirs[i]} must list the same skills as ${dirs[0]}`,
+    );
+  }
+  assert.deepEqual(names[0], ['commit-separately', 'release']);
+  for (const name of names[0]) {
+    const bodies = dirs.map((dir) => read(`${dir}/${name}/SKILL.md`));
+    for (let i = 1; i < bodies.length; i += 1) {
+      assert.equal(
+        bodies[i],
+        bodies[0],
+        `${dirs[i]}/${name}/SKILL.md must match ${dirs[0]}/${name}/SKILL.md`,
+      );
+    }
+  }
 });

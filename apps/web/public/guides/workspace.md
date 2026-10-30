@@ -4,7 +4,7 @@ The window is three panes. The file tree takes **20%**. The editor takes the mid
 
 ```text
 ┌──────────────┬────────────────────────────────┬─────────────────┐
-│ Files        │  main.ts   utils.ts   +   ×    │ Codex 1  Agent 2│
+│ Files│Git│Set│  main.ts │ utils.ts │ + │ ×    │ Codex 1 │ Agent 2│
 │              ├────────────────────────────────┼─────────────────┤
 │ src/         │                                │                 │
 │   main.ts    │           Editor               │    CLI chat     │
@@ -18,19 +18,23 @@ Click a pane to focus it. Click a running chat to type into it. Click tabs to sw
 
 ## Files
 
-The left sidebar is an nvim-tree file browser with a **Files** tab. Files show a Devicon for the type or extension. Folders use folder glyphs with `>` / `v` expand markers. Click a file to open it in the mid editor. Ctrl+B or Space e toggles the tree. Ctrl+P finds files (hidden files included; build directories excluded) and opens a new mid-editor tab, or focuses the tab if that file is already open. Ctrl+F searches project text the same way.
+The left sidebar is an nvim-tree file browser with a **Files** tab. Files show a Devicon for the type or extension. Names stay the default foreground unless git marks them (yellow modified, green added, red deleted). Folders use folder glyphs with `>` / `v` expand markers. The project path/`..` root label is hidden. Click a file to open it in the mid editor. Ctrl+B or Space e toggles the tree. Ctrl+P finds files (hidden files included; build directories excluded) and opens a new mid-editor tab, or focuses the tab if that file is already open. Ctrl+F searches project text the same way.
 
-The same sidebar has a **Git** tab. Switching to Git does not freeze the editor: status loads in the background, and you can go back to Files while it finishes.
+The same sidebar has **Git** and **Settings** tabs. Switching to Git does not freeze the editor: status loads in the background, and you can go back to Files while it finishes. Settings turns file icons on or off immediately, and **Reload config** applies the saved file without quitting.
 
 ## Editor tabs
 
-The middle pane is the editor. Tabs above it are clickable: a label switches buffers, **+** adds a tab, **×** closes the active one, and **‹ / ›** scroll when tabs overflow. Ctrl+T adds a tab. Ctrl+W closes one, and refuses if the file is unsaved. Ctrl+S saves (it asks for a name if the buffer is unnamed).
+The middle pane is the editor. Tabs above it are clickable: a label switches buffers, **+** adds a tab, **×** closes the active one, and **‹ / ›** scroll when tabs overflow. File tabs show the same colored Devicon as the Files tree. Labels use the same `│` as the pane splits. Ctrl+T adds a tab. Ctrl+W closes one, and refuses if the file is unsaved. Ctrl+S saves (it asks for a name if the buffer is unnamed).
 
 `:q` on the last editor window keeps the pane and leaves a tab, so the layout does not collapse.
 
+## Settings
+
+Ctrl+, or the **Settings** tab opens a sidebar next to Files and Git. Turn file icons on or off; the change applies immediately and persists for this machine. **[Reload config]** re-reads the saved file so you can pick up that choice without quitting Neovim. Enter or click a row to change it; `q` returns to Files. Lua and keymap edits still need a restart.
+
 ## Git source control
 
-Ctrl+G opens a source-control view in the left sidebar: commit message, **[Commit]**, Staged Changes, Changes, and a **COMMITS** log at the bottom (about 30% of the window height). Red is deleted, yellow is modified, green is added or untracked. Changed files use the same Devicons as the Files tree so the extension is visible in Git too.
+Ctrl+G opens a source-control view in the left sidebar: commit message, **[Commit]**, Staged Changes, Changes, and a **COMMITS** log at the bottom (about 30% of the window height). Red is deleted, yellow is modified, green is added or untracked. Changed files use the same Devicons as the Files tree so the extension is visible in Git too; icons keep their type colors and filenames follow git status.
 
 Stage, unstage, revert, and commit with the keyboard or the mouse. Files and commits open in the mid editor, not in a new split. Space g s still opens Fugitive if you want the full `:Git` UI.
 
@@ -52,6 +56,8 @@ Mason installs language servers, formatters, and debug adapters. Completion, dia
 | ------------------------------------- | -------------------------------------------------- |
 | TypeScript / JavaScript / React / Vue | vtsls, vue_ls, prettierd                           |
 | Svelte                                | svelte-language-server, prettierd                  |
+| Lua                                   | lua-language-server, StyLua                        |
+| Shell                                 | shfmt                                              |
 | Rust                                  | rust-analyzer (Clippy), rustfmt, CodeLLDB          |
 | Go                                    | gopls, gofmt, Delve                                |
 | Solidity                              | Nomic Foundation language server                   |

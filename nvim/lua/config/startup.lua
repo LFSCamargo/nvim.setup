@@ -6,7 +6,9 @@ local M = {}
 local opened = false
 
 function M.open()
-  if opened then return end
+  if opened then
+    return
+  end
   opened = true
   local api = vim.api
   local dir = vim.fn.argv(0)
@@ -33,7 +35,9 @@ function M.open()
     local codex = agents.active
     agents.new('cursor')
     -- Show Codex as the visible chat tab while both jobs keep running.
-    if codex then agents.show(codex) end
+    if codex then
+      agents.show(codex)
+    end
   end
   api.nvim_set_current_win(editor)
   vim.cmd.stopinsert()
@@ -43,7 +47,9 @@ end
 vim.api.nvim_create_autocmd('VimEnter', {
   once = true,
   callback = function()
-    if #vim.api.nvim_list_uis() > 0 then vim.schedule(M.open) end
+    if #vim.api.nvim_list_uis() > 0 then
+      vim.schedule(M.open)
+    end
   end,
 })
 

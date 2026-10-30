@@ -59,8 +59,20 @@ vim.lsp.config('lua_ls', {
 })
 
 vim.lsp.enable({
-  'vtsls', 'vue_ls', 'svelte', 'html', 'cssls', 'tailwindcss', 'eslint',
-  'rust_analyzer', 'gopls', 'solidity_ls_nomicfoundation', 'taplo', 'jsonls', 'yamlls', 'lua_ls',
+  'vtsls',
+  'vue_ls',
+  'svelte',
+  'html',
+  'cssls',
+  'tailwindcss',
+  'eslint',
+  'rust_analyzer',
+  'gopls',
+  'solidity_ls_nomicfoundation',
+  'taplo',
+  'jsonls',
+  'yamlls',
+  'lua_ls',
 })
 
 vim.diagnostic.config({

@@ -4,8 +4,14 @@ set -euo pipefail
 
 ROOT="$(cd -- "$(dirname -- "$0")/../.." && pwd -P)"
 PASS=0
-fail() { printf 'FAIL: %s\n' "$*" >&2; exit 1; }
-pass() { printf 'PASS: %s\n' "$*"; PASS=$((PASS + 1)); }
+fail() {
+  printf 'FAIL: %s\n' "$*" >&2
+  exit 1
+}
+pass() {
+  printf 'PASS: %s\n' "$*"
+  PASS=$((PASS + 1))
+}
 
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/nvim-setup-fonts.XXXXXX")"
 trap 'rm -rf -- "$TMP"' EXIT
@@ -13,18 +19,18 @@ trap 'rm -rf -- "$TMP"' EXIT
 write_stub() {
   local path="$1"
   mkdir -p -- "$(dirname -- "$path")"
-  cat >"$path"
+  cat > "$path"
   chmod +x "$path"
 }
 
 assert_file_has() {
   local file="$1" needle="$2"
-  grep -F -- "$needle" "$file" >/dev/null 2>&1 || fail "$file missing '$needle'"
+  grep -F -- "$needle" "$file" > /dev/null 2>&1 || fail "$file missing '$needle'"
 }
 
 # 1. Install (and therefore bootstrap) must install icon fonts.
 assert_file_has "$ROOT/scripts/install.sh" 'scripts/fonts.sh'
-if grep -F 'termicons.mskelton.dev' "$ROOT/scripts/fonts.sh" >/dev/null; then
+if grep -F 'termicons.mskelton.dev' "$ROOT/scripts/fonts.sh" > /dev/null; then
   fail 'fonts.sh should not download Termicons'
 fi
 assert_file_has "$ROOT/scripts/fonts.sh" 'https://github.com/ryanoasis/nerd-fonts/releases/download/v3.5.1/NerdFontsSymbolsOnly.zip'
@@ -40,10 +46,10 @@ pass 'install.sh and bootstrap.sh run fonts.sh with pinned Nerd Font and Monocra
 
 fixtures="$TMP/fixtures"
 mkdir -p "$fixtures"
-printf 'symbols-regular-dummy\n' >"$fixtures/SymbolsNerdFont-Regular.ttf"
-printf 'symbols-mono-dummy\n' >"$fixtures/SymbolsNerdFontMono-Regular.ttf"
-printf 'monocraft-nerd-dummy\n' >"$fixtures/Monocraft-nerd-fonts-patched.ttc"
-python3 - "$fixtures" <<'PY'
+printf 'symbols-regular-dummy\n' > "$fixtures/SymbolsNerdFont-Regular.ttf"
+printf 'symbols-mono-dummy\n' > "$fixtures/SymbolsNerdFontMono-Regular.ttf"
+printf 'monocraft-nerd-dummy\n' > "$fixtures/Monocraft-nerd-fonts-patched.ttc"
+python3 - "$fixtures" << 'PY'
 import sys, zipfile
 from pathlib import Path
 root = Path(sys.argv[1])
@@ -52,7 +58,7 @@ with zipfile.ZipFile(root / 'NerdFontsSymbolsOnly.zip', 'w') as zf:
     zf.write(root / 'SymbolsNerdFontMono-Regular.ttf', 'SymbolsNerdFontMono-Regular.ttf')
 PY
 sha256_of() {
-  if command -v sha256sum >/dev/null 2>&1; then
+  if command -v sha256sum > /dev/null 2>&1; then
     sha256sum -- "$1" | awk '{print $1}'
   else
     shasum -a 256 -- "$1" | awk '{print $1}'
@@ -65,12 +71,12 @@ make_bin() {
   local home="$1" os="$2" calls="$3"
   local bin="$home/bin"
   mkdir -p "$bin"
-  write_stub "$bin/uname" <<EOF
+  write_stub "$bin/uname" << EOF
 #!/bin/sh
 [ "\${1-}" = -s ] && { printf '%s\n' '$os'; exit 0; }
 exec /usr/bin/uname "\$@"
 EOF
-  write_stub "$bin/curl" <<EOF
+  write_stub "$bin/curl" << EOF
 #!/bin/sh
 out=""
 url=""
@@ -108,7 +114,7 @@ run_fonts() {
   shift 2
   local calls="$home/calls.log"
   mkdir -p "$home"
-  : >"$calls"
+  : > "$calls"
   local bin
   bin="$(make_bin "$home" "$os" "$calls")"
   env -i \
@@ -125,8 +131,8 @@ run_fonts() {
 # 2. macOS copies fonts into ~/Library/Fonts and switches Warp Monocraft to the nerd-patched family.
 home="$TMP/darwin"
 mkdir -p "$home/.warp" "$home/Library/Fonts"
-printf 'stale\n' >"$home/Library/Fonts/termicons.ttf"
-cat >"$home/.warp/settings.toml" <<'EOF'
+printf 'stale\n' > "$home/Library/Fonts/termicons.ttf"
+cat > "$home/.warp/settings.toml" << 'EOF'
 [appearance.text]
 font_name = "Monocraft"
 font_size = 13.0
@@ -135,7 +141,7 @@ font_size = 13.0
 is_any_ai_enabled = false
 EOF
 mkdir -p "$home/config/kitty"
-printf 'font_family Monocraft\n' >"$home/config/kitty/kitty.conf"
+printf 'font_family Monocraft\n' > "$home/config/kitty/kitty.conf"
 run_fonts "$home" Darwin
 [[ ! -e "$home/Library/Fonts/termicons.ttf" ]] || fail 'stale Termicons should be removed'
 [[ -f "$home/Library/Fonts/SymbolsNerdFont-Regular.ttf" ]] || fail 'Symbols Nerd Font missing from ~/Library/Fonts'
@@ -167,7 +173,7 @@ pass 'Linux install writes fonts and fontconfig fallbacks without creating Warp 
 # 4. Non-Monocraft Warp fonts stay put; checksum mismatches fail closed.
 home="$TMP/keepfont"
 mkdir -p "$home/.warp"
-printf 'font_name = "JetBrains Mono"\n' >"$home/.warp/settings.toml"
+printf 'font_name = "JetBrains Mono"\n' > "$home/.warp/settings.toml"
 run_fonts "$home" Darwin
 assert_file_has "$home/.warp/settings.toml" 'font_name = "JetBrains Mono"'
 if grep -F 'Monocraft Nerd Font' "$home/.warp/settings.toml"; then
@@ -182,19 +188,19 @@ if env -i \
   NVIM_SETUP_SYMBOLS_SHA='deadbeef' \
   NVIM_SETUP_MONOCRAFT_SHA="$monocraft_sha" \
   XDG_STATE_HOME="$home/state" \
-  /bin/bash "$ROOT/scripts/fonts.sh" 2>"$home.err"; then
+  /bin/bash "$ROOT/scripts/fonts.sh" 2> "$home.err"; then
   fail 'bad checksum should exit non-zero'
 fi
-grep -F 'Checksum mismatch' "$home.err" >/dev/null || fail 'checksum failure message missing'
+grep -F 'Checksum mismatch' "$home.err" > /dev/null || fail 'checksum failure message missing'
 pass 'fonts.sh verifies sha256 before installing'
 
 # 5. Overlay bakes Nerd Font icons at one cell into a font named Monocraft Nerd Font.
-if python3 -c 'import fontTools' 2>/dev/null \
+if python3 -c 'import fontTools' 2> /dev/null \
   || python3 -m pip install --quiet --disable-pip-version-check --target "$TMP/py" 'fonttools==4.60.2'; then
   export PYTHONPATH="${TMP}/py${PYTHONPATH:+:$PYTHONPATH}"
   overlay_dir="$TMP/overlay"
   mkdir -p "$overlay_dir"
-  python3 - "$overlay_dir" <<'PY'
+  python3 - "$overlay_dir" << 'PY'
 from pathlib import Path
 from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
@@ -237,7 +243,7 @@ PY
   python3 "$ROOT/scripts/overlay_fonts.py" \
     "$overlay_dir/base.ttf" "$overlay_dir/symbols.ttf" \
     "$overlay_dir/out.ttf" || fail 'overlay_fonts.py failed on fixture fonts'
-  python3 - "$overlay_dir/out.ttf" <<'PY' || fail 'overlay output missing Nerd Font cmap, family name, or one-cell metrics'
+  python3 - "$overlay_dir/out.ttf" << 'PY' || fail 'overlay output missing Nerd Font cmap, family name, or one-cell metrics'
 import sys
 from fontTools.ttLib import TTFont
 from fontTools.pens.boundsPen import BoundsPen

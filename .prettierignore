@@ -1,6 +1,7 @@
 node_modules
 dist
 .nx
+.husky/_
 .pnpm-store
 pnpm-lock.yaml
 CHANGELOG.md

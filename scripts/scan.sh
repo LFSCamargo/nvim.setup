@@ -14,12 +14,12 @@ audit_packages() {
 
 scan_sast() {
   local scan="$SETUP_ROOT/scripts/semgrep-scan.sh"
-  if command -v semgrep >/dev/null 2>&1; then
+  if command -v semgrep > /dev/null 2>&1; then
     say 'Scanning JavaScript and TypeScript for OWASP issues'
     (cd "$SETUP_ROOT" && sh "$scan")
     return
   fi
-  if command -v docker >/dev/null 2>&1; then
+  if command -v docker > /dev/null 2>&1; then
     say 'Scanning JavaScript and TypeScript for OWASP issues (Semgrep container)'
     docker run --rm --entrypoint sh \
       -v "$SETUP_ROOT:/src:ro" \

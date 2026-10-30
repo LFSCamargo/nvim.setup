@@ -3,9 +3,15 @@
 
 local dap, ui = require('dap'), require('dapui')
 ui.setup()
-dap.listeners.after.event_initialized['ui'] = function() ui.open() end
-dap.listeners.before.event_terminated['ui'] = function() ui.close() end
-dap.listeners.before.event_exited['ui'] = function() ui.close() end
+dap.listeners.after.event_initialized['ui'] = function()
+  ui.open()
+end
+dap.listeners.before.event_terminated['ui'] = function()
+  ui.close()
+end
+dap.listeners.before.event_exited['ui'] = function()
+  ui.close()
+end
 
 local packages = vim.fn.stdpath('data') .. '/mason/packages/'
 dap.adapters['pwa-node'] = {
