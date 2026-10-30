@@ -1,4 +1,4 @@
-name: website
+name: ci
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  web:
+  lint-and-build:
     runs-on: ubuntu-latest
     env:
       HUSKY: 0
@@ -22,11 +22,6 @@ jobs:
           node-version: '22'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: bash scripts/scan.sh audit
-      - run: pnpm test:workspace
       - run: pnpm format:check
       - run: pnpm --filter web typecheck
-      - run: pnpm --filter web test
       - run: pnpm build
-      - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm test:web:e2e

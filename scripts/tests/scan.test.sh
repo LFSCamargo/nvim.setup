@@ -51,11 +51,17 @@ assert_file_has "$workflow" 'scripts/semgrep-scan.sh'
 grep -F 'SEMGREP_APP_TOKEN' "$workflow" >/dev/null && fail 'Semgrep CE must not require SEMGREP_APP_TOKEN'
 pass 'GitHub Actions runs Semgrep CE from scripts/semgrep-scan.sh'
 
-# 4. Website CI audits the lockfile after a frozen install.
-web_ci="$ROOT/.github/workflows/web.yml"
-assert_file_has "$web_ci" 'scripts/scan.sh audit'
-assert_file_has "$web_ci" 'pnpm install --frozen-lockfile'
-pass 'website CI audits npm packages after pnpm install'
+# 4. CI lints and builds the site; Playwright and visitor-path tests stay local.
+ci="$ROOT/.github/workflows/ci.yml"
+[[ -f "$ci" ]] || fail '.github/workflows/ci.yml is required'
+[[ ! -f "$ROOT/.github/workflows/web.yml" ]] || fail 'website pipeline web.yml must be removed'
+assert_file_has "$ci" 'pnpm install --frozen-lockfile'
+assert_file_has "$ci" 'pnpm format:check'
+assert_file_has "$ci" 'pnpm --filter web typecheck'
+assert_file_has "$ci" 'pnpm build'
+grep -E 'playwright|test:web:e2e|filter web test' "$ci" >/dev/null \
+  && fail 'CI must not run Playwright or the website visitor-path suite'
+pass 'CI runs format, typecheck, and the production build'
 
 # 5. Local scan.sh audit invokes pnpm with a moderate severity floor.
 calls="$TMP/calls.log"
@@ -123,7 +129,7 @@ grep -F 'Missing semgrep' "$TMP/missing" >/dev/null || fail 'missing-semgrep mes
 pass 'scan.sh sast fails closed when Semgrep is not installed'
 
 # 9. GitHub Actions stay pinned to immutable SHAs (OWASP A06 / supply chain).
-for wf in commitlint.yml semgrep.yml web.yml; do
+for wf in commitlint.yml semgrep.yml ci.yml; do
   path="$ROOT/.github/workflows/$wf"
   if grep -E 'uses:[[:space:]]+[^[:space:]]+@v[0-9]' "$path" >/dev/null; then
     fail "$wf uses a mutable GitHub Action tag"

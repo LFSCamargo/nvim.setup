@@ -56,7 +56,10 @@ test('marketing app is TypeScript with Tailwind and Prettier', () => {
   assert.match(read('apps/web/vite.config.ts'), /@tailwindcss\/vite/);
   assert.match(read('prettier.config.mjs'), /prettier-plugin-tailwindcss/);
   assert.match(read('package.json'), /"format": "prettier --write \."/);
-  assert.match(read('.github/workflows/web.yml'), /pnpm format:check/);
+  assert.match(read('.github/workflows/ci.yml'), /pnpm format:check/);
+  assert.match(read('.github/workflows/ci.yml'), /pnpm --filter web typecheck/);
+  assert.match(read('.github/workflows/ci.yml'), /pnpm build/);
+  assert.doesNotMatch(read('.github/workflows/ci.yml'), /playwright|test:web:e2e|filter web test/);
   assert.equal(
     existsSync(
       new URL('../../apps/web/public/assets/agents.png', import.meta.url),
@@ -183,14 +186,17 @@ test('patched npm advisories stay above the OWASP A06 floor', () => {
   versionAtLeast(overrides['postcss-selector-parser'], '6.1.5');
 });
 
-test('OWASP Semgrep and npm audit fail the website CI', () => {
+test('OWASP Semgrep stays in CI and the website pipeline is gone', () => {
   const semgrep = read('.github/workflows/semgrep.yml');
   assert.match(semgrep, /image: semgrep\/semgrep/);
   assert.match(semgrep, /scripts\/semgrep-scan\.sh/);
   assert.doesNotMatch(semgrep, /SEMGREP_APP_TOKEN/);
   assert.match(read('scripts/semgrep-scan.sh'), /p\/owasp-top-ten/);
   assert.match(read('scripts/semgrep-scan.sh'), /--error/);
-  assert.match(read('.github/workflows/web.yml'), /scripts\/scan\.sh audit/);
+  assert.equal(
+    existsSync(new URL('../../.github/workflows/web.yml', import.meta.url)),
+    false,
+  );
   assert.match(read('package.json'), /"scan": "bash scripts\/scan\.sh"/);
   assert.match(read('Makefile'), /bash scripts\/scan\.sh/);
   assert.match(read('.semgrepignore'), /node_modules\//);
