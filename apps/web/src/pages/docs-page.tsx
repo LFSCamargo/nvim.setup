@@ -1,20 +1,30 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, Navigate, useParams } from 'react-router-dom';
 import { MarkdownView } from '@/components/markdown-view';
 import { Nav } from '@/components/sections/nav';
 import { SiteFooter } from '@/components/sections/site-footer';
 import { LiquidGlass } from '@/components/ui/liquid-glass';
-import { docPages, getDocPage, githubDocUrl } from '@/lib/docs';
+import { useDocumentMeta } from '@/hooks/use-document-meta';
+import {
+  defaultDocSlug,
+  docPages,
+  getDocPage,
+  githubDocUrl,
+  isDocSlug,
+} from '@/lib/docs';
+import { docMeta } from '@/lib/seo';
 import { cn } from '@/lib/utils';
 
 const groups = ['Start', 'Reference'] as const;
 
 export function DocsPage() {
   const { slug } = useParams();
-  const page = getDocPage(slug);
+  const known = isDocSlug(slug);
+  const page = getDocPage(known ? slug : defaultDocSlug);
   const [menu, setMenu] = useState(false);
   const [markdown, setMarkdown] = useState('');
   const [error, setError] = useState('');
+  useDocumentMeta(docMeta(page));
 
   useEffect(() => {
     let cancelled = false;
@@ -35,6 +45,10 @@ export function DocsPage() {
       cancelled = true;
     };
   }, [page.src]);
+
+  if (!known) {
+    return <Navigate to={`/docs/${defaultDocSlug}`} replace />;
+  }
 
   return (
     <>

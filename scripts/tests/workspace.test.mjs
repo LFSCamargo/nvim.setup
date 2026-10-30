@@ -101,6 +101,32 @@ test('bootstrap is a curl-pipeable installer that does not bundle markdown', () 
   assert.match(bootstrap, /scripts\/fonts\.sh/);
 });
 
+test('marketing site publishes titles, Open Graph tags, robots, and a sitemap', () => {
+  const html = read('apps/web/index.html');
+  const robots = read('apps/web/public/robots.txt');
+  const sitemap = read('apps/web/public/sitemap.xml');
+  const seo = read('apps/web/src/lib/seo.ts');
+  const content = read('apps/web/src/content.ts');
+  assert.match(
+    content,
+    /site = 'https:\/\/lfscamargo\.github\.io\/nvim\.setup'/,
+  );
+  assert.match(html, /property="og:title"/);
+  assert.match(html, /rel="canonical"/);
+  assert.match(html, /application\/ld\+json/);
+  assert.match(robots, /Disallow: \/guides\//);
+  assert.match(
+    robots,
+    /Sitemap: https:\/\/lfscamargo\.github\.io\/nvim\.setup\/sitemap\.xml/,
+  );
+  assert.match(sitemap, /\/docs\/getting-started/);
+  assert.match(sitemap, /\/docs\/editor/);
+  assert.doesNotMatch(sitemap, /\/guides\//);
+  assert.match(seo, /export function applyPageMeta/);
+  assert.match(read('apps/web/src/pages/home-page.tsx'), /useDocumentMeta/);
+  assert.match(read('apps/web/src/pages/docs-page.tsx'), /useDocumentMeta/);
+});
+
 test('docs reader loads static public guides instead of bundling markdown', () => {
   const docs = read('apps/web/src/lib/docs.ts');
   assert.doesNotMatch(docs, /\?raw/);

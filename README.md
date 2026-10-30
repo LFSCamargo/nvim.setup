@@ -64,16 +64,16 @@ nvim .
 
 ### Requirements
 
-| Dependency                      | Purpose                                    |
-| ------------------------------- | ------------------------------------------ |
-| Neovim 0.12+                    | Editor and current Tree-sitter APIs        |
-| Tree-sitter CLI 0.26.1+         | Parser builds (Homebrew or Cargo, not npm) |
-| Node.js 22+ and npm             | Web language servers and the debug adapter |
-| Git, curl, tar, unzip, Python 3 | Downloads, installation, and checks        |
-| C/C++ toolchain and Make        | Native builds                              |
-| Go and Rust/Cargo               | Go tools and the parser CLI                |
-| ripgrep, fd, fzf                | Search and file picking                    |
-| `codex`, `agent`, `gemini`, `claude`, `opencode` | Optional chat CLIs              |
+| Dependency                                       | Purpose                                    |
+| ------------------------------------------------ | ------------------------------------------ |
+| Neovim 0.12+                                     | Editor and current Tree-sitter APIs        |
+| Tree-sitter CLI 0.26.1+                          | Parser builds (Homebrew or Cargo, not npm) |
+| Node.js 22+ and npm                              | Web language servers and the debug adapter |
+| Git, curl, tar, unzip, Python 3                  | Downloads, installation, and checks        |
+| C/C++ toolchain and Make                         | Native builds                              |
+| Go and Rust/Cargo                                | Go tools and the parser CLI                |
+| ripgrep, fd, fzf                                 | Search and file picking                    |
+| `codex`, `agent`, `gemini`, `claude`, `opencode` | Optional chat CLIs                         |
 
 Keep `~/.local/bin` on your PATH, and `~/.cargo/bin` if you use Cargo. Install places an `nvim` wrapper there so `nvim --clean` opens this setup without restored tabs. The terminal needs true color and mouse support. On Debian/Ubuntu, the scripts add an `fd` wrapper for `fdfind`. If Ctrl+S freezes the terminal, add `stty -ixon` to your shell startup file.
 
@@ -83,25 +83,25 @@ Install and authenticate the chat CLIs separately: [Codex](https://github.com/op
 
 Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to insert, `Esc` for normal mode, and Ctrl+Q to quit (unsaved tabs come back next time). `nvim --clean` skips restored tabs and chats. The leader key is **Space**; press leader shortcuts as a sequence in normal mode.
 
-| Shortcut or click        | Action                                                                                         |
-| ------------------------ | ---------------------------------------------------------------------------------------------- |
-| Click a pane             | Focus the editor, file tree, or chat                                                           |
-| Click a tab, `+`, or `×` | Switch, add, or close a file or chat tab                                                       |
-| `‹` / `›`                | Scroll overflowing tabs                                                                        |
-| Ctrl+S                   | Save (asks for a name if the buffer is unnamed)                                                |
-| Ctrl+Q                   | Quit and persist this project's tabs and chats                                                 |
-| Ctrl+T / Ctrl+W          | Add / close a tab in the focused pane                                                          |
-| Ctrl+]                   | Start a new Codex, Cursor Agent, Gemini, Claude, or OpenCode session                           |
-| Ctrl+B                   | Toggle the file tree                                                                           |
-| Ctrl+G                   | Open Git source control (commit, stage, unstage, revert, bottom commit log; keyboard or mouse) |
-| Ctrl+P / Ctrl+F          | Find files / search project text (opens a new editor tab)                                      |
-| Esc                      | Send Escape to the focused agent (stop generation, for example)                                |
-| Ctrl+\ Ctrl+N            | Leave terminal-input mode (`Esc Esc` also works in other terminals)                            |
-| Ctrl+h/j/k/l             | Move between windows in normal mode                                                            |
-| Space a c / a u / a g / a l / a o | Toggle Codex / Cursor Agent / Gemini / Claude / OpenCode                            |
-| Space f                  | Format the current file                                                                        |
-| gd / gr / K              | Definition / references / documentation                                                        |
-| F5 / Space d b           | Start or continue debugging / toggle a breakpoint                                              |
+| Shortcut or click                 | Action                                                                                         |
+| --------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Click a pane                      | Focus the editor, file tree, or chat                                                           |
+| Click a tab, `+`, or `×`          | Switch, add, or close a file or chat tab                                                       |
+| `‹` / `›`                         | Scroll overflowing tabs                                                                        |
+| Ctrl+S                            | Save (asks for a name if the buffer is unnamed)                                                |
+| Ctrl+Q                            | Quit and persist this project's tabs and chats                                                 |
+| Ctrl+T / Ctrl+W                   | Add / close a tab in the focused pane                                                          |
+| Ctrl+]                            | Start a new Codex, Cursor Agent, Gemini, Claude, or OpenCode session                           |
+| Ctrl+B                            | Toggle the file tree                                                                           |
+| Ctrl+G                            | Open Git source control (commit, stage, unstage, revert, bottom commit log; keyboard or mouse) |
+| Ctrl+P / Ctrl+F                   | Find files / search project text (opens a new editor tab)                                      |
+| Esc                               | Send Escape to the focused agent (stop generation, for example)                                |
+| Ctrl+\ Ctrl+N                     | Leave terminal-input mode (`Esc Esc` also works in other terminals)                            |
+| Ctrl+h/j/k/l                      | Move between windows in normal mode                                                            |
+| Space a c / a u / a g / a l / a o | Toggle Codex / Cursor Agent / Gemini / Claude / OpenCode                                       |
+| Space f                           | Format the current file                                                                        |
+| gd / gr / K                       | Definition / references / documentation                                                        |
+| F5 / Space d b                    | Start or continue debugging / toggle a breakpoint                                              |
 
 Closing a chat tab stops that CLI. The tab also closes if the CLI process exits. Switching tabs leaves it running. Unsaved files are protected when you close a tab. Git files, commits, and Fugitive views open in the mid editor; `:q` there keeps that pane and a tab. Quitting with Ctrl+Q snapshots unsaved buffers and resumes chat CLIs by ID on the next launch in that directory. `make install` puts a wrapper at `~/.local/bin/nvim` so `nvim --clean` still loads this config. Maintenance scripts set `NVIM_WRAPPER=0` when they need Neovim's factory `--clean`.
 
@@ -217,7 +217,7 @@ If something looks off after install, start with `:checkhealth`, `:LspInfo`, `:M
 
 ## Website workspace
 
-The marketing site lives in `apps/web` as a TypeScript React/Vite app with Tailwind CSS v4. Guides on `/docs` are static markdown under `apps/web/public/guides/`. Prettier (with the Tailwind class-sorting plugin) formats the website and related Node files. Nx runs tasks across the pnpm workspace; the existing Makefile remains the entry point for installing and maintaining Neovim. Node.js 22.12+ and pnpm 10.34.9 are needed to develop the website. npm is still required by the Neovim installer for Mason's Node-based tools.
+The marketing site lives in `apps/web` as a TypeScript React/Vite app with Tailwind CSS v4. Guides on `/docs` are static markdown under `apps/web/public/guides/`. Each public route sets a unique title, description, canonical, and Open Graph tags; `robots.txt` and `sitemap.xml` list those routes and hide the raw markdown copies. Prettier (with the Tailwind class-sorting plugin) formats the website and related Node files. Nx runs tasks across the pnpm workspace; the existing Makefile remains the entry point for installing and maintaining Neovim. Node.js 22.12+ and pnpm 10.34.9 are needed to develop the website. npm is still required by the Neovim installer for Mason's Node-based tools.
 
 ```sh
 pnpm install

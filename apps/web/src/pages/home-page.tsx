@@ -7,10 +7,13 @@ import { Principles } from '@/components/sections/principles';
 import { SiteFooter } from '@/components/sections/site-footer';
 import { Workspace } from '@/components/sections/workspace';
 import { ScreenshotDialog } from '@/components/screenshot-dialog';
+import { useDocumentMeta } from '@/hooks/use-document-meta';
 import { useScreenshotLightbox } from '@/hooks/use-screenshot-lightbox';
+import { homeMeta } from '@/lib/seo';
 
 export function HomePage() {
   const lightbox = useScreenshotLightbox();
+  useDocumentMeta(homeMeta());
 
   return (
     <>

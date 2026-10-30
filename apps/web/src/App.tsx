@@ -13,6 +13,7 @@ export default function App() {
           element={<Navigate to="/docs/getting-started" replace />}
         />
         <Route path="/docs/:slug" element={<DocsPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </ThemeProvider>
   );

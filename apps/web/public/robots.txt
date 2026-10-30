@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /guides/
+
+Sitemap: https://lfscamargo.github.io/nvim.setup/sitemap.xml

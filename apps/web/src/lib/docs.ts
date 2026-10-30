@@ -56,6 +56,10 @@ export const docPages: DocPage[] = [
 
 export const defaultDocSlug = 'getting-started';
 
+export function isDocSlug(slug: string | undefined): slug is string {
+  return Boolean(slug && docPages.some((page) => page.slug === slug));
+}
+
 export function getDocPage(slug: string | undefined): DocPage {
   return docPages.find((page) => page.slug === slug) ?? docPages[0]!;
 }

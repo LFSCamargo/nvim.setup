@@ -21,7 +21,7 @@ Code we wrote. These live under `nvim/lua/config/` and `scripts/`. They are not 
 | Tooling    | `nvim/lua/config/tooling.lua`    | Mason package list and Tree-sitter parser list                                                      |
 | Wrapper    | `scripts/nvim-wrapper.sh`        | `nvim --clean` loads this config without restoring a session                                        |
 | Bootstrap  | `scripts/bootstrap.sh`           | One-shot installer: fetch the repo, deps, icon fonts, then the Neovim config                        |
-| Fonts      | `scripts/fonts.sh`               | Symbols Nerd Font and a Monocraft Nerd Font face with those glyphs baked in at one cell              |
+| Fonts      | `scripts/fonts.sh`               | Symbols Nerd Font and a Monocraft Nerd Font face with those glyphs baked in at one cell             |
 
 `nvim/init.lua` is the entry point (options, Lazy, then the modules above). Do not grow it; put new behavior in a single-purpose config module.
 
@@ -88,14 +88,14 @@ bash, css, go, gomod, html, javascript, json, lua, markdown, markdown_inline, ru
 
 Authenticate separately. Missing binaries print a notice; the editor still works.
 
-| Binary     | Chat pane    | Resume                                                         |
-| ---------- | ------------ | -------------------------------------------------------------- |
-| `codex`    | Codex        | `codex resume <uuid>`                                          |
-| `agent`    | Cursor Agent | `agent --resume=<uuid>`                                        |
-| `gemini`   | Gemini       | `gemini --resume <uuid>` (new chats use `--session-id`)        |
-| `claude`   | Claude       | `claude --resume <uuid>`                                       |
-| `opencode` | OpenCode     | `opencode --session <id>`                                      |
+| Binary     | Chat pane    | Resume                                                  |
+| ---------- | ------------ | ------------------------------------------------------- |
+| `codex`    | Codex        | `codex resume <uuid>`                                   |
+| `agent`    | Cursor Agent | `agent --resume=<uuid>`                                 |
+| `gemini`   | Gemini       | `gemini --resume <uuid>` (new chats use `--session-id`) |
+| `claude`   | Claude       | `claude --resume <uuid>`                                |
+| `opencode` | OpenCode     | `opencode --session <id>`                               |
 
 ## Marketing application
 
-`apps/web` is a separate TypeScript React/Vite application with Tailwind CSS, managed by the pnpm workspace and Nx. It does not add Neovim plugins or change the installed editor. Root `project.json` exposes the existing setup checks as the Nx `setup` project; the web package is the `web` project. Website dependencies and Aceternity UI adaptations are declared in `apps/web/package.json` and `apps/web/THIRD-PARTY-NOTICES.md`. The `/docs` reader loads static markdown from `apps/web/public/guides/` (repo guides are copied there at `vite` start/build). Fenced samples render through `apps/web/src/components/code-block.tsx` (copy, line numbers, wrapping). Format the site with `pnpm format` (Prettier plus `prettier-plugin-tailwindcss`). `make scan` / `pnpm scan` is the OWASP barrier for that tree: Semgrep CE (`p/owasp-top-ten`, `p/javascript`, `p/typescript`, `p/react`, `p/security-audit`) plus `pnpm audit --audit-level=moderate`. CI runs the same checks. `pnpm-workspace.yaml` sets `minimumReleaseAge`, `trustPolicy: no-downgrade`, and `blockExoticSubdeps` so new or exotic npm packages cannot land immediately.
+`apps/web` is a separate TypeScript React/Vite application with Tailwind CSS, managed by the pnpm workspace and Nx. It does not add Neovim plugins or change the installed editor. Root `project.json` exposes the existing setup checks as the Nx `setup` project; the web package is the `web` project. Website dependencies and Aceternity UI adaptations are declared in `apps/web/package.json` and `apps/web/THIRD-PARTY-NOTICES.md`. The `/docs` reader loads static markdown from `apps/web/public/guides/` (repo guides are copied there at `vite` start/build). Fenced samples render through `apps/web/src/components/code-block.tsx` (copy, line numbers, wrapping). Titles, canonicals, Open Graph/Twitter tags, and JSON-LD come from `apps/web/src/lib/seo.ts`; crawlers also get `apps/web/public/robots.txt` and `apps/web/public/sitemap.xml` (raw `/guides/*.md` copies are disallowed so they do not compete with `/docs`). Format the site with `pnpm format` (Prettier plus `prettier-plugin-tailwindcss`). `make scan` / `pnpm scan` is the OWASP barrier for that tree: Semgrep CE (`p/owasp-top-ten`, `p/javascript`, `p/typescript`, `p/react`, `p/security-audit`) plus `pnpm audit --audit-level=moderate`. CI runs the same checks. `pnpm-workspace.yaml` sets `minimumReleaseAge`, `trustPolicy: no-downgrade`, and `blockExoticSubdeps` so new or exotic npm packages cannot land immediately.

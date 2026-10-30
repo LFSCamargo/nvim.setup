@@ -314,6 +314,27 @@ describe('landing page visitor paths', () => {
     expect(screen.getByText('Chats with your own agents.')).toBeTruthy();
     expect(screen.getByText('LSP, format, and debug.')).toBeTruthy();
   });
+
+  it('sets the home document title and Open Graph description', () => {
+    renderApp();
+    expect(document.title).toBe('nvim.setup — A quieter place to build.');
+    expect(
+      document
+        .querySelector('meta[name="description"]')
+        ?.getAttribute('content'),
+    ).toMatch(/Neovim workspace/);
+    expect(
+      document.querySelector('link[rel="canonical"]')?.getAttribute('href'),
+    ).toMatch(/\/$/);
+    expect(
+      document
+        .querySelector('meta[property="og:title"]')
+        ?.getAttribute('content'),
+    ).toBe('nvim.setup — A quieter place to build.');
+    expect(document.getElementById('seo-json-ld')?.textContent).toContain(
+      'SoftwareApplication',
+    );
+  });
 });
 
 describe('documentation reader', () => {
@@ -368,5 +389,20 @@ describe('documentation reader', () => {
         .getByRole('link', { name: 'View on GitHub ↗' })
         .getAttribute('href'),
     ).toBe('https://github.com/LFSCamargo/nvim.setup/blob/main/docs/EDITOR.md');
+    expect(document.title).toBe('Editor guide — nvim.setup');
+    expect(
+      document
+        .querySelector('meta[name="description"]')
+        ?.getAttribute('content'),
+    ).toBe('Keybindings, panes, languages, chat, and debugging.');
+  });
+
+  it('sends unknown docs slugs to the getting started guide', async () => {
+    stubGuides();
+    renderApp('/docs/not-a-real-guide');
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Get started' }),
+    ).toBeTruthy();
+    expect(document.title).toBe('Get started — nvim.setup');
   });
 });

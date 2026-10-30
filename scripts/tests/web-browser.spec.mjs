@@ -386,6 +386,52 @@ test('principles marquee fills the viewport with two equal looping halves', asyn
   });
 });
 
+test('search engines get unique titles, robots, and a sitemap', async ({
+  page,
+  request,
+}) => {
+  await page.goto('/');
+  await expect(page).toHaveTitle(/quieter place to build/);
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+    'content',
+    /Neovim workspace/,
+  );
+  await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
+    'content',
+    /quieter place to build/,
+  );
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    'href',
+    /\/$/,
+  );
+  expect(
+    await page.locator('script#seo-json-ld').evaluate((el) => el.textContent),
+  ).toContain('SoftwareApplication');
+
+  const robots = await request.get('/robots.txt');
+  expect(robots.ok()).toBeTruthy();
+  expect(await robots.text()).toMatch(/Sitemap:/);
+  expect(await robots.text()).toMatch(/Disallow: \/guides\//);
+
+  const sitemap = await request.get('/sitemap.xml');
+  expect(sitemap.ok()).toBeTruthy();
+  const xml = await sitemap.text();
+  expect(xml).toContain('/docs/getting-started');
+  expect(xml).toContain('/docs/editor');
+  expect(xml).not.toContain('/guides/');
+
+  await page.goto('/docs/editor');
+  await expect(page).toHaveTitle(/Editor guide/);
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+    'content',
+    /Keybindings/,
+  );
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    'href',
+    /\/docs\/editor$/,
+  );
+});
+
 test('desktop visual capture', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.emulateMedia({ reducedMotion: 'reduce' });
