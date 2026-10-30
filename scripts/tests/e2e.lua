@@ -319,6 +319,33 @@ local ok, err = xpcall(function()
   assert(tabs.close_col >= 0, 'tab bar should expose × on two.lua: ' .. tabs.bar)
 
   local tab_pos = request('nvim_win_get_position', tabs.win)
+  request('nvim_input_mouse', 'right', 'press', '', 0, tab_pos[1], tab_pos[2] + 4)
+  request('nvim_input_mouse', 'right', 'release', '', 0, tab_pos[1], tab_pos[2] + 4)
+  wait_for('right-clicking editor tab', function()
+    return eval("return require('config.context_menu').visible()")
+  end)
+  assert(
+    eval([[return vim.tbl_contains(require('config.context_menu').labels(), 'Close tab')]]),
+    'editor tab right-click menu missing Close tab'
+  )
+  request('nvim_input', '<Esc>')
+  wait_for('closing editor tab menu', function()
+    return eval("return not require('config.context_menu').visible()")
+  end)
+  local chat_pos = request('nvim_win_get_position', chat)
+  request('nvim_input_mouse', 'right', 'press', '', 0, chat_pos[1], chat_pos[2] + 4)
+  request('nvim_input_mouse', 'right', 'release', '', 0, chat_pos[1], chat_pos[2] + 4)
+  wait_for('right-clicking chat tab', function()
+    return eval("return require('config.context_menu').visible()")
+  end)
+  assert(
+    eval([[return vim.tbl_contains(require('config.context_menu').labels(), 'Close chat')]]),
+    'chat tab right-click menu missing Close chat'
+  )
+  request('nvim_input', '<Esc>')
+  wait_for('closing chat tab menu', function()
+    return eval("return not require('config.context_menu').visible()")
+  end)
   request('nvim_input_mouse', 'left', 'press', '', 0, tab_pos[1], tab_pos[2] + tabs.close_col)
   request('nvim_input_mouse', 'left', 'release', '', 0, tab_pos[1], tab_pos[2] + tabs.close_col)
   wait_for('clicking × on two.lua to close that tab', function()
@@ -730,10 +757,123 @@ local ok, err = xpcall(function()
     request('nvim_input_mouse', 'left', 'press', '', 0, sp.row - 1, sp.col - 1)
     request('nvim_input_mouse', 'left', 'release', '', 0, sp.row - 1, sp.col - 1)
   end
+  local function right_click_sidebar(line, col)
+    focus_git_list()
+    local win = request('nvim_get_current_win')
+    local sp = eval(string.format('return vim.fn.screenpos(%d, %d, %d)', win, line, math.max(col, 1)))
+    request('nvim_input_mouse', 'right', 'press', '', 0, sp.row - 1, sp.col - 1)
+    request('nvim_input_mouse', 'right', 'release', '', 0, sp.row - 1, sp.col - 1)
+  end
   assert(
     sidebar_line('Staged Changes') > 0 and sidebar_line('deleted.txt') > 0 and sidebar_line('new.txt') > 0,
     'Git sections or changes missing'
   )
+  right_click_sidebar(sidebar_line('changed file.txt'), 10)
+  wait_for('Git right-click menu', function()
+    return eval("return require('config.context_menu').visible()")
+  end)
+  assert(
+    eval([[return vim.tbl_contains(require('config.context_menu').labels(), 'Stage file')]]),
+    'unstaged Git menu should offer Stage file'
+  )
+  request('nvim_input', '<CR>')
+  wait_for('Git menu Check Diff action', function()
+    return eval("return require('config.diff').active()")
+  end)
+  eval("require('config.sidebar').close_diff()")
+  focus_git_line('changed file.txt')
+  request('nvim_input', '<S-F10>')
+  wait_for('keyboard context menu', function()
+    return eval("return require('config.context_menu').visible()")
+  end)
+  request('nvim_input', '<Esc>')
+  wait_for('dismiss keyboard context menu', function()
+    return eval("return not require('config.context_menu').visible()")
+  end)
+  eval([[
+    package.loaded['e2e-tree-api-before-menu'] = package.loaded['nvim-tree.api']
+    package.loaded['nvim-tree.api'] = {
+      fs = {
+        rename = function() vim.g.context_tree_action = 'rename' end,
+        remove = function() vim.g.context_tree_action = 'remove' end,
+        create = function() vim.g.context_tree_action = 'create' end,
+      },
+      node = { open = { edit = function() vim.g.context_tree_action = 'toggle' end } },
+      tree = {
+        reload = function() vim.g.context_tree_action = 'refresh' end,
+        get_node_under_cursor = function() return { type = 'file', absolute_path = vim.env.E2E_DIR .. '/repo/app.ts' } end,
+      },
+    }
+    require('config.context_menu').tree({ type = 'file', absolute_path = vim.env.E2E_DIR .. '/repo/app.ts' })
+  ]])
+  assert(
+    eval([[return vim.tbl_contains(require('config.context_menu').labels(), 'Rename')]]),
+    'file tree menu should offer Rename'
+  )
+  eval([[require('config.context_menu').select(4)]])
+  wait_for('tree menu rename action', function()
+    return eval('return vim.g.context_tree_action') == 'rename'
+  end)
+  eval([[require('config.context_menu').tree({ type = 'directory', absolute_path = vim.env.E2E_DIR .. '/repo' })]])
+  assert(
+    eval([[return vim.tbl_contains(require('config.context_menu').labels(), 'Expand / collapse')]]),
+    'folder menu should offer expand/collapse'
+  )
+  eval([[require('config.context_menu').select(1)]])
+  wait_for('folder menu action', function()
+    return eval('return vim.g.context_tree_action') == 'toggle'
+  end)
+  eval([[
+    vim.cmd('topleft vsplit')
+    local win = vim.api.nvim_get_current_win()
+    local buf = vim.api.nvim_create_buf(false, true)
+    vim.api.nvim_win_set_buf(win, buf)
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, { 'app.ts' })
+    vim.bo[buf].filetype = 'NvimTree'
+    require('config.sidebar').tree_setup().on_attach(buf)
+    vim.g.e2e_tree_win = win
+  ]])
+  local tree_pos = eval([[return vim.fn.screenpos(vim.g.e2e_tree_win, 1, 1)]])
+  request('nvim_input_mouse', 'right', 'press', '', 0, tree_pos.row, tree_pos.col - 1)
+  request('nvim_input_mouse', 'right', 'release', '', 0, tree_pos.row, tree_pos.col - 1)
+  wait_for('file tree right-click menu', function()
+    return eval("return require('config.context_menu').visible()")
+  end)
+  assert(
+    eval([[return vim.tbl_contains(require('config.context_menu').labels(), 'Open file')]]),
+    'tree right-click menu missing Open file'
+  )
+  eval("require('config.context_menu').close(true)")
+  eval([[vim.api.nvim_win_close(vim.g.e2e_tree_win, true)]])
+  eval("package.loaded['nvim-tree.api'] = package.loaded['e2e-tree-api-before-menu']")
+  eval("require('config.sidebar').git()")
+  wait_for('Git list after tree context test', function()
+    return sidebar_text():find('changed file.txt', 1, true) ~= nil
+  end)
+  eval([[
+    local win = require('config.tabs').editor_win()
+    _G.EditorTabClick(vim.api.nvim_win_get_buf(win), 0, 'r')
+  ]])
+  assert(
+    eval([[return vim.tbl_contains(require('config.context_menu').labels(), 'Close other editor tabs')]]),
+    'editor tab menu should offer tab actions'
+  )
+  eval("require('config.context_menu').close(true)")
+  eval([[
+    local id = vim.tbl_keys(require('config.agents').sessions)[1]
+    _G.ChatTabClick(id, 0, 'r')
+  ]])
+  assert(
+    eval([[return vim.tbl_contains(require('config.context_menu').labels(), 'Close chat')]]),
+    'chat tab menu should offer Close chat'
+  )
+  eval("require('config.context_menu').close(true)")
+  eval("_G.SidebarFiles(0, 0, 'r')")
+  assert(
+    eval([[return vim.tbl_contains(require('config.context_menu').labels(), 'Open files')]]),
+    'sidebar tab menu should offer its view'
+  )
+  eval("require('config.context_menu').close(true)")
   wait_for('commit graph', function()
     local text = log_text()
     return log_line('COMMITS') > 0 and text:find('initial', 1, true) ~= nil
@@ -832,6 +972,7 @@ local ok, err = xpcall(function()
   )
   assert(not shown:find('Click', 1, true), 'mouse hint should not be shown')
   assert(shown:find('[Commit]', 1, true) and shown:find('Ctrl+Enter', 1, true), 'commit button missing')
+  assert(shown:find('[Check Diff]', 1, true), 'Check Diff button missing')
   assert(shown:find('x revert', 1, true) and shown:find('i message', 1, true), 'keyboard helper text missing')
   assert(shown:find('[Stage All]', 1, true) and shown:find('[Revert All]', 1, true), 'bulk change actions missing')
   assert(
@@ -853,6 +994,50 @@ local ok, err = xpcall(function()
   ]]),
     'change colors missing'
   )
+  local function diff_text()
+    return eval([[local buf = require('config.diff').buffer()
+      return buf and table.concat(vim.api.nvim_buf_get_lines(buf, 0, -1, false), '\n') or '' ]])
+  end
+  local windows_before_diff = eval('return #vim.api.nvim_tabpage_list_wins(0)')
+  local previous_editor_buf = eval("return vim.api.nvim_win_get_buf(require('config.tabs').editor_win())")
+  click_sidebar(sidebar_line('[Check Diff]'), 6)
+  wait_for('diff button to open in editor', function()
+    return diff_text():find('Unstaged diff:', 1, true) and diff_text():find('%+after')
+  end)
+  assert(
+    eval([[local tabs = require('config.tabs')
+    return vim.api.nvim_win_get_buf(tabs.editor_win()) == require('config.diff').buffer()]]),
+    'diff must open in editor pane'
+  )
+  assert(eval('return #vim.api.nvim_tabpage_list_wins(0)') == windows_before_diff, 'diff must not create a split')
+  click_sidebar(sidebar_line('deleted.txt'), 10)
+  wait_for('deleted file diff from sidebar click', function()
+    return diff_text():find('deleted.txt', 1, true) and diff_text():find('%-before')
+  end)
+  click_sidebar(sidebar_line('app.ts'), 10)
+  wait_for('untracked file diff from sidebar click', function()
+    return diff_text():find('app.ts', 1, true) and diff_text():find('%+export')
+  end)
+  local close_line = sidebar_line('[Close Diff]')
+  assert(close_line > 0, 'Close Diff button missing')
+  click_sidebar(close_line, 6)
+  wait_for('closing diff restores editor tab', function()
+    return eval("return not require('config.diff').active()")
+  end)
+  assert(
+    eval("return vim.api.nvim_win_get_buf(require('config.tabs').editor_win())") == previous_editor_buf,
+    'Close Diff should restore previous editor tab'
+  )
+  focus_git_line('changed file.txt')
+  request('nvim_input', 'd')
+  wait_for('d opens selected file diff', function()
+    return diff_text():find('changed file.txt', 1, true) and diff_text():find('%+after')
+  end)
+  eval("vim.api.nvim_set_current_win(require('config.tabs').editor_win())")
+  request('nvim_input', '<C-w>')
+  wait_for('Ctrl-W closes diff tab', function()
+    return eval("return not require('config.diff').active()")
+  end)
   click_sidebar(sidebar_line('Changes  ('), 2)
   wait_for('collapsing changes with mouse', function()
     return sidebar_line('changed file.txt') == 0
@@ -919,6 +1104,21 @@ local ok, err = xpcall(function()
   wait_for('staged new file in sidebar', function()
     return sidebar_line('[Unstage All]') > 0 and sidebar_text():find('new.txt', 1, true) ~= nil
   end)
+  right_click_sidebar(sidebar_line('new.txt'), 10)
+  wait_for('staged Git context menu', function()
+    return eval("return require('config.context_menu').visible()")
+  end)
+  assert(
+    eval([[return vim.tbl_contains(require('config.context_menu').labels(), 'Unstage file')]]),
+    'staged Git menu should offer Unstage file'
+  )
+  request('nvim_input', '<Esc>')
+  focus_git_line('new.txt')
+  request('nvim_input', 'd')
+  wait_for('staged new file diff', function()
+    return diff_text():find('Staged diff: new.txt', 1, true) and diff_text():find('%+new')
+  end)
+  eval("require('config.sidebar').close_diff()")
   eval([[
     for _, win in ipairs(vim.api.nvim_list_wins()) do
       local buf = vim.api.nvim_win_get_buf(win)
@@ -928,6 +1128,10 @@ local ok, err = xpcall(function()
     end
   ]])
   focus_git_list()
+  vim.wait(100)
+  wait_for('Git list ready after diff close', function()
+    return sidebar_text():find('[Commit]', 1, true) ~= nil
+  end)
   request('nvim_input', 'C')
   wait_for('commit from Git sidebar', function()
     local result = vim
@@ -942,6 +1146,13 @@ local ok, err = xpcall(function()
   wait_for('commit graph after sidebar commit', function()
     return log_text():find('e2e commit from sidebar', 1, true) ~= nil
   end)
+  focus_log_line('e2e commit from sidebar')
+  eval("require('config.sidebar').context_menu('log')")
+  assert(
+    eval([[return vim.tbl_contains(require('config.context_menu').labels(), 'Copy commit hash')]]),
+    'commit log menu should offer hash action'
+  )
+  request('nvim_input', '<Esc>')
   local function in_mid_editor()
     return eval([[
       local tabs = require('config.tabs')

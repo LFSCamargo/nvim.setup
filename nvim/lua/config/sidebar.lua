@@ -83,11 +83,21 @@ end
 
 function M.tree_setup()
   return {
+    on_attach = function(buf)
+      local tree = require('nvim-tree.api')
+      if tree.config and tree.config.mappings then
+        tree.config.mappings.default_on_attach(buf)
+      end
+      vim.keymap.set('n', '<RightMouse>', function()
+        require('config.context_menu').tree_at_mouse()
+      end, { buffer = buf, silent = true, desc = 'File tree context menu' })
+    end,
     view = {
       width = function()
         return M.width()
       end,
     },
+    ui = { confirm = { remove = true } },
     renderer = {
       icons = require('config.icons').tree_icons(),
       highlight_git = 'name',
@@ -438,6 +448,29 @@ local function open_file(entry)
   vim.cmd('edit ' .. vim.fn.fnameescape(path))
 end
 
+function M.check_diff(entry)
+  if not root then
+    return
+  end
+  if not entry or not entry.path then
+    entry = groups.staged[1] or groups.unstaged[1]
+  end
+  if not entry then
+    vim.notify('No changed files to show', vim.log.levels.INFO)
+    return
+  end
+  if require('config.diff').open(root, entry) then
+    M.render(current_branch, M.generation)
+  end
+end
+
+function M.close_diff()
+  require('config.diff').close()
+  if M.view == 'git' then
+    M.render(current_branch, M.generation)
+  end
+end
+
 local function show_commit(hash)
   if not root or type(hash) ~= 'string' or not hash:match('^%x+$') or #hash < 7 or #hash > 40 then
     return
@@ -478,12 +511,136 @@ local function selected_log(line)
   return log_rows and log_rows[line or api.nvim_win_get_cursor(0)[1]]
 end
 
+function M.context_menu(kind, line, pos)
+  local menu = require('config.context_menu')
+  local entry = kind == 'log' and selected_log(line) or selected(line)
+  local items = {}
+  if kind == 'composer' then
+    items = {
+      {
+        label = 'Edit commit message',
+        run = function()
+          focus_composer(true)
+        end,
+      },
+      { label = 'Commit staged changes', run = commit },
+    }
+  elseif entry and entry.kind == 'log' and entry.hash then
+    items = {
+      {
+        label = 'Show commit',
+        run = function()
+          show_commit(entry.hash)
+        end,
+      },
+      {
+        label = 'Copy commit hash',
+        run = function()
+          vim.fn.setreg('+', entry.hash)
+        end,
+      },
+    }
+  elseif entry and entry.path then
+    items = {
+      {
+        label = 'Check Diff',
+        run = function()
+          M.check_diff(entry)
+        end,
+      },
+      {
+        label = 'Open file',
+        run = function()
+          open_file(entry)
+        end,
+      },
+      {
+        label = 'Copy relative path',
+        run = function()
+          vim.fn.setreg('+', entry.path)
+        end,
+      },
+    }
+    if entry.group == 'staged' then
+      table.insert(items, 3, {
+        label = 'Unstage file',
+        run = function()
+          change_index(entry)
+        end,
+      })
+    else
+      table.insert(items, 3, {
+        label = 'Stage file',
+        run = function()
+          change_index(entry)
+        end,
+      })
+      items[#items + 1] = {
+        label = 'Revert file',
+        run = function()
+          revert_entry(entry)
+        end,
+      }
+    end
+  elseif entry and entry.kind == 'section' then
+    items = {
+      {
+        label = 'Expand / collapse',
+        run = function()
+          expanded[entry.group] = not expanded[entry.group]
+          M.render(current_branch, M.generation)
+        end,
+      },
+      {
+        label = entry.group == 'staged' and 'Unstage all' or 'Stage all',
+        run = entry.group == 'staged' and unstage_all or stage_all,
+      },
+      { label = 'Refresh changes', run = M.refresh },
+    }
+  else
+    items = {
+      {
+        label = 'Check Diff',
+        run = function()
+          M.check_diff()
+        end,
+      },
+      { label = 'Refresh changes', run = M.refresh },
+      {
+        label = 'Edit commit message',
+        run = function()
+          focus_composer(true)
+        end,
+      },
+      { label = 'Commit staged changes', run = commit },
+    }
+  end
+  return menu.show(items, pos)
+end
+
+local function context_mouse(kind, expected_win)
+  local mouse = vim.fn.getmousepos()
+  if mouse.winid ~= expected_win or mouse.line < 1 then
+    return
+  end
+  local pos = { row = mouse.screenrow, col = mouse.screencol }
+  M.context_menu(kind, mouse.line, pos)
+end
+
 local function activate(entry, action)
   if not entry then
     return
   end
   if entry.kind == 'commit' or action == 'commit' then
     commit()
+    return
+  end
+  if entry.kind == 'check_diff' or entry.kind == 'close_diff' then
+    if entry.kind == 'close_diff' then
+      M.close_diff()
+    else
+      M.check_diff(selected())
+    end
     return
   end
   if entry.kind == 'bulk' then
@@ -515,7 +672,11 @@ local function activate(entry, action)
     change_index(entry)
     return
   end
-  open_file(entry)
+  if require('config.diff').active() then
+    M.check_diff(entry)
+  else
+    open_file(entry)
+  end
 end
 
 local function click_action(entry, col)
@@ -523,6 +684,10 @@ local function click_action(entry, col)
     return
   end
   if entry.kind == 'commit' then
+    activate(entry)
+    return
+  end
+  if entry.kind == 'check_diff' or entry.kind == 'close_diff' then
     activate(entry)
     return
   end
@@ -575,19 +740,30 @@ function M.render(branch, generation)
   local rendering = render_id
   rows = {}
   rows[3] = { kind = 'commit' }
-  paint({
+  rows[4] = { kind = 'check_diff' }
+  local header = {
     '  SOURCE CONTROL',
     '  ' .. branch:gsub('[%c]', ' '),
     '  [Commit]  Ctrl+Enter',
-    '  s/u  x revert  i message',
-    '',
-  })
+    '  [Check Diff]',
+  }
+  if require('config.diff').active() then
+    header[#header + 1] = '  [Close Diff]'
+    rows[#header] = { kind = 'close_diff' }
+  end
+  header[#header + 1] = '  d diff  s/u  x revert  i message'
+  header[#header + 1] = ''
+  paint(header)
   api.nvim_buf_clear_namespace(git_buf, highlights, 0, -1)
   api.nvim_buf_add_highlight(git_buf, highlights, 'GitButton', 2, 0, -1)
-  api.nvim_buf_add_highlight(git_buf, highlights, 'GitHelp', 3, 0, -1)
+  api.nvim_buf_add_highlight(git_buf, highlights, 'GitButton', 3, 0, -1)
+  if rows[5] then
+    api.nvim_buf_add_highlight(git_buf, highlights, 'GitButton', 4, 0, -1)
+  end
+  api.nvim_buf_add_highlight(git_buf, highlights, 'GitHelp', #header - 2, 0, -1)
   paint_composer_placeholder()
   M.render_log()
-  local section, file_index, emitted_header, emitted_bulk, line_count = 1, 1, false, false, 5
+  local section, file_index, emitted_header, emitted_bulk, line_count = 1, 1, false, false, #header
   local names = { 'staged', 'unstaged' }
   local function batch()
     if
@@ -826,6 +1002,9 @@ local function bind_list_keys()
   map_buf(git_buf, 'n', '<CR>', function()
     activate(selected())
   end, 'Open file or toggle')
+  map_buf(git_buf, 'n', 'd', function()
+    M.check_diff(selected())
+  end, 'Check diff in editor')
   map_buf(git_buf, 'n', 's', function()
     local entry = selected()
     if entry and entry.path and entry.group == 'unstaged' then
@@ -861,6 +1040,9 @@ local function bind_list_keys()
   map_buf(git_buf, 'n', '<Tab>', focus_log, 'Focus commit log')
   map_buf(git_buf, 'n', 'r', M.refresh, 'Refresh')
   map_buf(git_buf, 'n', 'q', M.files, 'Files sidebar')
+  map_buf(git_buf, 'n', '<RightMouse>', function()
+    context_mouse(nil, git_win)
+  end, 'Git context menu')
   vim.keymap.set('n', '<LeftMouse>', function()
     local pos = vim.fn.getmousepos()
     if pos.winid == git_win and pos.line > 0 then
@@ -888,6 +1070,9 @@ local function bind_log_keys()
   map_buf(log_buf, 'n', '<C-CR>', commit, 'Commit')
   map_buf(log_buf, 'n', 'r', M.refresh, 'Refresh')
   map_buf(log_buf, 'n', 'q', M.files, 'Files sidebar')
+  map_buf(log_buf, 'n', '<RightMouse>', function()
+    context_mouse('log', log_win)
+  end, 'Commit context menu')
   vim.keymap.set('n', '<LeftMouse>', function()
     local pos = vim.fn.getmousepos()
     if pos.winid == log_win and pos.line > 0 then
@@ -907,6 +1092,9 @@ local function bind_composer_keys()
   map_buf(composer_buf, 'n', '<Tab>', focus_list, 'Git file list')
   map_buf(composer_buf, 'n', 'q', M.files, 'Files sidebar')
   map_buf(composer_buf, 'n', 'r', M.refresh, 'Refresh')
+  map_buf(composer_buf, 'n', '<RightMouse>', function()
+    context_mouse('composer', composer_win)
+  end, 'Commit context menu')
   api.nvim_create_autocmd({ 'TextChanged', 'TextChangedI' }, {
     buffer = composer_buf,
     callback = paint_composer_placeholder,
@@ -1004,7 +1192,13 @@ api.nvim_create_autocmd('WinLeave', {
 })
 api.nvim_create_autocmd('WinEnter', {
   callback = function()
-    if M.view ~= 'git' or left_git or not git_side(api.nvim_get_current_win()) then
+    if
+      M.view ~= 'git'
+      or left_git
+      or not git_side(api.nvim_get_current_win())
+      or require('config.diff').active()
+      or require('config.context_menu').restoring()
+    then
       return
     end
     vim.defer_fn(function()
@@ -1033,21 +1227,29 @@ api.nvim_create_autocmd('VimResized', {
 _G.SidebarFiles = function(_, _, button)
   if button == 'l' then
     M.files()
+  elseif button == 'r' then
+    require('config.context_menu').sidebar_tab('files', require('config.context_menu').mouse_position())
   end
 end
 _G.SidebarGit = function(_, _, button)
   if button == 'l' then
     M.git()
+  elseif button == 'r' then
+    require('config.context_menu').sidebar_tab('git', require('config.context_menu').mouse_position())
   end
 end
 _G.SidebarSettings = function(_, _, button)
   if button == 'l' then
     M.settings()
+  elseif button == 'r' then
+    require('config.context_menu').sidebar_tab('settings', require('config.context_menu').mouse_position())
   end
 end
 _G.SidebarExtensions = function(_, _, button)
   if button == 'l' then
     M.extensions()
+  elseif button == 'r' then
+    require('config.context_menu').sidebar_tab('extensions', require('config.context_menu').mouse_position())
   end
 end
 function M.winbar()

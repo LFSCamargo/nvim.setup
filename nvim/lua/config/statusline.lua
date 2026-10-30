@@ -58,6 +58,7 @@ local side_ft = {
   ['git-log'] = 'Git',
   ['setup-settings'] = 'Settings',
   ['setup-extensions'] = 'Extensions',
+  ['git-diff'] = 'Diff',
 }
 
 M.fill_highlights = {

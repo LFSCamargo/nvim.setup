@@ -14,6 +14,7 @@ local side_ft = {
 }
 local git_editor_ft = {
   git = true,
+  ['git-diff'] = true,
   fugitive = true,
   fugitiveblame = true,
   gitcommit = true,
@@ -319,7 +320,8 @@ function M.render()
     for _, b in ipairs(api.nvim_list_bufs()) do
       if editor_buf(b) then
         local name = api.nvim_buf_get_name(b)
-        local label = name == '' and '[New]' or vim.fn.fnamemodify(name, ':t')
+        local label = vim.bo[b].filetype == 'git-diff' and (vim.b[b].git_diff_label or 'Diff')
+          or (name == '' and '[New]' or vim.fn.fnamemodify(name, ':t'))
         local icon, icon_hl
         if name ~= '' then
           icon, icon_hl = require('config.icons').file_icon(name)
@@ -413,6 +415,10 @@ end
 
 function M.close_editor(buf)
   if not editor_buf(buf) then
+    return
+  end
+  if vim.bo[buf].filetype == 'git-diff' then
+    require('config.diff').close()
     return
   end
   if vim.bo[buf].modified then
@@ -521,6 +527,10 @@ _G.PaneTabCycle = function(direction, _, button)
 end
 
 _G.EditorTabClick = function(id, _, button)
+  if button == 'r' then
+    require('config.context_menu').editor_tab(id, require('config.context_menu').mouse_position())
+    return
+  end
   if button ~= 'l' or not editor_buf(id) then
     return
   end
@@ -537,18 +547,28 @@ end
 _G.ChatTabClick = function(id, _, button)
   if button == 'l' then
     require('config.agents').show(id)
+  elseif button == 'r' then
+    require('config.context_menu').chat_tab(id, require('config.context_menu').mouse_position())
   end
 end
 
 _G.EditorTabNew = function(_, _, button)
   if button == 'l' then
     M.new()
+  elseif button == 'r' then
+    require('config.context_menu').show({
+      { label = 'New editor tab', run = M.new },
+    }, require('config.context_menu').mouse_position())
   end
 end
 
 _G.ChatTabNew = function(_, _, button)
   if button == 'l' then
     require('config.agents').select()
+  elseif button == 'r' then
+    require('config.context_menu').show({
+      { label = 'New chat', run = require('config.agents').select },
+    }, require('config.context_menu').mouse_position())
   end
 end
 
@@ -562,12 +582,16 @@ end
 _G.EditorTabClose = function(id, _, button)
   if button == 'l' then
     M.close_editor(id)
+  elseif button == 'r' then
+    require('config.context_menu').editor_tab(id, require('config.context_menu').mouse_position())
   end
 end
 
 _G.ChatTabClose = function(id, _, button)
   if button == 'l' then
     require('config.agents').close(id)
+  elseif button == 'r' then
+    require('config.context_menu').chat_tab(id, require('config.context_menu').mouse_position())
   end
 end
 

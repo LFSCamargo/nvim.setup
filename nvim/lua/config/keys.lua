@@ -131,6 +131,9 @@ end, {})
 vim.api.nvim_create_user_command('CommandPalette', function()
   require('config.palette').open()
 end, {})
+vim.api.nvim_create_user_command('ContextMenu', function()
+  require('config.context_menu').current()
+end, {})
 
 local shortcuts = {
   ['<C-s>'] = { 'PaneSave', 'Save editor file' },
@@ -151,6 +154,7 @@ for key, binding in pairs(shortcuts) do
   map('t', key, '<C-\\><C-n><Cmd>' .. binding[1] .. '<CR>', binding[2])
 end
 map('n', '<leader>p', '<Cmd>CommandPalette<CR>', 'Command palette')
+map('n', '<S-F10>', '<Cmd>ContextMenu<CR>', 'Context menu')
 
 -- Ctrl+W is remapped above, so splits use leader instead of the window-command prefix.
 map('n', '<leader>ws', '<Cmd>split<CR>', 'Split window below')

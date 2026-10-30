@@ -38,12 +38,32 @@ package.loaded['nvim-tree.config'] = {
   },
 }
 package.loaded['nvim-tree.api'] = {
+  config = { mappings = { default_on_attach = function() end } },
+  fs = {
+    create = function()
+      vim.g.context_tree_action = 'create'
+    end,
+    remove = function()
+      vim.g.context_tree_action = 'remove'
+    end,
+    rename = function()
+      vim.g.context_tree_action = 'rename'
+    end,
+  },
+  node = { open = {
+    edit = function()
+      vim.g.context_tree_action = 'toggle'
+    end,
+  } },
   tree = {
     open = function() end,
     close = function() end,
     toggle = function() end,
     reload = function() end,
     resize = function() end,
+    get_node_under_cursor = function()
+      return { type = 'file', absolute_path = vim.env.E2E_DIR .. '/repo/app.ts' }
+    end,
   },
 }
 require('config.appearance')
