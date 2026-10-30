@@ -2,7 +2,7 @@
 
 A portable Neovim config that puts your files, editor, and AI chats in one window.
 
-Codex and Cursor Agent run as real CLI sessions next to your code. Language servers, formatters, and debuggers come with the install. Gruvbox colors sit on a transparent UI, so your terminal keeps the background.
+Codex, Cursor Agent, Gemini, Claude, and OpenCode run as real CLI sessions next to your code. Language servers, formatters, and debuggers come with the install. Gruvbox colors sit on a transparent UI, so your terminal keeps the background.
 
 ```text
 ┌──────────────┬────────────────────────────────┬─────────────────┐
@@ -23,16 +23,17 @@ This is a complete setup, not a plugin. `make install` replaces your Neovim conf
 ## Features
 
 - Clickable file tree, editor tabs, and chat tabs
+- File-type Devicons in the Files tree and Git sidebar. Install puts Nerd Font files on the system and, in Warp, uses a Monocraft face with those glyphs at one cell.
 - Per-project session restore for editor tabs, unsaved buffers, and AI chats (UUID resume)
 - `nvim --clean` for a blank editor that does not restore or overwrite the last session
-- Independent Codex and Cursor Agent sessions (your login, your permissions)
+- Independent Codex, Cursor Agent, Gemini, Claude, and OpenCode sessions (your login, your permissions)
 - TypeScript, JavaScript, React, Vue, Svelte, Rust, Go, Solidity, Lua, HTML, CSS, JSON, YAML, TOML
 - Completion, diagnostics, go-to-definition, format-on-demand, Git, and debugging
 - Pinned plugins, a lockfile, and Makefile commands for install, capture, update, and validation
 
 ## Install
 
-You do not need to clone this repository first. One command fetches the setup, installs Neovim and the other dependencies if they are missing, then deploys the config.
+You do not need to clone this repository first. One command fetches the setup, installs Neovim and the other dependencies if they are missing, installs icon fonts, then deploys the config.
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/LFSCamargo/nvim.setup/main/scripts/bootstrap.sh | bash
@@ -48,7 +49,7 @@ NVIM_APPNAME=nvim-preview nvim .
 
 Do not pipe the installer to sudo. Close other Neovim instances first. Linux may ask for sudo only for system packages. On macOS, Homebrew and the Xcode Command Line Tools are installed when they are missing.
 
-The script clones into `~/.local/share/nvim.setup` (override with `NVIM_SETUP_HOME`), adds `~/.local/bin` to your shell PATH, runs `make deps`, then `make install`. Distro packages can be older than this setup needs; if Neovim is missing or below 0.12, or Node is below 22, the installer fetches a current binary into `~/.local/opt`. `make doctor` reports incompatible versions.
+The script clones into `~/.local/share/nvim.setup` (override with `NVIM_SETUP_HOME`), adds `~/.local/bin` to your shell PATH, runs `make deps`, installs icon fonts (Symbols Nerd Font, Monocraft Nerd Font), then `make install`. Distro packages can be older than this setup needs; if Neovim is missing or below 0.12, or Node is below 22, the installer fetches a current binary into `~/.local/opt`. `make doctor` reports incompatible versions.
 
 Fork the repo and clone your fork if you want a copy you can customize, then run `./scripts/bootstrap.sh` from that checkout (or `make bootstrap`).
 
@@ -59,7 +60,7 @@ cd nvim.setup
 nvim .
 ```
 
-`make install` alone still works from a checkout: it checks prerequisites, backs up the existing config, copies `nvim/`, restores pinned plugins, installs parsers and Mason tools, then validates. It needs internet access.
+`make install` alone still works from a checkout: it checks prerequisites, backs up the existing config, copies `nvim/`, installs icon fonts (Symbols Nerd Font, Monocraft Nerd Font), restores pinned plugins, installs parsers and Mason tools, then validates. It needs internet access. Restart the terminal once so new fonts load.
 
 ### Requirements
 
@@ -72,11 +73,11 @@ nvim .
 | C/C++ toolchain and Make        | Native builds                              |
 | Go and Rust/Cargo               | Go tools and the parser CLI                |
 | ripgrep, fd, fzf                | Search and file picking                    |
-| `codex` and `agent`             | Optional chat CLIs                         |
+| `codex`, `agent`, `gemini`, `claude`, `opencode` | Optional chat CLIs              |
 
 Keep `~/.local/bin` on your PATH, and `~/.cargo/bin` if you use Cargo. Install places an `nvim` wrapper there so `nvim --clean` opens this setup without restored tabs. The terminal needs true color and mouse support. On Debian/Ubuntu, the scripts add an `fd` wrapper for `fdfind`. If Ctrl+S freezes the terminal, add `stty -ixon` to your shell startup file.
 
-Install and authenticate the chat CLIs separately with the [Codex](https://github.com/openai/codex) and [Cursor CLI](https://cursor.com/docs/cli/overview) docs. Missing CLIs print a notice; the editor still works. Credentials and CLI permissions stay outside this repository.
+Install and authenticate the chat CLIs separately: [Codex](https://github.com/openai/codex), [Cursor CLI](https://cursor.com/docs/cli/overview), [Gemini CLI](https://geminicli.com/docs/get-started/installation/), [Claude Code](https://code.claude.com/docs/en/setup), and [OpenCode](https://opencode.ai/docs/cli/). Missing CLIs print a notice; the editor still works. Credentials and CLI permissions stay outside this repository.
 
 ## Using the editor
 
@@ -90,19 +91,19 @@ Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to i
 | Ctrl+S                   | Save (asks for a name if the buffer is unnamed)                                                |
 | Ctrl+Q                   | Quit and persist this project's tabs and chats                                                 |
 | Ctrl+T / Ctrl+W          | Add / close a tab in the focused pane                                                          |
-| Ctrl+]                   | Start a new Codex or Cursor Agent session                                                      |
+| Ctrl+]                   | Start a new Codex, Cursor Agent, Gemini, Claude, or OpenCode session                           |
 | Ctrl+B                   | Toggle the file tree                                                                           |
 | Ctrl+G                   | Open Git source control (commit, stage, unstage, revert, bottom commit log; keyboard or mouse) |
-| Ctrl+P / Ctrl+F          | Find files / search project text                                                               |
+| Ctrl+P / Ctrl+F          | Find files / search project text (opens a new editor tab)                                      |
 | Esc                      | Send Escape to the focused agent (stop generation, for example)                                |
 | Ctrl+\ Ctrl+N            | Leave terminal-input mode (`Esc Esc` also works in other terminals)                            |
 | Ctrl+h/j/k/l             | Move between windows in normal mode                                                            |
-| Space a c / Space a u    | Toggle Codex / Cursor Agent                                                                    |
+| Space a c / a u / a g / a l / a o | Toggle Codex / Cursor Agent / Gemini / Claude / OpenCode                            |
 | Space f                  | Format the current file                                                                        |
 | gd / gr / K              | Definition / references / documentation                                                        |
 | F5 / Space d b           | Start or continue debugging / toggle a breakpoint                                              |
 
-Closing a chat tab stops that CLI. Switching tabs leaves it running. Unsaved files are protected when you close a tab. Git files, commits, and Fugitive views open in the mid editor; `:q` there keeps that pane and a tab. Quitting with Ctrl+Q snapshots unsaved buffers and resumes Codex/Agent chats by UUID on the next launch in that directory. `make install` puts a wrapper at `~/.local/bin/nvim` so `nvim --clean` still loads this config. Maintenance scripts set `NVIM_WRAPPER=0` when they need Neovim's factory `--clean`.
+Closing a chat tab stops that CLI. The tab also closes if the CLI process exits. Switching tabs leaves it running. Unsaved files are protected when you close a tab. Git files, commits, and Fugitive views open in the mid editor; `:q` there keeps that pane and a tab. Quitting with Ctrl+Q snapshots unsaved buffers and resumes chat CLIs by ID on the next launch in that directory. `make install` puts a wrapper at `~/.local/bin/nvim` so `nvim --clean` still loads this config. Maintenance scripts set `NVIM_WRAPPER=0` when they need Neovim's factory `--clean`.
 
 The full keybinding list, language notes, and debugging details live in [the editor guide](docs/EDITOR.md). Plugins we wrote versus plugins and tools we install are in [the plugin overview](docs/PLUGINS.md). What `make e2e` covers — and what to add when behavior changes — is in [the E2E test plan](docs/E2E-TESTPLAN.md).
 
@@ -131,7 +132,8 @@ Run these from the repository:
 | `make help`                                    | List commands                                                                            |
 | `make bootstrap`                               | Fetch the repo if needed, install Neovim and other deps, then install                    |
 | `make doctor`                                  | Check prerequisites                                                                      |
-| `make install`                                 | Back up, deploy, restore plugins, install parsers and tools, validate                    |
+| `make install`                                 | Back up, deploy, restore plugins, install icon fonts, parsers and tools, validate        |
+| `make fonts`                                   | Install Nerd Font files for Files/Git Devicons (also runs from `make install`)           |
 | `make check`                                   | Check shell syntax and compile every Lua file                                            |
 | `make e2e`                                     | Simulated UI e2e (chat, session, Git sidebar); see [the test plan](docs/E2E-TESTPLAN.md) |
 | `make test`                                    | Run `make check` then `make e2e`                                                         |

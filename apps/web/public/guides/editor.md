@@ -1,6 +1,6 @@
 # Neovim setup
 
-Appearance uses Gruvbox syntax colors with transparent backgrounds throughout the editor, file tree, menus, and chat panes. Visual selection, search matches, and the selected completion item keep a fill so they stay visible. The terminal palette stays unchanged. Settings are in `lua/config/appearance.lua`.
+Appearance uses Gruvbox syntax colors with transparent backgrounds throughout the editor, file tree, menus, and chat panes. Visual selection, search matches, and the selected completion item keep a fill so they stay visible. The terminal palette stays unchanged. Settings are in `lua/config/appearance.lua`. The Files tree and Git sidebar show a Devicon for each extension so you can tell `.ts` from `.rs` at a glance. Folders use nvim-tree folder glyphs, not file Devicons. Expand markers are `>` and `v`. `make install` installs Symbols Nerd Font and bakes those glyphs into a Regular face named **Monocraft Nerd Font** (Warp has no fallback list). Those icons occupy one terminal cell. If Warp’s font is Monocraft, that setting becomes Monocraft Nerd Font.
 
 Run `nvim .` in a project. Interactive startup opens the file tree at 20% width. If this project has a saved session, editor tabs (including unsaved buffers) and AI chats resume by UUID; otherwise it starts one Codex and one Cursor Agent session. `nvim --clean` skips restore and save, so you get a blank editor plus two fresh chats without clobbering the last session. The chat pane also uses 25% width; keyboard focus stays in the editor. This works with `nvim`, `nvim .`, and `nvim file`. Headless maintenance does not launch chats.
 
@@ -20,11 +20,11 @@ Ctrl shortcuts in the first table work in **normal, insert, and terminal** modes
 | Ctrl+Q / `:SessionQuit` | Quit and persist this project's editor tabs and chats |
 | Ctrl+T | New editor tab, or CLI selector when focused on chat |
 | Ctrl+W | Close the focused editor or chat tab (refuses unsaved files) |
-| Ctrl+] / `:AgentSelect` | Choose Codex or Cursor Agent for a new chat |
+| Ctrl+] / `:AgentSelect` | Choose a chat CLI (Codex, Cursor Agent, Gemini, Claude, OpenCode) |
 | Ctrl+B / Space e | Toggle the file tree |
 | Ctrl+G | Open the Git source-control sidebar |
-| Ctrl+P / Command+P / Space f f | Find project files (hidden files included; build dirs excluded) |
-| Ctrl+F / Space f g | Search text in the project |
+| Ctrl+P / Command+P / Space f f | Find project files (hidden files included; build dirs excluded); opens a new mid-editor tab, or focuses the existing tab for that file |
+| Ctrl+F / Space f g | Search text in the project; results open as a mid-editor tab |
 | Space f b | Switch open buffers |
 | Space w | Save (`:write`) |
 | Ctrl+h / j / k / l | Focus the window in that direction |
@@ -38,12 +38,15 @@ Ctrl shortcuts in the first table work in **normal, insert, and terminal** modes
 | --- | --- |
 | Space a c / `:Codex` | Toggle the Codex pane |
 | Space a u / `:CursorAgent` | Toggle the Cursor Agent pane |
+| Space a g / `:Gemini` | Toggle the Gemini pane |
+| Space a l / `:Claude` | Toggle the Claude pane |
+| Space a o / `:OpenCode` | Toggle the OpenCode pane |
 | Esc (in a chat) | Send Escape to that CLI (stop generation). Stays in terminal mode. |
 | Ctrl+\ Ctrl+N | Leave terminal input without sending Esc to the CLI |
 
 ### Git source control (Ctrl+G)
 
-The Git view matches a typical source-control panel: commit message, **[Commit]**, **Staged Changes**, **Changes**, and a **COMMITS** log pane at the bottom (30% of the window height) showing recent `git log --graph --oneline` history. Clicking **Git** (or focusing the Git sidebar from another pane) reloads status and history. Every action has a key. Red is deleted, yellow is modified, green is added or untracked.
+The Git view matches a typical source-control panel: commit message, **[Commit]**, **Staged Changes**, **Changes**, and a **COMMITS** log pane at the bottom (30% of the window height) showing recent `git log --graph --oneline` history. Clicking **Git** (or focusing the Git sidebar from another pane) reloads status and history. Every action has a key. Red is deleted, yellow is modified, green is added or untracked. Each changed file shows a Devicon for its type or extension.
 
 | Keys | Action |
 | --- | --- |
@@ -101,11 +104,12 @@ Space g s still opens Fugitive for the full Git status UI in the mid editor. Fil
 | `:GitChanges` | Open Git source control |
 | `:SidebarFilesToggle` | Toggle the file tree |
 | `:PaneSave` / `:PaneNewTab` / `:ProjectCloseTab` | Save / new tab / close tab |
+| `:FindProjectFiles` / `:FindProjectText` | Find files / search project text (same as Ctrl+P / Ctrl+F) |
 | `:SessionQuit` | Save session and quit |
-| `:Codex` / `:CursorAgent` / `:AgentSelect` | Chat pane |
+| `:Codex` / `:CursorAgent` / `:Gemini` / `:Claude` / `:OpenCode` / `:AgentSelect` | Chat pane |
 | `:qa` | Neovim's usual quit prompt (does not snapshot like Ctrl+Q) |
 
-Closing a chat tab stops that CLI. Closing the last editor tab, or `:q` in the last editor window, leaves a blank editor tab so the mid pane stays. Ctrl+Q writes the project session and quits even with unsaved buffers.
+Closing a chat tab stops that CLI. When the CLI process exits (for example Ctrl+C in Cursor Agent), that chat tab closes too: another session is shown if any remain, otherwise the pane closes. If an `(exited)` leftover remains, click it or press Ctrl+W / × to close it. Closing the last editor tab, or `:q` in the last editor window, leaves a blank editor tab so the mid pane stays. Ctrl+Q writes the project session and quits even with unsaved buffers.
 
 ## Language support
 
@@ -123,7 +127,7 @@ The sidebar has **Files** and **Git** tabs. Git loads changes in the background,
 
 Click pane contents to focus the editor, tree, or chat; clicking a running chat enables terminal input. The editor and chat panes each have their own clickable tabs above their contents. Click a label to switch, **+** to add, or **×** to close the active tab. The active label is underlined in gold; **‹ / ›** navigate when tabs overflow. Ctrl+T adds a tab in the focused pane. File tabs show listed editor buffers and preserve unsaved edits when switching.
 
-Chat **+** and Ctrl+] open a CLI selector for a new independent Codex or Cursor Agent session. Multiple sessions of either CLI can run at once. Switching chat tabs preserves running sessions; closing a chat tab stops that session. Space a c and Space a u toggle the corresponding assistant pane. The file tree uses 20% of the editor width and the chat pane uses 25%. Chats run the actual interactive CLIs in the directory where you opened them. They use existing CLI authentication and permissions; no prompts or approval bypasses are injected. Use `codex login` or `agent login` outside Neovim if login expires. They do not automatically receive editor selections: mention project-relative file paths in chat. Sessions are stored per working directory under Neovim state (`nvim-setup-sessions`); Codex resumes with `codex resume <uuid>` and Cursor Agent with `agent --resume=<uuid>`. Reopen Neovim in a different project for a separate context, or start `nvim --clean` for a blank window in the current project.
+Chat **+** and Ctrl+] open a CLI selector for a new independent Codex, Cursor Agent, Gemini, Claude, or OpenCode session. Multiple sessions of any CLI can run at once. Switching chat tabs preserves running sessions; closing a chat tab stops that session. If the CLI itself exits, the tab closes the same way. Space a c / a u / a g / a l / a o toggle the Codex, Cursor Agent, Gemini, Claude, and OpenCode panes. The file tree uses 20% of the editor width and the chat pane uses 25%. Chats run the actual interactive CLIs in the directory where you opened them. They use existing CLI authentication and permissions; no prompts or approval bypasses are injected. Use `codex login`, `agent login`, `gemini`, `claude`, or `opencode` outside Neovim if login expires. They do not automatically receive editor selections: mention project-relative file paths in chat. Sessions are stored per working directory under Neovim state (`nvim-setup-sessions`). Resume is `codex resume <uuid>`, `agent --resume=<uuid>`, `gemini --resume <uuid>`, `claude --resume <uuid>`, and `opencode --session <id>`. Reopen Neovim in a different project for a separate context, or start `nvim --clean` for a blank window in the current project.
 
 ## Debugging
 
@@ -133,7 +137,7 @@ For custom debug commands use a project `.vscode/launch.json`, then `:DebugLoadL
 
 ## Command+P on macOS
 
-Both `<D-p>` (Command+P) and Ctrl+P are mapped in Neovim. The terminal must forward Command+P. [Warp's current custom keybindings](https://github.com/warpdotdev/warp/issues/14300) expose built-in actions, with no supported send-text mapping; use Ctrl+P or Space f f in Warp. In a terminal with send-text keybindings, map Command+P to byte `0x10` (Ctrl+P). No Warp settings were changed.
+Both `<D-p>` (Command+P) and Ctrl+P are mapped in Neovim. The terminal must forward Command+P. [Warp's current custom keybindings](https://github.com/warpdotdev/warp/issues/14300) expose built-in actions, with no supported send-text mapping; use Ctrl+P or Space f f in Warp. In a terminal with send-text keybindings, map Command+P to byte `0x10` (Ctrl+P). Icon-font install may set Warp’s `font_name` from Monocraft to Monocraft Nerd Font and installs a face with that family name (Nerd Font glyphs baked in at one cell). Other Warp settings are left alone. Restart Warp after that so the new face loads.
 
 ## Maintenance
 

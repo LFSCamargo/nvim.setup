@@ -15,7 +15,7 @@ macOS or Linux, and internet access. The installer installs Neovim, Node, Git, a
 | C/C++ toolchain and Make        | Native builds                              |
 | Go and Rust/Cargo               | Go tools and the parser CLI                |
 | ripgrep, fd, fzf                | Search and file picking                    |
-| `codex` and `agent`             | Optional chat CLIs                         |
+| `codex`, `agent`, `gemini`, `claude`, `opencode` | Optional chat CLIs              |
 
 Keep `~/.local/bin` on your PATH, and `~/.cargo/bin` if you use Cargo. The terminal needs true color and mouse support. If Ctrl+S freezes the terminal, add `stty -ixon` to your shell startup file.
 
@@ -26,7 +26,7 @@ curl -fsSL https://raw.githubusercontent.com/LFSCamargo/nvim.setup/main/scripts/
 nvim .
 ```
 
-Do not pipe that command to sudo. Close other Neovim instances first. The script clones into `~/.local/share/nvim.setup`, installs missing tools (including Neovim 0.12+ and Node 22+), then deploys the config. Distro packages can be older than this setup needs; the installer fetches current binaries when it has to.
+Do not pipe that command to sudo. Close other Neovim instances first. The script clones into `~/.local/share/nvim.setup`, installs missing tools (including Neovim 0.12+ and Node 22+), deploys the config, and installs the Nerd Font files used by the Files and Git Devicons. Distro packages can be older than this setup needs; the installer fetches current binaries when it has to. Restart the terminal once so those fonts load.
 
 Fork the repo if you want a copy you can customize, then run `./scripts/bootstrap.sh` from the checkout.
 
@@ -43,16 +43,16 @@ Preview uses separate config, data, and state directories, so plugins and tools 
 
 Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to insert, `Esc` for normal mode, and Ctrl+Q to quit (unsaved tabs come back next time). The leader key is **Space**.
 
-| Do this         | What happens                              |
-| --------------- | ----------------------------------------- |
-| Click a pane    | Focus the editor, file tree, or chat      |
-| Ctrl+B          | Toggle the file tree                      |
-| Ctrl+G          | Open Git source control                   |
-| Ctrl+P / Ctrl+F | Find files / search project text          |
-| Ctrl+]          | Start a new Codex or Cursor Agent session |
-| Space f         | Format the current file                   |
-| gd / gr / K     | Definition / references / documentation   |
+| Do this         | What happens                                      |
+| --------------- | ------------------------------------------------- |
+| Click a pane    | Focus the editor, file tree, or chat              |
+| Ctrl+B          | Toggle the file tree                              |
+| Ctrl+G          | Open Git source control                           |
+| Ctrl+P / Ctrl+F | Find files / search project text (new editor tab) |
+| Ctrl+]          | Start a new Codex, Cursor Agent, Gemini, Claude, or OpenCode session |
+| Space f         | Format the current file                           |
+| gd / gr / K     | Definition / references / documentation           |
 
-Install and authenticate the chat CLIs separately with the [Codex](https://github.com/openai/codex) and [Cursor CLI](https://cursor.com/docs/cli/overview) docs. Missing CLIs print a notice; the editor still works. Credentials stay outside this repository.
+Install and authenticate the chat CLIs separately: [Codex](https://github.com/openai/codex), [Cursor CLI](https://cursor.com/docs/cli/overview), [Gemini CLI](https://geminicli.com/docs/get-started/installation/), [Claude Code](https://code.claude.com/docs/en/setup), and [OpenCode](https://opencode.ai/docs/cli/). Missing CLIs print a notice; the editor still works. Credentials stay outside this repository.
 
 If something looks off after install, start with `:checkhealth`, `:LspInfo`, `:MasonLog`, `:ConformInfo`, and `:messages`.

@@ -34,17 +34,17 @@ Map **files** to Conventional Commit scopes. One commit = one type + one scope +
 
 Typical scopes in this repo: `workspace`, `bootstrap`, `web`, `theme`, `docs`, `test`, `ci`, `git`, `session`, `agents`.
 
-| Put together | Because |
-| --- | --- |
-| A feature module and its tests | The test names the behavior |
-| `apps/web/public/guides/plugins.md` with `docs/PLUGINS.md` | The guide is a copy |
-| Lockfile with the `package.json` that changed it | Install must match |
+| Put together                                               | Because                     |
+| ---------------------------------------------------------- | --------------------------- |
+| A feature module and its tests                             | The test names the behavior |
+| `apps/web/public/guides/plugins.md` with `docs/PLUGINS.md` | The guide is a copy         |
+| Lockfile with the `package.json` that changed it           | Install must match          |
 
-| Split | Because |
-| --- | --- |
-| pnpm/Nx vs landing-page UI | Different scopes (`build(workspace)` vs `feat(web)`) |
-| Screenshots vs source vs Playwright vs Actions | Different parts |
-| Theme/marquee/lightbox files vs the page that later wires them | Different scopes |
+| Split                                                          | Because                                              |
+| -------------------------------------------------------------- | ---------------------------------------------------- |
+| pnpm/Nx vs landing-page UI                                     | Different scopes (`build(workspace)` vs `feat(web)`) |
+| Screenshots vs source vs Playwright vs Actions                 | Different parts                                      |
+| Theme/marquee/lightbox files vs the page that later wires them | Different scopes                                     |
 
 **Shared files** (one file, many features): put them in the earliest commit that cannot build or typecheck without them. Do not rewrite a file between commits to fake history.
 
