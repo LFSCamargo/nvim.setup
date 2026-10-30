@@ -98,6 +98,7 @@ Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to i
 | Ctrl+B                            | Toggle the file tree                                                                           |
 | Ctrl+G                            | Open Git source control (commit, stage, unstage, revert, bottom commit log; keyboard or mouse) |
 | Ctrl+, / `:SetupSettings`         | Open Settings (appearance, editing, search, sessions)                                          |
+| Right-click / Shift+F10           | Open an action menu for a file, Git item, or tab                                               |
 | Space p / `:CommandPalette`       | Search coding and configuration actions                                                        |
 | `:SetupExtensions`                | Browse user plugins, tools, and parsers                                                        |
 | Ctrl+P / Ctrl+F                   | Find files / search project text (opens a new editor tab)                                      |

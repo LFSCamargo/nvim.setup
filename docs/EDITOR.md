@@ -32,6 +32,9 @@ Ctrl shortcuts in the first table work in **normal, insert, and terminal** modes
 | Space w s / Space w v | Split below / split right |
 | Esc Esc (terminal) | Leave terminal input (`Ctrl+\ Ctrl+N` also works) |
 | Click a pane | Focus editor, tree, or chat; clicking a running chat starts typing |
+| Right-click / Shift+F10 / `:ContextMenu` | Open actions for the clicked or focused tree item, Git item, or tab |
+
+The context menu uses the item under the pointer, even when another item was selected. File and folder menus offer open/create, path, rename, delete, and refresh actions as applicable. Git file menus offer Check Diff, open, stage or unstage, copy path, and revert where applicable; section and commit-log menus offer their existing actions. Editor tabs offer focus, copy path, close, and close other tabs; chat tabs offer focus and close. Sidebar tab labels offer open and refresh. Enter or click runs a menu action; Esc or clicking elsewhere dismisses it. Delete and revert keep their confirmation prompts, and modified editor tabs still refuse to close without saving.
 
 ### Chat
 
@@ -65,7 +68,7 @@ Click **Extensions** or run `:SetupExtensions` to browse Mason packages in a mar
 
 ### Git source control (Ctrl+G)
 
-The Git view matches a typical source-control panel: commit message, **[Commit]**, **Staged Changes**, **Changes**, and a **COMMITS** log pane at the bottom (30% of the window height) showing recent `git log --graph --oneline` history. Clicking **Git** (or focusing the Git sidebar from another pane) reloads status and history. Every action has a key. Red is deleted, yellow is modified, green is added or untracked. Each changed file shows a Devicon for its type or extension; the icon keeps its type color and the filename follows git status.
+The Git view matches a typical source-control panel: commit message, **[Commit]**, **[Check Diff]**, **Staged Changes**, **Changes**, and a **COMMITS** log pane at the bottom (30% of the window height) showing recent `git log --graph --oneline` history. Clicking **Git** (or focusing the Git sidebar from another pane) reloads status and history. Every action has a key. Red is deleted, yellow is modified, green is added or untracked. Each changed file shows a Devicon for its type or extension; the icon keeps its type color and the filename follows git status.
 
 | Keys | Action |
 | --- | --- |
@@ -75,11 +78,13 @@ The Git view matches a typical source-control panel: commit message, **[Commit]*
 | `s` / `u` / `x` | Stage / unstage / revert the file (`x` asks first) |
 | `S` / `U` / `X` | Stage all / unstage all / revert all |
 | `r` / `q` | Refresh / return to Files |
+| `d` / **[Check Diff]** | Open the selected file's Git diff in the existing editor pane; the button uses the first changed file when none is selected |
+| **[Close Diff]** | Close the diff tab and restore the previous editor tab |
 | Click **Git** | Open Git, or refresh if it is already showing |
 | Click `+` / `−` / `x` | Stage / unstage / revert that file |
 | Click **[Commit]** / **[Stage All]** / **[Unstage All]** / **[Revert All]** | Same as the matching key |
 
-Space g s still opens Fugitive for the full Git status UI in the mid editor. Files and commits from the Git sidebar also reuse that pane; they do not create extra splits. `:q` on the last editor window keeps the pane and leaves a tab (a blank one if none remain).
+While a diff is open, clicking a staged or unstaged file in the sidebar updates that editor tab. Staged diffs compare the index with HEAD; unstaged diffs compare saved working files with the index. Untracked and deleted files can be previewed. Unsaved editor changes are not part of Git's diff, so the preview asks you to save first. The diff never creates another split or replaces the chat pane. Space g s still opens Fugitive for the full Git status UI in the mid editor. Files and commits from the Git sidebar also reuse that pane; they do not create extra splits. `:q` on the last editor window keeps the pane and leaves a tab (a blank one if none remain).
 
 | Keys | Action |
 | --- | --- |
