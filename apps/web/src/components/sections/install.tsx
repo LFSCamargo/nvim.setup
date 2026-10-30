@@ -7,6 +7,7 @@ import {
   requirements,
   type InstallMode,
 } from '@/content';
+import { CodeBlock } from '@/components/code-block';
 import { LiquidGlass } from '@/components/ui/liquid-glass';
 import { Reveal } from '@/components/reveal';
 import { useTheme } from '@/hooks/use-theme';
@@ -35,7 +36,6 @@ export function Install() {
   return (
     <section
       id="install"
-      data-nav-contrast={inverted ? 'light' : 'dark'}
       className={cn(
         'py-20 md:py-24',
         inverted ? 'bg-zinc-100 text-zinc-900' : 'bg-zinc-950 text-zinc-50',
@@ -115,7 +115,8 @@ export function Install() {
             scale={30}
             frost={0.5}
             tint={0.04}
-            className="max-w-full border border-zinc-800 text-zinc-100"
+            data-rim="dark"
+            className="max-w-full border border-zinc-800 text-zinc-100 glass-rim"
             contentClassName="relative bg-zinc-950"
           >
             <div className="flex h-12 items-center justify-between border-b border-white/10 px-5 font-mono text-[10px] tracking-[0.12em] text-zinc-400">
@@ -147,25 +148,14 @@ export function Install() {
                 </button>
               ))}
             </div>
-            <pre
-              tabIndex={0}
-              aria-label={`${mode === 'preview' ? 'Preview' : 'Standard'} installation commands`}
-              className="min-h-40 max-w-full overflow-x-auto px-5 py-5 font-mono text-[11px] leading-7"
-            >
-              <code>
-                {commands[mode].split('\n').map((line, index) => (
-                  <span
-                    className="block whitespace-pre"
-                    key={`${mode}-${index}`}
-                  >
-                    <span className="mr-4 text-zinc-600 select-none">
-                      {String(index + 1).padStart(2, '0')}
-                    </span>
-                    {line}
-                  </span>
-                ))}
-              </code>
-            </pre>
+            <CodeBlock
+              code={commands[mode]}
+              language="sh"
+              showHeader={false}
+              framed={false}
+              label={`${mode === 'preview' ? 'Preview' : 'Standard'} installation commands`}
+              className="min-h-40"
+            />
             <button
               className="flex w-full items-center justify-between border-t border-white/10 bg-white/5 px-5 py-4 text-xs text-zinc-300 hover:bg-white/10 hover:text-white"
               onClick={() => void copyCommands()}

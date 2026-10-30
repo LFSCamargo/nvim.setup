@@ -1,8 +1,36 @@
+import { Children, isValidElement, type ReactNode } from 'react';
 import type { Components } from 'react-markdown';
 import Markdown from 'react-markdown';
 import { Link } from 'react-router-dom';
 import remarkGfm from 'remark-gfm';
+import { CodeBlock } from '@/components/code-block';
 import { localDocHref } from '@/lib/docs';
+
+function codeText(children: ReactNode): string {
+  if (typeof children === 'string') {
+    return children.replace(/\n$/, '');
+  }
+  if (Array.isArray(children)) {
+    return children
+      .map((child) => (typeof child === 'string' ? child : ''))
+      .join('')
+      .replace(/\n$/, '');
+  }
+  return String(children ?? '').replace(/\n$/, '');
+}
+
+function languageFromClass(className: string | undefined): string {
+  const match = /language-([\w+-]+)/.exec(className ?? '');
+  return match?.[1] ?? 'text';
+}
+
+function sampleName(language: string): string {
+  if (language === 'text') return 'layout';
+  if (language === 'sh' || language === 'bash' || language === 'shell') {
+    return 'terminal';
+  }
+  return language;
+}
 
 function resolveHref(href: string | undefined): string | undefined {
   if (!href) return href;
@@ -43,10 +71,20 @@ const components: Components = {
     );
   },
   pre({ children }) {
+    const child = Children.toArray(children)[0];
+    if (isValidElement<{ className?: string; children?: ReactNode }>(child)) {
+      const language = languageFromClass(child.props.className);
+      return (
+        <CodeBlock
+          className="mt-5"
+          code={codeText(child.props.children)}
+          language={language}
+          filename={sampleName(language)}
+        />
+      );
+    }
     return (
-      <pre className="overflow-x-auto rounded-xl border border-line bg-black/40 p-4 font-mono text-[13px] leading-7 dark:bg-black/40">
-        {children}
-      </pre>
+      <CodeBlock className="mt-5" code={codeText(children)} language="text" />
     );
   },
   code({ className, children, ...props }) {
@@ -60,7 +98,7 @@ const components: Components = {
     }
     return (
       <code
-        className="rounded bg-glass px-1.5 py-0.5 font-mono text-[0.85em]"
+        className="rounded border border-line bg-glass px-1.5 py-0.5 font-mono text-[0.84em] text-foreground"
         {...props}
       >
         {children}
