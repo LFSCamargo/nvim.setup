@@ -11,6 +11,7 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Features
 
+- **editor:** add Git diff and context menus ([41b0fa2](https://github.com/LFSCamargo/nvim.setup/commit/41b0fa2f9cda200353d12788d8810026c080b4cf))
 - **editor:** add customizable settings and extension marketplace ([ac8b392](https://github.com/LFSCamargo/nvim.setup/commit/ac8b392fb135f22716da35e90372103ab55beb9c))
 - **editor:** add Settings sidebar and extract format and statusline ([8801c16](https://github.com/LFSCamargo/nvim.setup/commit/8801c1613bdd345b44c6010c21d95be6f937fbd1))
 
@@ -20,6 +21,7 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Documentation
 
+- **editor:** explain Git diff and context menu actions ([c96795b](https://github.com/LFSCamargo/nvim.setup/commit/c96795b0af3167bdc8908b6386a21c41ab8d1869))
 - add a contributing guide and the MIT license ([d43e0c0](https://github.com/LFSCamargo/nvim.setup/commit/d43e0c01d20025a253add11437f0a807817e57b5))
 - add a release skill for version bumps ([bdaf13d](https://github.com/LFSCamargo/nvim.setup/commit/bdaf13df8bf57626035acb39a49e5d5214bd0021))
 
