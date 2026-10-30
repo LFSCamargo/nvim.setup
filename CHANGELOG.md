@@ -11,6 +11,7 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Features
 
+- **web:** publish titles, Open Graph tags, and a sitemap ([e83f390](https://github.com/LFSCamargo/nvim.setup/commit/e83f390e663862bc54c10f9bb7a30a1672080e35))
 - **web:** render docs and install samples as terminal blocks ([6b24ba8](https://github.com/LFSCamargo/nvim.setup/commit/6b24ba80c80cdf7cfebdfb72c54d1f926e6014bd))
 - **web:** add a fourth cropped workspace screenshot ([9fd1412](https://github.com/LFSCamargo/nvim.setup/commit/9fd14120606ba231b457ba67f18fedbbb5e2b594))
 - **tabs:** open fzf files as mid-editor tabs ([165609b](https://github.com/LFSCamargo/nvim.setup/commit/165609bd662d2f9c6e600754d01510360d26d6e9))
