@@ -18,7 +18,9 @@ export function Nav() {
   const [menu, setMenu] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
   const onLight = useNavContrast(headerRef);
-  const linkTone = onLight ? 'hover:text-zinc-950' : 'hover:text-white';
+  const itemTone = onLight
+    ? 'text-black hover:text-black'
+    : 'text-white hover:text-white';
 
   return (
     <header
@@ -31,12 +33,9 @@ export function Nav() {
         scale={28}
         aberration={2}
         frost={0.8}
-        tint={onLight ? 0.14 : 0.08}
-        data-rim={onLight ? 'light' : 'dark'}
-        className={cn(
-          'pointer-events-auto mx-auto max-w-6xl border glass-rim backdrop-blur-xl transition-[border-color,box-shadow] duration-200',
-          onLight ? 'border-zinc-900/12' : 'border-white/12',
-        )}
+        tint={0.06}
+        data-nav-shell
+        className="pointer-events-auto mx-auto max-w-6xl border border-line nav-glass"
       >
         <nav
           className="flex h-16 items-center gap-3 px-5"
@@ -47,31 +46,25 @@ export function Nav() {
             <div
               id="nav-links"
               className={cn(
-                'absolute top-[4.75rem] right-4 left-4 flex-col gap-5 rounded-2xl border p-5 text-sm md:static md:flex md:flex-row md:items-center md:gap-8 md:border-0 md:bg-transparent md:p-0',
-                onLight
-                  ? 'border-zinc-900/10 bg-zinc-50/95 text-zinc-600'
-                  : 'border-white/10 bg-zinc-950/95 text-zinc-400',
+                'absolute top-[4.75rem] right-4 left-4 flex-col gap-5 rounded-2xl border border-line bg-glass p-5 text-sm backdrop-blur-xl md:static md:flex md:flex-row md:items-center md:gap-8 md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none',
+                onLight ? 'text-black' : 'text-white',
                 menu ? 'flex' : 'hidden md:flex',
               )}
               onClick={() => setMenu(false)}
             >
               {links.map((link) =>
                 'to' in link ? (
-                  <Link key={link.label} className={linkTone} to={link.to}>
+                  <Link key={link.label} className={itemTone} to={link.to}>
                     {link.label}
                   </Link>
                 ) : (
-                  <a key={link.label} className={linkTone} href={link.href}>
+                  <a key={link.label} className={itemTone} href={link.href}>
                     {link.label}
                   </a>
                 ),
               )}
               <a
-                className={cn(
-                  linkTone,
-                  onLight ? 'border-zinc-900/15' : 'border-white/15',
-                  'md:border-l md:pl-8',
-                )}
+                className={cn(itemTone, 'border-line md:border-l md:pl-8')}
                 href={repo}
               >
                 GitHub ↗
@@ -80,8 +73,8 @@ export function Nav() {
             <ThemeSwitch onLight={onLight} />
             <button
               className={cn(
-                'rounded-full border px-3 py-1.5 text-xs md:hidden',
-                onLight ? 'border-zinc-900/15' : 'border-white/15',
+                'rounded-full border border-line px-3 py-1.5 text-xs md:hidden',
+                itemTone,
               )}
               aria-expanded={menu}
               aria-controls="nav-links"

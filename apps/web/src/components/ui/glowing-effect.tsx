@@ -6,6 +6,7 @@ import {
   type CSSProperties,
 } from 'react';
 import { animate, useReducedMotion } from 'motion/react';
+import { useTheme } from '@/hooks/use-theme';
 import { cn } from '@/lib/utils';
 
 type GlowingEffectProps = {
@@ -34,6 +35,7 @@ export const GlowingEffect = memo(function GlowingEffect({
   disabled,
 }: GlowingEffectProps) {
   const reduced = useReducedMotion();
+  const { theme } = useTheme();
   const isDisabled = disabled ?? reduced ?? false;
   const containerRef = useRef<HTMLDivElement>(null);
   const lastPosition = useRef({ x: 0, y: 0 });
@@ -113,14 +115,17 @@ export const GlowingEffect = memo(function GlowingEffect({
 
   const gradient =
     variant === 'white'
-      ? `repeating-conic-gradient(from 236.84deg at 50% 50%, #fff, #a3a3a3 calc(25% / 5), #fff calc(100% / 5))`
+      ? theme === 'light'
+        ? `repeating-conic-gradient(from 236.84deg at 50% 50%, #18181b, #a1a1aa calc(25% / 5), #18181b calc(100% / 5))`
+        : `repeating-conic-gradient(from 236.84deg at 50% 50%, #fff, #a3a3a3 calc(25% / 5), #fff calc(100% / 5))`
       : `radial-gradient(circle, #dd7bbb 10%, #dd7bbb00 20%), repeating-conic-gradient(from 236.84deg at 50% 50%, #dd7bbb 0%, #d79f1e 25%, #5a922c 50%, #4c7894 75%, #dd7bbb 100%)`;
 
   return (
     <>
       <div
         className={cn(
-          'pointer-events-none absolute -inset-px hidden rounded-[inherit] border border-white/20 opacity-0',
+          'pointer-events-none absolute -inset-px hidden rounded-[inherit] border opacity-0',
+          theme === 'light' ? 'border-zinc-900/15' : 'border-white/20',
           glow && 'opacity-100',
           isDisabled && 'block',
         )}

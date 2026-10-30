@@ -4,11 +4,12 @@ import { useTheme } from '@/hooks/use-theme';
 
 export function useNavContrast(headerRef: RefObject<HTMLElement | null>) {
   const { theme } = useTheme();
-  const [onLight, setOnLight] = useState(false);
+  const [onLight, setOnLight] = useState(theme === 'light');
 
   useEffect(() => {
     const header = headerRef.current;
     if (!header) return;
+    setOnLight(theme === 'light');
     let frame = 0;
 
     function measure() {

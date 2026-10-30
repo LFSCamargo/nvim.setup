@@ -23,7 +23,7 @@ export function Hero({ onOpenScreenshot }: HeroProps) {
       <div className="relative z-10 mx-auto max-w-6xl text-center">
         <Reveal>
           <p className="flex items-center justify-center gap-2 font-mono text-[10px] tracking-[0.18em] text-muted">
-            <span className="size-1.5 rounded-full bg-foreground shadow-[0_0_14px_rgb(255_255_255/0.4)] dark:shadow-[0_0_14px_rgb(255_255_255/0.4)]" />
+            <span className="size-1.5 rounded-full bg-foreground shadow-[0_0_14px_rgb(20_20_22/0.28)] dark:shadow-[0_0_14px_rgb(255_255_255/0.4)]" />
             YOUR TERMINAL. YOUR RULES.
           </p>
           <h1 className="mt-7 text-[clamp(3.4rem,8vw,6.6rem)] leading-[0.95] font-medium tracking-[-0.06em]">
@@ -35,11 +35,10 @@ export function Hero({ onOpenScreenshot }: HeroProps) {
               className="font-serif text-[1.08em] tracking-[-0.05em] italic"
             />
             <span
-              className="ml-2 inline-block animate-blink font-mono text-[0.72em] font-normal"
+              data-hero-caret
+              className="ml-1 inline-block h-[0.72em] w-[0.08em] translate-y-[0.08em] animate-blink bg-foreground align-middle"
               aria-hidden="true"
-            >
-              ▌
-            </span>
+            />
           </h1>
           <TextGenerateEffect
             className="mx-auto mt-7 max-w-xl text-base"

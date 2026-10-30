@@ -8,12 +8,13 @@ type BrandProps = {
 };
 
 export function Brand({ className, onLight = false }: BrandProps) {
+  const tone = onLight ? 'text-black' : 'text-white';
   return (
     <Link
       to="/"
       className={cn(
         'flex items-center gap-2.5 text-lg font-semibold tracking-tight whitespace-nowrap transition-colors duration-200',
-        onLight ? 'text-zinc-950' : 'text-zinc-100',
+        tone,
         className,
       )}
       aria-label="nvim.setup home"
@@ -21,11 +22,14 @@ export function Brand({ className, onLight = false }: BrandProps) {
       <NeovimLogo
         className={cn(
           'size-7 shrink-0 grayscale transition-colors duration-200',
-          onLight ? 'text-zinc-950' : 'text-zinc-100',
+          tone,
         )}
       />
       <span>
-        nvim<span className="text-zinc-500">.setup</span>
+        nvim
+        <span className={onLight ? 'text-black/60' : 'text-white/60'}>
+          .setup
+        </span>
       </span>
     </Link>
   );

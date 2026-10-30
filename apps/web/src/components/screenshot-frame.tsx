@@ -15,7 +15,7 @@ export function ScreenshotFrame({
   label = '~/your-next-idea',
   tilt = false,
 }: ScreenshotFrameProps) {
-  return (
+  const frame = (
     <LiquidGlass
       radius={18}
       bevelDepth={16}
@@ -23,10 +23,10 @@ export function ScreenshotFrame({
       aberration={3}
       frost={0.6}
       tint={0.06}
+      data-rim="dark"
       className={cn(
         'max-w-full border border-white/12 glass-rim dark:border-white/12',
-        tilt &&
-          'hero-tilt origin-bottom [transform:perspective(1600px)_rotateX(4deg)]',
+        tilt && 'hero-tilt origin-bottom [transform:rotateX(4deg)]',
         className,
       )}
       contentClassName="relative bg-zinc-950"
@@ -43,4 +43,8 @@ export function ScreenshotFrame({
       {children}
     </LiquidGlass>
   );
+
+  if (!tilt) return frame;
+
+  return <div className="overflow-x-clip [perspective:1600px]">{frame}</div>;
 }

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import {
+  grayscaleLevel,
   isHeaderOverLightBackdrop,
   isLightBackdrop,
   parseCssColor,
@@ -33,14 +34,16 @@ function stubRect(
 }
 
 describe('nav logo contrast', () => {
-  it('treats white and zinc-100 as light backdrops', () => {
+  it('treats grayscale above 50% as a light backdrop', () => {
     expect(isLightBackdrop('rgb(255, 255, 255)')).toBe(true);
     expect(isLightBackdrop('rgb(244 244 245)')).toBe(true);
-    expect(isLightBackdrop('rgba(255, 255, 255, 1)')).toBe(true);
+    expect(isLightBackdrop('rgb(129, 129, 129)')).toBe(true);
+    expect(grayscaleLevel(129, 129, 129)).toBeGreaterThan(0.5);
   });
 
-  it('keeps the dark page background as a dark backdrop', () => {
+  it('keeps grayscale at or below 50% as a dark backdrop', () => {
     expect(isLightBackdrop('rgb(11, 11, 12)')).toBe(false);
+    expect(isLightBackdrop('rgb(127, 127, 127)')).toBe(false);
     expect(isLightBackdrop('rgba(255, 255, 255, 0)')).toBe(false);
     expect(relativeLuminance(11, 11, 12)).toBeLessThan(0.2);
   });
@@ -60,10 +63,10 @@ describe('nav logo contrast', () => {
     });
   });
 
-  it('switches the header logo to the dark mark over a light section', () => {
+  it('switches the header mark to black over a light painted surface', () => {
     const header = document.createElement('header');
     const band = document.createElement('section');
-    band.dataset.navContrast = 'light';
+    band.style.backgroundColor = 'rgb(244, 244, 245)';
     document.body.append(header, band);
     stubRect(header, { top: 16, height: 64, width: 800 });
     stubRect(band, { top: 40, height: 500, width: 800 });
@@ -73,28 +76,55 @@ describe('nav logo contrast', () => {
   it('ignores collapsed layout boxes from jsdom defaults', () => {
     const header = document.createElement('header');
     const band = document.createElement('section');
-    band.dataset.navContrast = 'light';
+    band.style.backgroundColor = 'rgb(244, 244, 245)';
     document.body.append(header, band);
     expect(isHeaderOverLightBackdrop(header)).toBe(false);
   });
 
-  it('uses a dark contrast band to keep the light mark over inverted sections', () => {
+  it('keeps the white mark over a dark painted surface', () => {
     const header = document.createElement('header');
     const band = document.createElement('section');
-    band.dataset.navContrast = 'dark';
+    band.style.backgroundColor = 'rgb(9, 9, 11)';
     document.body.append(header, band);
     stubRect(header, { top: 16, height: 64, width: 800 });
     stubRect(band, { top: 40, height: 500, width: 800 });
     expect(isHeaderOverLightBackdrop(header)).toBe(false);
   });
 
-  it('keeps the light mark when the header sits over the dark page', () => {
+  it('keeps the white mark when the header sits over the dark page', () => {
     const header = document.createElement('header');
     const band = document.createElement('section');
-    band.dataset.navContrast = 'light';
+    band.style.backgroundColor = 'rgb(244, 244, 245)';
     document.body.append(header, band);
     stubRect(header, { top: 16, height: 64, width: 800 });
     stubRect(band, { top: 400, height: 500, width: 800 });
+    expect(isHeaderOverLightBackdrop(header)).toBe(false);
+  });
+
+  it('reads a nested screenshot fill instead of a wrapping page color', () => {
+    const header = document.createElement('header');
+    const main = document.createElement('main');
+    const shot = document.createElement('div');
+    main.style.backgroundColor = 'rgb(243, 242, 238)';
+    shot.style.backgroundColor = 'rgb(9, 9, 11)';
+    main.append(shot);
+    document.body.append(header, main);
+    stubRect(header, { top: 16, height: 64, width: 800 });
+    stubRect(main, { top: 0, height: 2000, width: 800 });
+    stubRect(shot, { top: 0, height: 400, width: 800 });
+    expect(isHeaderOverLightBackdrop(header)).toBe(false);
+  });
+
+  it('uses the majority of samples so a light gutter does not win over a dark screenshot', () => {
+    const header = document.createElement('header');
+    const gutter = document.createElement('div');
+    const shot = document.createElement('div');
+    gutter.style.backgroundColor = 'rgb(243, 242, 238)';
+    shot.style.backgroundColor = 'rgb(9, 9, 11)';
+    document.body.append(header, gutter, shot);
+    stubRect(header, { top: 16, left: 0, width: 800, height: 64 });
+    stubRect(gutter, { top: 0, left: 0, width: 80, height: 500 });
+    stubRect(shot, { top: 0, left: 80, width: 720, height: 500 });
     expect(isHeaderOverLightBackdrop(header)).toBe(false);
   });
 });

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { motion, stagger, useAnimate, useReducedMotion } from 'motion/react';
+import { useTheme } from '@/hooks/use-theme';
 import { cn } from '@/lib/utils';
 
 type TextGenerateEffectProps = {
@@ -17,16 +18,18 @@ export function TextGenerateEffect({
 }: TextGenerateEffectProps) {
   const [scope, animate] = useAnimate();
   const reduced = useReducedMotion();
+  const { theme } = useTheme();
   const wordsArray = words.split(' ');
+  const blur = filter && !reduced && theme === 'dark';
 
   useEffect(() => {
     if (reduced) return;
     void animate(
       'span',
-      { opacity: 1, filter: filter ? 'blur(0px)' : 'none' },
+      { opacity: 1, filter: blur ? 'blur(0px)' : 'none' },
       { duration, delay: stagger(0.08) },
     );
-  }, [animate, duration, filter, reduced]);
+  }, [animate, blur, duration, reduced]);
 
   return (
     <p className={cn('leading-relaxed text-muted', className)}>
@@ -37,7 +40,7 @@ export function TextGenerateEffect({
             className="inline"
             style={{
               opacity: reduced ? 1 : 0,
-              filter: reduced || !filter ? 'none' : 'blur(8px)',
+              filter: blur ? 'blur(8px)' : 'none',
             }}
           >
             {word}{' '}

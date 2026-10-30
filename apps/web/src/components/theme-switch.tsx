@@ -18,10 +18,7 @@ export function ThemeSwitch({ onLight = false }: ThemeSwitchProps) {
     <div
       role="group"
       aria-label="Color theme"
-      className={cn(
-        'flex rounded-full border p-0.5',
-        onLight ? 'border-zinc-900/15' : 'border-white/15',
-      )}
+      className="flex rounded-full border border-line p-0.5"
     >
       {modes.map((mode) => {
         const active = theme === mode.id;
@@ -35,11 +32,11 @@ export function ThemeSwitch({ onLight = false }: ThemeSwitchProps) {
               'rounded-full px-2.5 py-1 text-[10px] tracking-[0.12em]',
               active
                 ? onLight
-                  ? 'bg-zinc-900 text-zinc-50'
-                  : 'bg-white/15 text-zinc-100'
+                  ? 'bg-black text-white'
+                  : 'bg-white text-black'
                 : onLight
-                  ? 'text-zinc-600 hover:text-zinc-950'
-                  : 'text-zinc-400 hover:text-white',
+                  ? 'text-black hover:text-black'
+                  : 'text-white hover:text-white',
             )}
           >
             {mode.label}
