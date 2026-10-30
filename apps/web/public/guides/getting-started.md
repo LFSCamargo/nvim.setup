@@ -56,3 +56,5 @@ Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to i
 Install and authenticate the chat CLIs separately: [Codex](https://github.com/openai/codex), [Cursor CLI](https://cursor.com/docs/cli/overview), [Gemini CLI](https://geminicli.com/docs/get-started/installation/), [Claude Code](https://code.claude.com/docs/en/setup), and [OpenCode](https://opencode.ai/docs/cli/). Missing CLIs print a notice; the editor still works. Credentials stay outside this repository.
 
 If something looks off after install, start with `:checkhealth`, `:LspInfo`, `:MasonLog`, `:ConformInfo`, and `:messages`.
+
+To change the setup itself, see [Contributing](https://github.com/LFSCamargo/nvim.setup/blob/main/CONTRIBUTING.md) and the [first-change tutorial](https://github.com/LFSCamargo/nvim.setup/blob/main/docs/TUTORIAL.md).

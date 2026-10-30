@@ -20,6 +20,9 @@ The file tree takes 20% of the window and the chat pane takes 25%. Focus stays i
 
 This is a complete setup, not a plugin. `make install` replaces your Neovim config after backing it up.
 
+Want to change it? [Contributing](CONTRIBUTING.md) is the contract;
+[docs/TUTORIAL.md](docs/TUTORIAL.md) is a first-change walkthrough.
+
 ## Features
 
 - Clickable file tree, editor tabs, and chat tabs
@@ -177,7 +180,7 @@ After each commit, run `make changelog`. If `CHANGELOG.md` changed, commit it as
 
 `make changelog` lints the full history with those rules and rewrites [CHANGELOG.md](CHANGELOG.md). Conventional commits are grouped by type; older messages without a type go under Other. Tagged `vX.Y.Z` or `vX.Y.Z-beta` releases become dated sections; untagged commits stay under Unreleased. Agents fold Unreleased into a version with `.cursor/skills/release/SKILL.md`.
 
-Cursor, Claude Code, and Codex follow [AGENTS.md](AGENTS.md). After code changes they write tests, check for spaghetti, run `make test`, review for vulnerabilities, and keep `docs/` in sync. Claude Code also reads [CLAUDE.md](CLAUDE.md); Cursor also loads `.cursor/rules/`. If you ask to commit separately, they follow `.cursor/skills/commit-separately/SKILL.md`. If you ask to release or bump the version, they follow `.cursor/skills/release/SKILL.md`.
+Cursor, Claude Code, and Codex follow [AGENTS.md](AGENTS.md). After code changes they write tests, check for spaghetti, run `make test`, review for vulnerabilities, and keep `docs/` in sync. Claude Code also reads [CLAUDE.md](CLAUDE.md); Cursor also loads `.cursor/rules/`. If you ask to commit separately, they follow `.cursor/skills/commit-separately/SKILL.md`. If you ask to release or bump the version, they follow `.cursor/skills/release/SKILL.md`. Humans follow [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/TUTORIAL.md](docs/TUTORIAL.md).
 
 ## Backups and recovery
 
@@ -203,7 +206,10 @@ If a download fails, the new config stays installed and the backup is kept. Fix 
 | `docs/EDITOR.md`          | Keybindings, language, chat, and debug reference                    |
 | `docs/PLUGINS.md`         | First-party modules, Lazy plugins, Mason tools, parsers             |
 | `docs/E2E-TESTPLAN.md`    | What `make e2e` covers and how to extend it                         |
+| `docs/TUTORIAL.md`        | First-change walkthrough from clone to pull request                 |
 | `docs/VALIDATION.md`      | What the packaging checks cover                                     |
+| `CONTRIBUTING.md`         | How to test, commit, and open a pull request                        |
+| `LICENSE`                 | MIT License                                                         |
 | `Makefile` / `VERSION`    | Maintenance commands and the setup release version                  |
 | `scripts/scan.sh`         | Semgrep OWASP SAST and moderate-or-higher npm audit                 |
 | `commitlint.config.mjs`   | Conventional Commits rules for `git commit`                         |
@@ -232,3 +238,10 @@ pnpm scan                 # Semgrep OWASP SAST + moderate-or-higher npm audit
 `pnpm exec nx show projects` lists the projects. `pnpm exec nx run setup:check` and `pnpm exec nx run setup:e2e` run the existing shell/Lua and simulated Neovim UI checks. Setup tests are never served from Nx's cache. CI and Git hooks use pnpm; do not regenerate an npm lockfile.
 
 `make scan` (or `pnpm scan`) runs Semgrep Community Edition against the JavaScript/TypeScript tree with the OWASP Top Ten, JavaScript, TypeScript, React, and security-audit rulesets, then `pnpm audit --audit-level=moderate`. Findings fail the command. CI runs Semgrep from `.github/workflows/semgrep.yml` (no Semgrep Cloud token) and Prettier, TypeScript, and the production build from `.github/workflows/ci.yml`. Website visitor-path and Playwright checks stay local (`pnpm --filter web test`, `pnpm test:web:e2e`). Local SAST uses `semgrep` on PATH, or the `semgrep/semgrep` Docker image. The workspace also waits seven days before installing newly published package versions (`minimumReleaseAge`) and refuses exotic transitive dependencies.
+
+## License
+
+This repository is licensed under the [MIT License](LICENSE). Third-party
+plugins, Mason tools, and the landing-page UI adaptations keep their own
+terms; see [docs/PLUGINS.md](docs/PLUGINS.md) and
+[apps/web/THIRD-PARTY-NOTICES.md](apps/web/THIRD-PARTY-NOTICES.md).
