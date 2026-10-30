@@ -171,7 +171,7 @@ fix(agents): send Escape to the focused session
 docs: document the e2e check
 ```
 
-Use `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, or `revert`. After `pnpm install` in this repository, a `commit-msg` hook rejects messages that do not match.
+Use `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, or `revert`. After `pnpm install` in this repository, a `pre-commit` hook runs Prettier on staged files (and re-stages the fixes), and a `commit-msg` hook rejects messages that do not match.
 
 After each commit, run `make changelog`. If `CHANGELOG.md` changed, commit it as `chore(changelog): regenerate from commits` before pushing. A `pre-push` hook and CI fail when the file is stale. Regeneration commits are omitted from the changelog so that extra commit does not loop.
 

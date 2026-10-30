@@ -34,6 +34,7 @@ test('Nx delegates the real setup checks without caching interactive e2e results
     'bash scripts/tests/bootstrap.test.sh',
     'bash scripts/tests/fonts.test.sh',
     'bash scripts/tests/scan.test.sh',
+    'bash scripts/tests/format.test.sh',
   ]);
   assert.equal(setup.targets.test.options.parallel, false);
   assert.equal(json('package.json').scripts.build, 'nx run web:build');
@@ -59,7 +60,10 @@ test('marketing app is TypeScript with Tailwind and Prettier', () => {
   assert.match(read('.github/workflows/ci.yml'), /pnpm format:check/);
   assert.match(read('.github/workflows/ci.yml'), /pnpm --filter web typecheck/);
   assert.match(read('.github/workflows/ci.yml'), /pnpm build/);
-  assert.doesNotMatch(read('.github/workflows/ci.yml'), /playwright|test:web:e2e|filter web test/);
+  assert.doesNotMatch(
+    read('.github/workflows/ci.yml'),
+    /playwright|test:web:e2e|filter web test/,
+  );
   assert.equal(
     existsSync(
       new URL('../../apps/web/public/assets/agents.png', import.meta.url),
@@ -211,5 +215,11 @@ test('commit hooks and CI use the same pnpm workspace install', () => {
   assert.match(workflow, /pnpm install --frozen-lockfile/);
   assert.doesNotMatch(workflow, /npm ci|cache: npm|npx /);
   assert.match(read('.husky/commit-msg'), /pnpm exec commitlint --edit "\$1"/);
+  assert.match(read('.husky/pre-commit'), /scripts\/format-staged\.sh/);
+  assert.match(
+    read('scripts/format-staged.sh'),
+    /node_modules\/\.bin\/prettier/,
+  );
+  assert.match(read('scripts/format-staged.sh'), /--write --ignore-unknown/);
   assert.match(read('Makefile'), /pnpm exec commitlint --last/);
 });

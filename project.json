@@ -21,7 +21,8 @@
           "node --test scripts/tests/workspace.test.mjs",
           "bash scripts/tests/bootstrap.test.sh",
           "bash scripts/tests/fonts.test.sh",
-          "bash scripts/tests/scan.test.sh"
+          "bash scripts/tests/scan.test.sh",
+          "bash scripts/tests/format.test.sh"
         ],
         "parallel": false
       },
