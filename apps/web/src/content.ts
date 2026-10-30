@@ -29,7 +29,7 @@ export const screens = [
     height: 1016,
     caption:
       'Files, code, and a place to think. Your terminal, thoughtfully arranged.',
-    alt: 'Real Neovim setup screenshot showing the file tree, editor tabs, and a Cursor Agent chat',
+    alt: 'Real Neovim setup screenshot showing the nvim-tree file sidebar and editor tabs',
   },
   {
     id: 'git',
@@ -38,7 +38,17 @@ export const screens = [
     width: 1916,
     height: 1016,
     caption: 'See what changed. Stage with a click. Keep your code in view.',
-    alt: 'Real Neovim setup screenshot showing grouped Git changes beside the editor and Codex',
+    alt: 'Real Neovim setup screenshot showing grouped Git changes, the commit composer, and history',
+  },
+  {
+    id: 'layout',
+    label: 'The layout',
+    src: '/assets/layout.png',
+    width: 1916,
+    height: 1016,
+    caption:
+      'Git on the left. Codex on the right. Your buffer stays in the middle.',
+    alt: 'Real Neovim setup screenshot showing Git changes beside the editor and a Codex session',
   },
   {
     id: 'agents',
@@ -47,8 +57,8 @@ export const screens = [
     width: 1916,
     height: 1016,
     caption:
-      'Codex and Cursor Agent run as real CLI sessions in the right pane. Your login, your permissions.',
-    alt: 'Real Neovim setup screenshot showing a Codex session chatting beside the editor',
+      'Codex, Cursor Agent, Gemini, Claude, and OpenCode run as real CLI sessions in the right pane. Your login, your permissions.',
+    alt: 'Real Neovim setup screenshot showing a Codex session chatting beside open source files',
   },
 ] as const;
 
@@ -80,7 +90,7 @@ export const features = [
     number: '04',
     title: 'Chats with your own agents.',
     description:
-      'The right 25% runs the real Codex and Cursor Agent CLIs. Your login, your permissions. Multiple sessions, UUID resume, Esc to stop generation. Closing a tab stops that CLI; switching leaves it running.',
+      'The right 25% runs the real Codex, Cursor Agent, Gemini, Claude, and OpenCode CLIs. Your login, your permissions. Multiple sessions, ID resume, Esc to stop generation. Closing a tab stops that CLI; switching leaves it running.',
     tag: 'Optional AI tools',
   },
   {
@@ -194,6 +204,24 @@ export const requirements = [
     name: 'Cursor Agent CLI',
     purpose: 'Optional chat in the right pane',
     href: 'https://cursor.com/docs/cli/overview',
+    optional: true,
+  },
+  {
+    name: 'Gemini CLI',
+    purpose: 'Optional chat in the right pane',
+    href: 'https://geminicli.com/docs/get-started/installation/',
+    optional: true,
+  },
+  {
+    name: 'Claude Code CLI',
+    purpose: 'Optional chat in the right pane',
+    href: 'https://code.claude.com/docs/en/setup',
+    optional: true,
+  },
+  {
+    name: 'OpenCode CLI',
+    purpose: 'Optional chat in the right pane',
+    href: 'https://opencode.ai/docs/cli/',
     optional: true,
   },
 ] as const;
