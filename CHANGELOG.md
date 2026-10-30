@@ -76,6 +76,7 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Chores
 
+- **release:** v1.0.0-beta ([3db91f9](https://github.com/LFSCamargo/nvim.setup/commit/3db91f9a9f9af93d9a12c4fe58b5a30754bfec96))
 - **workspace:** keep Nx target defaults formatted ([073f9cf](https://github.com/LFSCamargo/nvim.setup/commit/073f9cffb9e90b3cb11d433764e385c7351341fe))
 - adds new view for recent commits from the repository ([9057d9b](https://github.com/LFSCamargo/nvim.setup/commit/9057d9b28fdb3be095a10505a158e22603eeb59a))
 - **gitignore:** ignore Neovim runtime logs ([c4c1a12](https://github.com/LFSCamargo/nvim.setup/commit/c4c1a12377ee597fa7d973938caa5394d9940702))
