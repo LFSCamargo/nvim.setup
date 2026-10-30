@@ -8,4 +8,4 @@ Before you finish a code change: write tests in `scripts/tests/` (bug fixes need
 
 ## Committing
 
-Only commit when asked. Use Conventional Commits. If asked to commit separately / by scope, follow `.cursor/skills/commit-separately/SKILL.md`. After the commit, run `make changelog`. If `CHANGELOG.md` changed, commit `chore(changelog): regenerate from commits` before pushing. Never edit `CHANGELOG.md` by hand.
+Only commit when asked. Use Conventional Commits. If asked to commit separately / by scope, follow `.cursor/skills/commit-separately/SKILL.md`. If asked to release, bump the version, or fold Unreleased into a version, follow `.cursor/skills/release/SKILL.md`. After the commit, run `make changelog`. If `CHANGELOG.md` changed, commit `chore(changelog): regenerate from commits` before pushing. Never edit `CHANGELOG.md` by hand.
