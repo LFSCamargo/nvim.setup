@@ -236,7 +236,7 @@ function M.restore_chats(data)
   local agents = require('config.agents')
   local created = {}
   for _, chat in ipairs(chats.sessions) do
-    if type(chat) == 'table' and (chat.name == 'codex' or chat.name == 'cursor') then
+    if type(chat) == 'table' and agents.is_cli(chat.name) then
       local before = agents.active
       agents.new(chat.name, { uuid = chat.uuid, label = chat.label })
       created[#created + 1] = agents.active or before
