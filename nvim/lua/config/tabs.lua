@@ -203,11 +203,13 @@ function M.render()
     local items = {}
     for _, id in ipairs(ids) do
       local s = agents.sessions[id]
-      items[#items + 1] = {
-        id = id,
-        label = s.label .. (s.exited and ' (exited)' or ''),
-        active = s.buf == buf,
-      }
+      if s and not s.exited and vim.api.nvim_buf_is_valid(s.buf) then
+        items[#items + 1] = {
+          id = id,
+          label = s.label,
+          active = s.buf == buf,
+        }
+      end
     end
     append(items, 'ChatTabClick')
     out[#out + 1] = '%#PaneTabInactive#%0@v:lua.ChatTabNew@ + %T%0@v:lua.PaneTabClose@ × %T'
@@ -233,6 +235,61 @@ end
 function M.new()
   M.focus()
   vim.cmd.enew()
+end
+
+-- Open a path as a mid-editor tab. Reuse an existing tab for the same file.
+-- Unlike :edit, this does not replace a blank [New] buffer.
+function M.open(path, loc)
+  if type(path) ~= 'string' or path == '' or path:find('[\r\n]') then return end
+  local win = M.focus()
+  if not win then return end
+  loc = loc or {}
+  local abs = vim.fn.fnamemodify(path, ':p')
+  local want = vim.fs.normalize(abs)
+  local buf = loc.bufnr
+  if buf and not (api.nvim_buf_is_valid(buf) and editor_buf(buf)) then buf = nil end
+  if not buf then
+    for _, b in ipairs(api.nvim_list_bufs()) do
+      if editor_buf(b) then
+        local name = api.nvim_buf_get_name(b)
+        if name ~= '' and vim.fs.normalize(name) == want then
+          buf = b
+          break
+        end
+      end
+    end
+  end
+  if not buf then
+    buf = vim.fn.bufadd(abs)
+    if buf == 0 then return end
+    vim.bo[buf].buflisted = true
+  end
+  api.nvim_set_current_win(win)
+  api.nvim_win_set_buf(win, buf)
+  if loc.line and loc.line > 0 then
+    pcall(api.nvim_win_set_cursor, win, { loc.line, math.max(0, (loc.col or 1) - 1) })
+  end
+end
+
+function M.open_from_fzf(selected, opts)
+  local parse = function(sel)
+    return sel, {}
+  end
+  local ok, fzf_path = pcall(require, 'fzf-lua.path')
+  if ok then
+    parse = function(sel)
+      local entry = fzf_path.entry_to_file(sel, opts)
+      return entry.path or entry.bufname, {
+        bufnr = entry.bufnr,
+        line = entry.line,
+        col = entry.col,
+      }
+    end
+  end
+  for _, sel in ipairs(selected or {}) do
+    local path, loc = parse(sel)
+    M.open(path, loc)
+  end
 end
 
 function M.close()
@@ -300,6 +357,12 @@ _G.PaneTabCycle = function(direction, _, button)
   if chat then
     ids = vim.tbl_keys(agents.sessions)
     table.sort(ids)
+    local live = {}
+    for _, id in ipairs(ids) do
+      local s = agents.sessions[id]
+      if s and not s.exited and vim.api.nvim_buf_is_valid(s.buf) then live[#live + 1] = id end
+    end
+    ids = live
   else
     for _, b in ipairs(api.nvim_list_bufs()) do
       if editor_buf(b) then ids[#ids + 1] = b end
