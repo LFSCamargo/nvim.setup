@@ -73,7 +73,11 @@ function readCommits() {
 function releaseTags() {
   const out = git(['tag', '--list', '--sort=version:refname']);
   return out
-    ? out.split('\n').filter((tag) => /^v?\d+\.\d+\.\d+$/.test(tag))
+    ? out
+        .split('\n')
+        .filter((tag) =>
+          /^v?\d+\.\d+\.\d+(-[0-9A-Za-z][0-9A-Za-z.-]*)?$/.test(tag),
+        )
     : [];
 }
 

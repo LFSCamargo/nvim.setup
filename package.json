@@ -12,7 +12,7 @@
     "build": "nx run web:build",
     "test": "nx run-many -t test",
     "test:setup": "nx run setup:test",
-    "test:workspace": "node --test scripts/tests/workspace.test.mjs && bash scripts/tests/bootstrap.test.sh && bash scripts/tests/fonts.test.sh && bash scripts/tests/scan.test.sh && bash scripts/tests/format.test.sh",
+    "test:workspace": "node --test scripts/tests/workspace.test.mjs && bash scripts/tests/bootstrap.test.sh && bash scripts/tests/fonts.test.sh && bash scripts/tests/scan.test.sh && bash scripts/tests/format.test.sh && bash scripts/tests/bump.test.sh",
     "scan": "bash scripts/scan.sh",
     "scan:sast": "bash scripts/scan.sh sast",
     "scan:audit": "bash scripts/scan.sh audit",

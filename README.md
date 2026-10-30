@@ -142,7 +142,7 @@ Run these from the repository:
 | `make update`                                  | Fast-forward from the configured upstream, then install                                  |
 | `make upgrade`                                 | Upgrade plugins, refresh parsers, validate, and save the lockfile                        |
 | `make capture`                                 | Copy installed config changes back into this repository                                  |
-| `make bump VERSION=1.1.0`                      | Set this setup's release version                                                         |
+| `make bump VERSION=1.1.0`                      | Set this setup's release version (`1.2.3` or `1.2.3-beta`)                               |
 | `make commitlint`                              | Check the latest commit message against Conventional Commits                             |
 | `make changelog`                               | Validate every commit and regenerate `CHANGELOG.md`                                      |
 

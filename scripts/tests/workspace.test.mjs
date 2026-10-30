@@ -35,6 +35,7 @@ test('Nx delegates the real setup checks without caching interactive e2e results
     'bash scripts/tests/fonts.test.sh',
     'bash scripts/tests/scan.test.sh',
     'bash scripts/tests/format.test.sh',
+    'bash scripts/tests/bump.test.sh',
   ]);
   assert.equal(setup.targets.test.options.parallel, false);
   assert.equal(json('package.json').scripts.build, 'nx run web:build');

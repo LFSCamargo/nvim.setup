@@ -22,7 +22,8 @@
           "bash scripts/tests/bootstrap.test.sh",
           "bash scripts/tests/fonts.test.sh",
           "bash scripts/tests/scan.test.sh",
-          "bash scripts/tests/format.test.sh"
+          "bash scripts/tests/format.test.sh",
+          "bash scripts/tests/bump.test.sh"
         ],
         "parallel": false
       },
