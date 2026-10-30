@@ -29,6 +29,7 @@ else
   chmod +x "$wrapper_dst"
   say "Installed nvim wrapper to $wrapper_dst so nvim --clean skips restored tabs."
 fi
+bash "$SETUP_ROOT/scripts/fonts.sh"
 bash "$SETUP_ROOT/scripts/plugins.sh" restore
 run_lua "$CONFIG_DIR/scripts/install-parsers.lua"
 run_lua "$CONFIG_DIR/scripts/install-tools.lua"

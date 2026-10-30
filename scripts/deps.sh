@@ -1,20 +1,6 @@
 #!/usr/bin/env bash
 source "$(dirname -- "$0")/common.sh"
 
-file_sha256() {
-  if command -v sha256sum >/dev/null 2>&1; then
-    sha256sum -- "$1" | awk '{print $1}'
-  else
-    shasum -a 256 -- "$1" | awk '{print $1}'
-  fi
-}
-
-verify_sha256() {
-  local file="$1" expected="$2" actual
-  actual="$(file_sha256 "$file")"
-  [[ -n "$expected" && "$actual" == "$expected" ]] || die "Checksum mismatch for $file"
-}
-
 nvim_meets_min() {
   command -v nvim >/dev/null 2>&1 || return 1
   NVIM_WRAPPER=0 nvim --clean --headless -n '+lua if vim.fn.has("nvim-0.12") == 0 then vim.cmd("cquit 1") end' +qa >/dev/null 2>&1
@@ -42,7 +28,7 @@ install_neovim_release() {
   url="https://github.com/neovim/neovim/releases/latest/download/$asset"
   say "Installing Neovim 0.12+ from $url"
   work="$(mktemp -d "${TMPDIR:-/tmp}/nvim-setup-nvim.XXXXXX")"
-  curl -fsSL -- "$url" -o "$work/$asset"
+  curl -fsSL -o "$work/$asset" -- "$url"
   sumfile="$(curl -fsSL -- "$url.sha256sum")"
   expected="$(printf '%s\n' "$sumfile" | awk '{print $1; exit}')"
   verify_sha256 "$work/$asset" "$expected"
@@ -69,7 +55,7 @@ install_node_release() {
   [[ -n "$expected" && -n "$tarball" ]] || die "Could not find a Node.js 22 archive for $node_arch"
   url="https://nodejs.org/dist/latest-v22.x/$tarball"
   work="$(mktemp -d "${TMPDIR:-/tmp}/nvim-setup-node.XXXXXX")"
-  curl -fsSL -- "$url" -o "$work/$tarball"
+  curl -fsSL -o "$work/$tarball" -- "$url"
   verify_sha256 "$work/$tarball" "$expected"
   mkdir -p "$work/extract"
   tar -xf "$work/$tarball" -C "$work/extract"
@@ -112,11 +98,11 @@ case "$(uname -s)" in
     if [[ $(id -u) != 0 ]]; then need sudo; elevated=(sudo); fi
     if command -v apt-get >/dev/null 2>&1; then
       "${elevated[@]}" apt-get update
-      "${elevated[@]}" apt-get install -y neovim git curl tar unzip build-essential ripgrep fd-find fzf nodejs npm golang-go cargo python3
+      "${elevated[@]}" apt-get install -y neovim git curl tar unzip build-essential ripgrep fd-find fzf nodejs npm golang-go cargo python3 python3-pip
     elif command -v dnf >/dev/null 2>&1; then
-      "${elevated[@]}" dnf install -y neovim git curl tar unzip gcc gcc-c++ make ripgrep fd-find fzf nodejs npm golang cargo python3
+      "${elevated[@]}" dnf install -y neovim git curl tar unzip gcc gcc-c++ make ripgrep fd-find fzf nodejs npm golang cargo python3 python3-pip
     elif command -v pacman >/dev/null 2>&1; then
-      "${elevated[@]}" pacman -Syu --needed neovim git curl tar unzip base-devel ripgrep fd fzf tree-sitter-cli nodejs npm go rust python
+      "${elevated[@]}" pacman -Syu --needed neovim git curl tar unzip base-devel ripgrep fd fzf tree-sitter-cli nodejs npm go rust python python-pip
     else die 'Supported package managers: Homebrew, apt, dnf, pacman. See README for manual prerequisites.'; fi
     export PATH="$HOME/.cargo/bin:$HOME/.local/bin:$PATH"
     need cargo

@@ -1,10 +1,10 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
-.PHONY: help bootstrap deps doctor install plugins parsers tools validate update upgrade capture bump check e2e test scan commitlint changelog
+.PHONY: help bootstrap deps doctor install fonts plugins parsers tools validate update upgrade capture bump check e2e test scan commitlint changelog
 help: ## Show available commands
 	@awk 'BEGIN {FS = ":.*## "} /^[a-z0-9-]+:.*## / {printf "  %-12s %s\n", $$1, $$2}' Makefile
 
-bootstrap: ## Fetch this setup (if needed), install Neovim and other deps, then install
+bootstrap: ## Fetch this setup (if needed), install deps and icon fonts, then install
 	@bash scripts/bootstrap.sh
 
 deps: ## Install macOS/Linux system dependencies (may need sudo)
@@ -13,8 +13,11 @@ deps: ## Install macOS/Linux system dependencies (may need sudo)
 doctor: ## Check system prerequisites and optional agent CLIs
 	@bash scripts/doctor.sh
 
-install: ## Back up local config, install pinned plugins, tools, parsers; validate
+install: ## Back up local config, install pinned plugins, tools, parsers, icon fonts; validate
 	@bash scripts/install.sh
+
+fonts: ## Install Nerd Font files for Files/Git Devicons
+	@bash scripts/fonts.sh
 
 plugins: ## Install/restore plugin versions recorded in lazy-lock.json
 	@bash scripts/plugins.sh restore

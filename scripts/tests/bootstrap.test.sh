@@ -39,6 +39,7 @@ if [ "$1" = clone ]; then
   done
   mkdir -p "$clone_dest/scripts" "$clone_dest/nvim"
   printf '%s\n' '#!/bin/sh' "printf 'deps NVIM_APPNAME=%s\n' \"\${NVIM_APPNAME:-nvim}\" >>'__CALLS__'" >"$clone_dest/scripts/deps.sh"
+  printf '%s\n' '#!/bin/sh' "printf 'fonts NVIM_APPNAME=%s\n' \"\${NVIM_APPNAME:-nvim}\" >>'__CALLS__'" >"$clone_dest/scripts/fonts.sh"
   printf '%s\n' '#!/bin/sh' "printf 'install NVIM_APPNAME=%s\n' \"\${NVIM_APPNAME:-nvim}\" >>'__CALLS__'" >"$clone_dest/scripts/install.sh"
   printf '%s\n' '-- fake --' >"$clone_dest/nvim/init.lua"
   printf '%s\n' 'install:' >"$clone_dest/Makefile"
@@ -90,6 +91,7 @@ home="$TMP/pipe"
 run_piped "$home"
 assert_file_has "$home/calls.log" 'git clone --branch main --depth 1 -- https://github.com/LFSCamargo/nvim.setup.git'
 assert_file_has "$home/calls.log" 'deps NVIM_APPNAME=nvim'
+assert_file_has "$home/calls.log" 'fonts NVIM_APPNAME=nvim'
 assert_file_has "$home/calls.log" 'install NVIM_APPNAME=nvim'
 assert_file_has "$home/.zprofile" 'nvim.setup PATH'
 [[ -f "$home/share/nvim.setup/nvim/init.lua" ]] || fail 'clone stub did not create the checkout'
@@ -99,6 +101,7 @@ pass 'piped bootstrap clones and installs without a pre-existing repo'
 home="$TMP/preview"
 run_piped "$home" --preview
 assert_file_has "$home/calls.log" 'deps NVIM_APPNAME=nvim-preview'
+assert_file_has "$home/calls.log" 'fonts NVIM_APPNAME=nvim-preview'
 assert_file_has "$home/calls.log" 'install NVIM_APPNAME=nvim-preview'
 pass 'piped bootstrap --preview sets NVIM_APPNAME=nvim-preview'
 
@@ -109,7 +112,7 @@ if FAKE_UID=0 run_piped "$home" 2>"$home.err"; then
 fi
 grep -F 'Do not run this installer as root' "$home.err" >/dev/null || fail 'root refusal message missing'
 [[ ! -e "$home/calls.log" || ! -s "$home/calls.log" ]] || {
-  if grep -E 'git |brew |deps |install ' "$home/calls.log" >/dev/null; then
+  if grep -E 'git |brew |deps |fonts |install ' "$home/calls.log" >/dev/null; then
     fail 'root run started clone or install'
   fi
 }
@@ -130,6 +133,7 @@ calls="$home/calls.log"
 : >"$calls"
 cp "$ROOT/scripts/bootstrap.sh" "$home/repo/scripts/bootstrap.sh"
 printf '%s\n' '#!/bin/sh' "printf 'deps NVIM_APPNAME=%s\n' \"\${NVIM_APPNAME:-nvim}\" >>'$calls'" >"$home/repo/scripts/deps.sh"
+printf '%s\n' '#!/bin/sh' "printf 'fonts NVIM_APPNAME=%s\n' \"\${NVIM_APPNAME:-nvim}\" >>'$calls'" >"$home/repo/scripts/fonts.sh"
 printf '%s\n' '#!/bin/sh' "printf 'install NVIM_APPNAME=%s\n' \"\${NVIM_APPNAME:-nvim}\" >>'$calls'" >"$home/repo/scripts/install.sh"
 printf '%s\n' '-- fake --' >"$home/repo/nvim/init.lua"
 write_stub "$home/bin/brew" <<EOF
@@ -152,6 +156,7 @@ env -i \
   PATH="$home/bin:/usr/bin:/bin" \
   /bin/bash "$home/repo/scripts/bootstrap.sh"
 assert_file_has "$calls" 'deps NVIM_APPNAME=nvim'
+assert_file_has "$calls" 'fonts NVIM_APPNAME=nvim'
 assert_file_has "$calls" 'install NVIM_APPNAME=nvim'
 if grep -F 'git clone' "$calls" >/dev/null; then
   fail 'checkout run should not git clone'
@@ -187,6 +192,10 @@ grep -F 'https://github.com/neovim/neovim/releases/latest/download/' "$ROOT/scri
   || fail 'deps should install Neovim from GitHub releases when packages are too old'
 grep -F 'https://nodejs.org/dist/latest-v22.x/' "$ROOT/scripts/deps.sh" >/dev/null \
   || fail 'deps should install Node.js 22 when packages are too old'
+grep -F 'python3-pip' "$ROOT/scripts/deps.sh" >/dev/null \
+  || fail 'deps should install pip so fonts.sh can overlay icon glyphs'
+grep -F 'scripts/fonts.sh' "$ROOT/scripts/bootstrap.sh" >/dev/null \
+  || fail 'bootstrap should install icon fonts'
 pass 'bootstrap and deps keep the public install URLs'
 
 printf '\n%s\n' "All $PASS bootstrap tests passed"

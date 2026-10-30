@@ -13,8 +13,8 @@ die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 
 usage() {
   cat <<'EOF'
-Install nvim.setup: fetch the repo, install Neovim and other dependencies, then
-deploy the config.
+Install nvim.setup: fetch the repo, install Neovim and other dependencies,
+install icon fonts, then deploy the config.
 
 Usage:
   curl -fsSL https://raw.githubusercontent.com/LFSCamargo/nvim.setup/main/scripts/bootstrap.sh | bash
@@ -198,6 +198,8 @@ ensure_fetch_tools
 ensure_repo
 say "Installing dependencies (Neovim, Node, language tools)..."
 bash "$SETUP_ROOT/scripts/deps.sh"
+say 'Installing icon fonts (Symbols Nerd Font, Monocraft Nerd Font)...'
+bash "$SETUP_ROOT/scripts/fonts.sh"
 say 'Installing the Neovim configuration...'
 bash "$SETUP_ROOT/scripts/install.sh"
 say "nvim.setup is ready. Open a project with: ${NVIM_APPNAME:+NVIM_APPNAME=$NVIM_APPNAME }nvim ."
