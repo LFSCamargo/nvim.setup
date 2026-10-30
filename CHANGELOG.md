@@ -9,6 +9,10 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ## [Unreleased]
 
+### Features
+
+- **editor:** add Settings sidebar and extract format and statusline ([8801c16](https://github.com/LFSCamargo/nvim.setup/commit/8801c1613bdd345b44c6010c21d95be6f937fbd1))
+
 ### Bug Fixes
 
 - **session:** disable swap files without touching restore ([e147837](https://github.com/LFSCamargo/nvim.setup/commit/e1478371dc425c053b06a56be6a1b9c1a9d31770))
