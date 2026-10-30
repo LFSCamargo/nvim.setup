@@ -18,6 +18,8 @@ git -C "$work_dir/repo" commit -qm initial
 printf 'after\n' > "$work_dir/repo/changed file.txt"
 rm -- "$work_dir/repo/deleted.txt"
 printf 'new\n' > "$work_dir/repo/new.txt"
+printf 'export\n' > "$work_dir/repo/app.ts"
+printf 'fn\n' > "$work_dir/repo/lib.rs"
 cat > "$work_dir/bin/codex" <<'SCRIPT'
 #!/bin/sh
 if [ "$1" = "create-chat" ]; then
@@ -28,8 +30,10 @@ printf '%s\n' "$*" > "$E2E_DIR/$(basename "$0")-args"
 stty raw -echo
 cat > "$E2E_DIR/$(basename "$0")-input"
 SCRIPT
-cp "$work_dir/bin/codex" "$work_dir/bin/agent"
-chmod +x "$work_dir/bin/codex" "$work_dir/bin/agent"
+for bin in agent gemini claude opencode; do
+  cp "$work_dir/bin/codex" "$work_dir/bin/$bin"
+done
+chmod +x "$work_dir/bin/codex" "$work_dir/bin/agent" "$work_dir/bin/gemini" "$work_dir/bin/claude" "$work_dir/bin/opencode"
 
 wrap_root="$work_dir/wrapper"
 mkdir -p "$wrap_root/local" "$wrap_root/real" "$wrap_root/config/nvim"

@@ -1,5 +1,5 @@
 -- Simulated UI e2e: spawn a child Neovim over RPC and drive mouse, focus, and Escape.
--- Fake `codex` / `agent` binaries (from scripts/e2e.sh) record input under E2E_DIR.
+-- Fake chat CLI binaries (from scripts/e2e.sh) record input under E2E_DIR.
 
 for _, rel in ipairs({ '/.luarc.json', '/nvim/.luarc.json' }) do
   local luarc = vim.json.decode(table.concat(vim.fn.readfile(vim.env.SETUP_ROOT .. rel), '\n'))
@@ -91,6 +91,74 @@ local ok, err = xpcall(function()
   escape_reaches('agent')
   print('PASS: local chat config, mouse focus, Escape delivery and terminal mode')
 
+  -- Process exit (Ctrl+C in the CLI) must close that chat tab, not leave "(exited)".
+  local closed_id = eval("return require('config.agents').active")
+  local closed_buf = eval(string.format(
+    'return require("config.agents").sessions[%d].buf',
+    closed_id
+  ))
+  eval(string.format(
+    'vim.fn.jobstop(require("config.agents").sessions[%d].job)',
+    closed_id
+  ))
+  wait_for('exited agent chat tab to close', function()
+    return eval(string.format([[
+      local a = require('config.agents')
+      return a.sessions[%d] == nil
+        and not vim.api.nvim_buf_is_valid(%d)
+        and vim.tbl_count(a.sessions) == 1
+        and a.win ~= nil
+        and vim.api.nvim_win_is_valid(a.win)
+        and a.active ~= %d
+        and a.sessions[a.active] ~= nil
+        and vim.api.nvim_win_get_buf(a.win) == a.sessions[a.active].buf
+    ]], closed_id, closed_buf, closed_id))
+  end)
+  print('PASS: agent process exit closes the chat tab')
+
+  eval("require('config.agents').new('cursor')")
+  wait_for('extra agent tab', function()
+    return eval('return vim.tbl_count(require("config.agents").sessions) == 2')
+  end)
+  local leftover_id = eval("return require('config.agents').active")
+  local leftover_buf = eval(string.format(
+    'return require("config.agents").sessions[%d].buf',
+    leftover_id
+  ))
+  eval(string.format('require("config.agents").sessions[%d].exited = true', leftover_id))
+  eval(string.format('require("config.agents").show(%d)', leftover_id))
+  wait_for('clicking an exited chat tab to close it', function()
+    return eval(string.format([[
+      local a = require('config.agents')
+      return a.sessions[%d] == nil and not vim.api.nvim_buf_is_valid(%d)
+    ]], leftover_id, leftover_buf))
+  end)
+  print('PASS: clicking an exited chat tab closes it')
+
+  eval("require('config.agents').new('cursor')")
+  wait_for('orphan agent tab', function()
+    return eval('return vim.tbl_count(require("config.agents").sessions) >= 2')
+  end)
+  local orphan_id = eval("return require('config.agents').active")
+  local orphan_buf = eval(string.format(
+    'return require("config.agents").sessions[%d].buf',
+    orphan_id
+  ))
+  eval(string.format([[
+    local a = require('config.agents')
+    local id, buf = %d, %d
+    a.sessions[id].exited = true
+    a.sessions[id] = nil
+    vim.api.nvim_set_current_win(a.win)
+    vim.api.nvim_win_set_buf(a.win, buf)
+    vim.cmd.startinsert()
+  ]], orphan_id, orphan_buf))
+  request('nvim_input', '<C-w>')
+  wait_for('Ctrl-W to close an orphan exited chat', function()
+    return eval(string.format('return not vim.api.nvim_buf_is_valid(%d)', orphan_buf))
+  end)
+  print('PASS: Ctrl-W closes a leftover exited chat tab')
+
   request('nvim_set_current_win', editor)
   eval([[
     local session = require('config.session')
@@ -155,6 +223,13 @@ local ok, err = xpcall(function()
         vim.api.nvim_win_set_buf(tree_win, buf)
       end,
     } }
+    package.loaded['nvim-web-devicons'] = package.loaded['nvim-web-devicons'] or {
+      setup = function() end,
+      get_icon = function(_, ext)
+        local icons = { txt = 'T', ts = 'S', rs = 'R' }
+        return icons[ext or ''] or 'F', 'DevIconTest'
+      end,
+    }
     local system = vim.system
     vim.system = function(_, _, cb) vim.defer_fn(function() cb({ code = 0, stdout = '/late\n' }) end, 300) end
     local sidebar = require('config.sidebar')
@@ -326,6 +401,38 @@ local ok, err = xpcall(function()
     return log_line('COMMITS') > 0 and text:find('initial', 1, true) ~= nil
   end)
   local shown = sidebar_text()
+  local function tree_icons_safe()
+    return eval([[
+      local function folder_ok(icons)
+        -- nvim-tree/node/directory.lua:210 indexes web_devicons.folder.enable
+        return icons.show.file == true and icons.show.folder == true
+          and icons.show.folder_arrow == true
+          and type(icons.padding) == 'table'
+          and icons.padding.icon == ' '
+          and icons.web_devicons.file.enable == true
+          and icons.web_devicons.folder.enable == false
+          and icons.glyphs.folder.arrow_closed == '>'
+          and icons.glyphs.folder.arrow_open == 'v'
+          and type(icons.glyphs.folder.default) == 'string'
+          and type(icons.glyphs.folder.open) == 'string'
+      end
+      local icons = require('config.icons')
+      if not folder_ok(icons.tree_icons()) then return false end
+      local live = package.loaded['nvim-tree.config']
+      local drawn = live and live.g and live.g.renderer and live.g.renderer.icons
+      return drawn and type(drawn.web_devicons.folder.enable) == 'boolean'
+    ]])
+  end
+  assert(tree_icons_safe(), 'Files sidebar should show file type icons')
+  assert(eval([[
+    for _, range in ipairs(vim.fn.getcellwidths()) do
+      if range[1] <= 0xF07B and range[2] >= 0xF07B and range[3] == 2 then return false end
+    end
+    return true
+  ]]), 'Devicons should occupy one cell so they do not overlap filenames')
+  assert(shown:find('T changed file.txt', 1, true) and shown:find('T deleted.txt', 1, true) and shown:find('T new.txt', 1, true), 'txt icon missing in Git')
+  assert(shown:find('S app.ts', 1, true) and shown:find('R lib.rs', 1, true), 'extension icons missing in Git')
+  assert(not shown:find('S lib.rs', 1, true) and not shown:find('R app.ts', 1, true), 'Git file icons should follow the extension')
   assert(not shown:find('Click', 1, true), 'mouse hint should not be shown')
   assert(shown:find('[Commit]', 1, true) and shown:find('Ctrl+Enter', 1, true), 'commit button missing')
   assert(shown:find('x revert', 1, true) and shown:find('i message', 1, true), 'keyboard helper text missing')
@@ -354,7 +461,7 @@ local ok, err = xpcall(function()
     return result.stdout:find('changed file.txt', 1, true) ~= nil
   end)
   wait_for('Git sidebar refresh', function()
-    return sidebar_text():find('M  changed file.txt', 1, true) ~= nil
+    return sidebar_text():find('M  T changed file.txt', 1, true) ~= nil
   end)
   wait_for('Unstage All action', function() return sidebar_line('[Unstage All]') > 0 end)
   vim.wait(500)
@@ -364,7 +471,7 @@ local ok, err = xpcall(function()
     return not result.stdout:find('changed file.txt', 1, true)
   end)
   wait_for('unstaged section refresh', function()
-    return sidebar_text():find('+  M  changed file.txt', 1, true) ~= nil
+    return sidebar_text():find('+  M  T changed file.txt', 1, true) ~= nil
   end)
   focus_git_line('changed file.txt')
   request('nvim_input', 's')
@@ -373,7 +480,7 @@ local ok, err = xpcall(function()
     return result.stdout:find('changed file.txt', 1, true) ~= nil
   end)
   wait_for('staged file after keyboard', function()
-    return sidebar_text():find('M  changed file.txt', 1, true) ~= nil and sidebar_line('[Unstage All]') > 0
+    return sidebar_text():find('M  T changed file.txt', 1, true) ~= nil and sidebar_line('[Unstage All]') > 0
   end)
   focus_git_list()
   request('nvim_input', 'U')
@@ -382,7 +489,7 @@ local ok, err = xpcall(function()
     return result.stdout:find('changed file.txt', 1, true) == nil
   end)
   wait_for('changes restored after unstage all', function()
-    return sidebar_text():find('+  M  changed file.txt', 1, true) ~= nil
+    return sidebar_text():find('+  M  T changed file.txt', 1, true) ~= nil
   end)
   focus_git_line('new.txt')
   request('nvim_input', 's')
@@ -525,7 +632,80 @@ local ok, err = xpcall(function()
   eval("require('config.tabs').focus()")
   print('PASS: asynchronous Git sidebar, switching, staging and opening files')
 
+  assert(eval("return vim.fn.exists(':IconTheme')") == 0, 'icon pack picker should be removed')
+  assert(eval("return vim.fn.maparg('<C-S-i>', 'n')") == '', 'Ctrl+Shift+I should not switch icon packs')
+  assert(eval("return require('config.icons').file_icon('app.ts')") == 'S', 'Devicons should mark .ts files')
+  assert(eval("return require('config.icons').file_icon('lib.rs')") == 'R', 'Devicons should mark .rs files')
+  assert(eval("return require('config.icons').tree_icons().web_devicons.file.enable") == true)
+  assert(eval("return require('config.icons').tree_icons().web_devicons.folder.enable") == false, 'folders must not use file Devicons')
+  assert(tree_icons_safe(), 'Files sidebar should keep nvim-tree folder icons')
+  assert(eval("return require('config.icons').tree_icons().show.folder_arrow") == true)
+  assert(eval("return require('config.icons').tree_icons().glyphs.folder.arrow_closed") == '>')
+  print('PASS: Devicons only, one-cell Nerd Font glyphs')
 
+  -- Ctrl+P must add a mid-editor tab. Vim :edit on a blank [New] buffer replaces it.
+  eval("require('config.tabs').new()")
+  wait_for('blank editor tab before Ctrl-P', function()
+    return eval("return vim.api.nvim_buf_get_name(0) == ''")
+  end)
+  local blank_tab = eval('return vim.api.nvim_get_current_buf()')
+  local wins_before_find = eval('return #vim.api.nvim_tabpage_list_wins(0)')
+  eval([[
+    vim.api.nvim_create_user_command('FindProjectFiles', function()
+      require('config.tabs').open_from_fzf({ vim.env.E2E_DIR .. '/repo/new.txt' })
+    end, { force = true })
+  ]])
+  request('nvim_input', '<C-p>')
+  wait_for('Ctrl-P opening a file tab', function()
+    return eval("return vim.api.nvim_buf_get_name(0):find('new.txt', 1, true) ~= nil")
+  end)
+  assert(in_mid_editor(), 'Ctrl-P should open the file in the mid editor')
+  assert(
+    eval('return #vim.api.nvim_tabpage_list_wins(0)') == wins_before_find,
+    'Ctrl-P should reuse the mid editor, not split like a new Vim window'
+  )
+  assert(
+    eval(string.format(
+      'return vim.api.nvim_buf_is_valid(%d) and vim.bo[%d].buflisted and vim.api.nvim_get_current_buf() ~= %d',
+      blank_tab,
+      blank_tab,
+      blank_tab
+    )),
+    'Ctrl-P should keep the previous tab instead of replacing it like :edit'
+  )
+  local file_tabs = eval([[
+    local n = 0
+    for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+      if vim.api.nvim_buf_get_name(buf):find('new.txt', 1, true) and require('config.tabs').editor_buf(buf) then
+        n = n + 1
+      end
+    end
+    return n
+  ]])
+  request('nvim_input', '<C-p>')
+  wait_for('Ctrl-P focusing an already open file', function()
+    return eval("return vim.api.nvim_buf_get_name(0):find('new.txt', 1, true) ~= nil")
+  end)
+  assert(
+    eval([[
+      local n = 0
+      for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+        if vim.api.nvim_buf_get_name(buf):find('new.txt', 1, true) and require('config.tabs').editor_buf(buf) then
+          n = n + 1
+        end
+      end
+      return n
+    ]]) == file_tabs,
+    'Ctrl-P should switch to an existing tab instead of duplicating it'
+  )
+  print('PASS: Ctrl-P opens a new mid-editor tab')
+
+
+  assert(eval([[
+    local a = require('config.agents')
+    return a.is_cli('gemini') and a.is_cli('claude') and a.is_cli('opencode')
+      and a.order[3] == 'gemini' and a.order[4] == 'claude' and a.order[5] == 'opencode'
+  ]]), 'Gemini, Claude, and OpenCode must be registered chat CLIs')
   eval("require('config.agents').new('codex', { uuid = 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee' })")
   wait_for('codex resume argv', function()
     local f = io.open(vim.env.E2E_DIR .. '/codex-args', 'r')
@@ -542,23 +722,69 @@ local ok, err = xpcall(function()
     f:close()
     return args:find('--resume=11111111-2222-4333-8444-555555555555', 1, true)
   end)
+  eval("require('config.agents').new('gemini', { uuid = '22222222-3333-4444-8555-666666666666' })")
+  wait_for('gemini resume argv', function()
+    local f = io.open(vim.env.E2E_DIR .. '/gemini-args', 'r')
+    if not f then return false end
+    local args = f:read('*a')
+    f:close()
+    return args:find('--resume 22222222-3333-4444-8555-666666666666', 1, true)
+  end)
+  eval("require('config.agents').new('claude', { uuid = '33333333-4444-4555-8666-777777777777' })")
+  wait_for('claude resume argv', function()
+    local f = io.open(vim.env.E2E_DIR .. '/claude-args', 'r')
+    if not f then return false end
+    local args = f:read('*a')
+    f:close()
+    return args:find('--resume 33333333-4444-4555-8666-777777777777', 1, true)
+  end)
+  eval("require('config.agents').new('opencode', { uuid = 'ses_deadbeefcafebabe' })")
+  wait_for('opencode resume argv', function()
+    local f = io.open(vim.env.E2E_DIR .. '/opencode-args', 'r')
+    if not f then return false end
+    local args = f:read('*a')
+    f:close()
+    return args:find('--session ses_deadbeefcafebabe', 1, true)
+  end)
+  eval("require('config.agents').new('gemini')")
+  wait_for('gemini new session-id argv', function()
+    local f = io.open(vim.env.E2E_DIR .. '/gemini-args', 'r')
+    if not f then return false end
+    local args = f:read('*a')
+    f:close()
+    return args:find('--session-id ', 1, true)
+  end)
+  eval("require('config.agents').new('opencode')")
+  wait_for('opencode new session argv', function()
+    local f = io.open(vim.env.E2E_DIR .. '/opencode-args', 'r')
+    if not f then return false end
+    local args = f:read('*a')
+    f:close()
+    return args:find('--session ses_', 1, true)
+  end)
   eval([[
     require('config.session').restore_chats({
       chats = {
         active = 1,
         sessions = {
           { name = 'codex', uuid = '99999999-aaaa-4bbb-8ccc-dddddddddddd', label = 'Codex saved' },
+          { name = 'gemini', uuid = 'aaaa1111-bbbb-4ccc-8ddd-eeeeeeeeeeee', label = 'Gemini saved' },
+          { name = 'claude', uuid = 'bbbb2222-cccc-4ddd-8eee-ffffffffffff', label = 'Claude saved' },
+          { name = 'opencode', uuid = 'ses_cafef00d12345678', label = 'OpenCode saved' },
         },
       },
     })
   ]])
   wait_for('restored chat uuid', function()
     return eval([[
-      local found = false
+      local found = { codex = false, gemini = false, claude = false, opencode = false }
       for _, s in pairs(require('config.agents').sessions) do
-        if s.uuid == '99999999-aaaa-4bbb-8ccc-dddddddddddd' then found = true end
+        if s.uuid == '99999999-aaaa-4bbb-8ccc-dddddddddddd' then found.codex = true end
+        if s.uuid == 'aaaa1111-bbbb-4ccc-8ddd-eeeeeeeeeeee' then found.gemini = true end
+        if s.uuid == 'bbbb2222-cccc-4ddd-8eee-ffffffffffff' then found.claude = true end
+        if s.uuid == 'ses_cafef00d12345678' then found.opencode = true end
       end
-      return found
+      return found.codex and found.gemini and found.claude and found.opencode
     ]])
   end)
   wait_for('restored codex resume argv', function()
@@ -568,7 +794,61 @@ local ok, err = xpcall(function()
     f:close()
     return args:find('resume 99999999-aaaa-4bbb-8ccc-dddddddddddd', 1, true)
   end)
+  wait_for('restored gemini resume argv', function()
+    local f = io.open(vim.env.E2E_DIR .. '/gemini-args', 'r')
+    if not f then return false end
+    local args = f:read('*a')
+    f:close()
+    return args:find('--resume aaaa1111-bbbb-4ccc-8ddd-eeeeeeeeeeee', 1, true)
+  end)
+  wait_for('restored claude resume argv', function()
+    local f = io.open(vim.env.E2E_DIR .. '/claude-args', 'r')
+    if not f then return false end
+    local args = f:read('*a')
+    f:close()
+    return args:find('--resume bbbb2222-cccc-4ddd-8eee-ffffffffffff', 1, true)
+  end)
+  wait_for('restored opencode session argv', function()
+    local f = io.open(vim.env.E2E_DIR .. '/opencode-args', 'r')
+    if not f then return false end
+    local args = f:read('*a')
+    f:close()
+    return args:find('--session ses_cafef00d12345678', 1, true)
+  end)
   print('PASS: session persist, unsaved buffers, UUID resume and NVIM_CLEAN')
+
+  eval([[
+    local a = require('config.agents')
+    local keep = a.active
+    local extra = {}
+    for id, _ in pairs(a.sessions) do
+      if id ~= keep then extra[#extra + 1] = id end
+    end
+    for _, id in ipairs(extra) do a.close(id) end
+    vim.fn.jobstop(a.sessions[keep].job)
+  ]])
+  wait_for('last exited agent chat to close the pane', function()
+    return eval([[
+      local a = require('config.agents')
+      return vim.tbl_count(a.sessions) == 0
+        and (a.win == nil or not vim.api.nvim_win_is_valid(a.win))
+    ]])
+  end)
+  print('PASS: last agent process exit closes the chat pane')
+
+  eval("require('config.agents').new('cursor')")
+  wait_for('replacement chat for Ctrl-Q', function()
+    return eval([[
+      local a = require('config.agents')
+      return vim.tbl_count(a.sessions) == 1
+        and a.win ~= nil
+        and vim.api.nvim_win_is_valid(a.win)
+    ]])
+  end)
+  eval("vim.api.nvim_set_current_win(require('config.agents').win)")
+  wait_for('terminal input before Ctrl-Q', function()
+    return request('nvim_get_mode').mode == 't'
+  end)
 
   request('nvim_input', '<C-q>')
   wait_for('Ctrl-Q quitting Neovim from terminal input', function()
