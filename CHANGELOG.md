@@ -11,6 +11,7 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Documentation
 
+- add a contributing guide and the MIT license ([d43e0c0](https://github.com/LFSCamargo/nvim.setup/commit/d43e0c01d20025a253add11437f0a807817e57b5))
 - add a release skill for version bumps ([bdaf13d](https://github.com/LFSCamargo/nvim.setup/commit/bdaf13df8bf57626035acb39a49e5d5214bd0021))
 
 ## [1.0.0-beta] - 2026-10-30
