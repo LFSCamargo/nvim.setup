@@ -9,6 +9,10 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ## [Unreleased]
 
+### Documentation
+
+- add a release skill for version bumps ([bdaf13d](https://github.com/LFSCamargo/nvim.setup/commit/bdaf13df8bf57626035acb39a49e5d5214bd0021))
+
 ## [1.0.0-beta] - 2026-10-30
 
 ### Features
