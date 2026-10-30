@@ -344,6 +344,12 @@ test('documentation sidebar lets visitors read guides and open GitHub', async ({
     'href',
     'https://github.com/LFSCamargo/nvim.setup/blob/main/docs/EDITOR.md',
   );
+  const reload = await page.reload();
+  expect(reload?.ok()).toBeTruthy();
+  await expect(page).toHaveURL(/\/docs\/editor$/);
+  await expect(page.getByRole('heading', { level: 1 })).toContainText(
+    'Neovim setup',
+  );
 });
 
 test('principles marquee fills the viewport with two equal looping halves', async ({

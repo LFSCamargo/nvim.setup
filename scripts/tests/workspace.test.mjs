@@ -127,6 +127,19 @@ test('marketing site publishes titles, Open Graph tags, robots, and a sitemap', 
   assert.match(read('apps/web/src/pages/docs-page.tsx'), /useDocumentMeta/);
 });
 
+test('marketing site recovers refreshed docs URLs on static hosts', () => {
+  const vite = read('apps/web/vite.config.ts');
+  assert.match(vite, /appType: 'spa'/);
+  assert.match(vite, /writeSpaFallback/);
+  assert.match(vite, /name: 'spa-fallback'/);
+  assert.match(read('apps/web/src/lib/spa.ts'), /404\.html/);
+  assert.match(read('apps/web/public/_redirects'), /\/\* +\/index\.html +200/);
+  assert.equal(
+    existsSync(new URL('../../apps/web/public/.nojekyll', import.meta.url)),
+    true,
+  );
+});
+
 test('docs reader loads static public guides instead of bundling markdown', () => {
   const docs = read('apps/web/src/lib/docs.ts');
   assert.doesNotMatch(docs, /\?raw/);

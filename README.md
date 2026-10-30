@@ -217,7 +217,7 @@ If something looks off after install, start with `:checkhealth`, `:LspInfo`, `:M
 
 ## Website workspace
 
-The marketing site lives in `apps/web` as a TypeScript React/Vite app with Tailwind CSS v4. Guides on `/docs` are static markdown under `apps/web/public/guides/`. Each public route sets a unique title, description, canonical, and Open Graph tags; `robots.txt` and `sitemap.xml` list those routes and hide the raw markdown copies. Prettier (with the Tailwind class-sorting plugin) formats the website and related Node files. Nx runs tasks across the pnpm workspace; the existing Makefile remains the entry point for installing and maintaining Neovim. Node.js 22.12+ and pnpm 10.34.9 are needed to develop the website. npm is still required by the Neovim installer for Mason's Node-based tools.
+The marketing site lives in `apps/web` as a TypeScript React/Vite app with Tailwind CSS v4. Guides on `/docs` are static markdown under `apps/web/public/guides/`. Each public route sets a unique title, description, canonical, and Open Graph tags; `robots.txt` and `sitemap.xml` list those routes and hide the raw markdown copies. Refreshing a `/docs` URL still serves the app (`404.html` plus `_redirects`). Prettier (with the Tailwind class-sorting plugin) formats the website and related Node files. Nx runs tasks across the pnpm workspace; the existing Makefile remains the entry point for installing and maintaining Neovim. Node.js 22.12+ and pnpm 10.34.9 are needed to develop the website. npm is still required by the Neovim installer for Mason's Node-based tools.
 
 ```sh
 pnpm install
