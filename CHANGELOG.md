@@ -9,6 +9,10 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ## [Unreleased]
 
+### Bug Fixes
+
+- **session:** disable swap files without touching restore ([e147837](https://github.com/LFSCamargo/nvim.setup/commit/e1478371dc425c053b06a56be6a1b9c1a9d31770))
+
 ### Documentation
 
 - add a contributing guide and the MIT license ([d43e0c0](https://github.com/LFSCamargo/nvim.setup/commit/d43e0c01d20025a253add11437f0a807817e57b5))

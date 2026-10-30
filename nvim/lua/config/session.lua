@@ -1,5 +1,9 @@
 -- Per-project session: editor tabs (including unsaved snapshots) and AI chat UUIDs.
 -- NVIM_CLEAN=1 skips restore and save so a clean window cannot clobber the last session.
+-- Swap files are off: unsaved buffers live in session snapshots, and leftover
+-- .swp ATTENTION dialogs must not block restore or VimLeavePre cleanup.
+
+vim.o.swapfile = false
 
 local M = { busy = false, exiting = false }
 local api = vim.api

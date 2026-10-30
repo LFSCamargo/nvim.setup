@@ -84,7 +84,7 @@ Install and authenticate the chat CLIs separately: [Codex](https://github.com/op
 
 ## Using the editor
 
-Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to insert, `Esc` for normal mode, and Ctrl+Q to quit (unsaved tabs come back next time). `nvim --clean` skips restored tabs and chats. The leader key is **Space**; press leader shortcuts as a sequence in normal mode.
+Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to insert, `Esc` for normal mode, and Ctrl+Q to quit (unsaved tabs come back next time). Swap files are off; the project session is what restores unsaved tabs. `nvim --clean` skips restored tabs and chats. The leader key is **Space**; press leader shortcuts as a sequence in normal mode.
 
 | Shortcut or click                 | Action                                                                                         |
 | --------------------------------- | ---------------------------------------------------------------------------------------------- |

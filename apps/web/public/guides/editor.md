@@ -4,7 +4,7 @@ Appearance uses Gruvbox syntax colors with transparent backgrounds throughout th
 
 Run `nvim .` in a project. Interactive startup opens the file tree at 20% width. If this project has a saved session, editor tabs (including unsaved buffers) and AI chats resume by UUID; otherwise it starts one Codex and one Cursor Agent session. `nvim --clean` skips restore and save, so you get a blank editor plus two fresh chats without clobbering the last session. The chat pane also uses 25% width; keyboard focus stays in the editor. This works with `nvim`, `nvim .`, and `nvim file`. Headless maintenance does not launch chats.
 
-Press `i` to edit, `Esc` for normal mode, and Ctrl+Q to quit (unsaved tabs are snapshotted and restored next time). The leader key is **Space**; press leader shortcuts as a sequence in normal mode (for example Space, then `g`, then `s`).
+Press `i` to edit, `Esc` for normal mode, and Ctrl+Q to quit (unsaved tabs are snapshotted and restored next time). Swap files are disabled; recovery is the project session, not `.swp`. The leader key is **Space**; press leader shortcuts as a sequence in normal mode (for example Space, then `g`, then `s`).
 
 Also see [plugins and first-party modules](PLUGINS.md) and the [E2E test plan](E2E-TESTPLAN.md).
 
