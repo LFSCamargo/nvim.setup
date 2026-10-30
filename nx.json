@@ -10,8 +10,16 @@
     ]
   },
   "targetDefaults": {
-    "build": { "dependsOn": ["^build"], "cache": true },
-    "dev": { "cache": false },
-    "test": { "cache": false }
-  }
+    "build": {
+      "dependsOn": ["^build"],
+      "cache": true
+    },
+    "dev": {
+      "cache": false
+    },
+    "test": {
+      "cache": false
+    }
+  },
+  "analytics": true
 }
