@@ -9,7 +9,7 @@ Code we wrote. These live under `nvim/lua/config/` and `scripts/`. They are not 
 | Module     | Path                             | What it does                                                                                        |
 | ---------- | -------------------------------- | --------------------------------------------------------------------------------------------------- |
 | Agents     | `nvim/lua/config/agents.lua`     | Chat CLI panes (Codex, Cursor Agent, Gemini, Claude, OpenCode), ID resume, Esc, close tab on exit   |
-| Session    | `nvim/lua/config/session.lua`    | Per-project tabs, unsaved snapshots, chat UUIDs, Ctrl+Q, `NVIM_CLEAN`                               |
+| Session    | `nvim/lua/config/session.lua`    | Per-project tabs, unsaved snapshots, chat UUIDs, Ctrl+Q, `NVIM_CLEAN`; swap files off               |
 | Sidebar    | `nvim/lua/config/sidebar.lua`    | Files / Git source-control panel (composer, stage, unstage, revert, commit, bottom log pane)        |
 | Keys       | `nvim/lua/config/keys.lua`       | Global and leader maps, Ctrl shortcuts, user commands                                               |
 | Tabs       | `nvim/lua/config/tabs.lua`       | Clickable editor and chat winbar tabs; keeps the mid editor pane and a tab; Ctrl+P opens files here |

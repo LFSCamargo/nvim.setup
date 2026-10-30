@@ -21,6 +21,7 @@ o.expandtab = true
 o.shiftwidth = 2
 o.tabstop = 2
 o.undofile = true
+o.swapfile = false -- Session snapshots recover unsaved buffers; leftover .swp must not ATTENTION.
 o.scrolloff = 5
 o.completeopt = { 'menu', 'menuone', 'noselect' }
 
