@@ -36,6 +36,7 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Bug Fixes
 
+- **web:** serve the SPA shell when a docs URL is refreshed ([e316170](https://github.com/LFSCamargo/nvim.setup/commit/e3161705bf980d02267bdde01d2b97cffe5932c6))
 - **theme:** pick nav black or white from the real backdrop ([bb7fb7f](https://github.com/LFSCamargo/nvim.setup/commit/bb7fb7f4a4045e2c0cb6736f0255442f767dc2bb))
 - **deps:** patch npm advisories and harden the workspace ([c94e9ac](https://github.com/LFSCamargo/nvim.setup/commit/c94e9ac765aa6833b563591f61cf0877b587259b))
 - **git:** refresh source control when focusing the Git sidebar ([f63e736](https://github.com/LFSCamargo/nvim.setup/commit/f63e736bbc183625c825412d2510cb290db33021))
