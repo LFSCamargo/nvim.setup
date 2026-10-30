@@ -11,6 +11,7 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Features
 
+- **editor:** add customizable settings and extension marketplace ([ac8b392](https://github.com/LFSCamargo/nvim.setup/commit/ac8b392fb135f22716da35e90372103ab55beb9c))
 - **editor:** add Settings sidebar and extract format and statusline ([8801c16](https://github.com/LFSCamargo/nvim.setup/commit/8801c1613bdd345b44c6010c21d95be6f937fbd1))
 
 ### Bug Fixes
