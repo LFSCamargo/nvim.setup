@@ -11,6 +11,12 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Features
 
+- **web:** render docs and install samples as terminal blocks ([6b24ba8](https://github.com/LFSCamargo/nvim.setup/commit/6b24ba80c80cdf7cfebdfb72c54d1f926e6014bd))
+- **web:** add a fourth cropped workspace screenshot ([9fd1412](https://github.com/LFSCamargo/nvim.setup/commit/9fd14120606ba231b457ba67f18fedbbb5e2b594))
+- **tabs:** open fzf files as mid-editor tabs ([165609b](https://github.com/LFSCamargo/nvim.setup/commit/165609bd662d2f9c6e600754d01510360d26d6e9))
+- **agents:** add Gemini, Claude, and OpenCode chats ([d99aef3](https://github.com/LFSCamargo/nvim.setup/commit/d99aef370edb05995fef8319567cded3b653ed8e))
+- **icons:** draw Files and Git with Devicons only ([07273d0](https://github.com/LFSCamargo/nvim.setup/commit/07273d0823ef9fefae1aba61715e27c60f631446))
+- **fonts:** install Nerd Font files during setup ([7e2998a](https://github.com/LFSCamargo/nvim.setup/commit/7e2998a75f57f1e50ee6a0208d13d00aafe37bbd))
 - **security:** fail closed on OWASP SAST and npm audit ([1438b5d](https://github.com/LFSCamargo/nvim.setup/commit/1438b5d0f2c48d6394c48985754067c9cf019ce6))
 - **web:** compose the marketing landing page ([2bb28da](https://github.com/LFSCamargo/nvim.setup/commit/2bb28da7d64f935782fbfdc68c5bc011f76bc509))
 - **web:** serve on-site docs from static public guides ([799d9af](https://github.com/LFSCamargo/nvim.setup/commit/799d9af4fb4a6313e775c2e715f30a915f19fe59))
@@ -29,6 +35,7 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Bug Fixes
 
+- **theme:** pick nav black or white from the real backdrop ([bb7fb7f](https://github.com/LFSCamargo/nvim.setup/commit/bb7fb7f4a4045e2c0cb6736f0255442f767dc2bb))
 - **deps:** patch npm advisories and harden the workspace ([c94e9ac](https://github.com/LFSCamargo/nvim.setup/commit/c94e9ac765aa6833b563591f61cf0877b587259b))
 - **git:** refresh source control when focusing the Git sidebar ([f63e736](https://github.com/LFSCamargo/nvim.setup/commit/f63e736bbc183625c825412d2510cb290db33021))
 - **git:** shrink the commit log pane to 30% height ([09a7dd2](https://github.com/LFSCamargo/nvim.setup/commit/09a7dd24ea56c993e656b3a4f4bf2fe996dfc36a))
@@ -37,6 +44,7 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Documentation
 
+- record fonts, extra chat CLIs, and light-mode nav contrast ([79dc8d6](https://github.com/LFSCamargo/nvim.setup/commit/79dc8d6f420112ffd810332af9e37781cbfb0b91))
 - **agents:** add a skill to commit separately by scope ([dc3e772](https://github.com/LFSCamargo/nvim.setup/commit/dc3e77252cf64e3c7cb3bc105018152ee243d1a8))
 - **security:** document the OWASP scan and audit gate ([37beafd](https://github.com/LFSCamargo/nvim.setup/commit/37beafd817303ef3359b10d315c5df386ef3ed6f))
 - **web:** document the website, bootstrap installer, and browser tests ([7b7154d](https://github.com/LFSCamargo/nvim.setup/commit/7b7154d01a2dc08bc13f71caa1a55f2aef76a861))
@@ -46,6 +54,8 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Tests
 
+- **web:** cover light mode, nav contrast, and the layout tab ([7d2b765](https://github.com/LFSCamargo/nvim.setup/commit/7d2b7657e1519cc8337c1e6e16f12c96f19bf41c))
+- **editor:** cover new chats, Devicons, and Ctrl-P tabs ([a0f1ad0](https://github.com/LFSCamargo/nvim.setup/commit/a0f1ad09aa819cc64a049d5a2931a1372c0d5741))
 - **security:** lock the scan scripts and advisory floor ([295c0f6](https://github.com/LFSCamargo/nvim.setup/commit/295c0f686b7ae6d043e95a27003720ced367b9ce))
 - **workspace:** lock pnpm, Nx, bootstrap, and the marketing app ([61fabe0](https://github.com/LFSCamargo/nvim.setup/commit/61fabe0f439872a1ea8354ae68935885586204af))
 - **web:** cover visitor paths in Playwright ([658cf4c](https://github.com/LFSCamargo/nvim.setup/commit/658cf4ccd3b6e250a9403226c62c56f02459771f))
@@ -62,6 +72,7 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Chores
 
+- **workspace:** keep Nx target defaults formatted ([073f9cf](https://github.com/LFSCamargo/nvim.setup/commit/073f9cffb9e90b3cb11d433764e385c7351341fe))
 - adds new view for recent commits from the repository ([9057d9b](https://github.com/LFSCamargo/nvim.setup/commit/9057d9b28fdb3be095a10505a158e22603eeb59a))
 - **gitignore:** ignore Neovim runtime logs ([c4c1a12](https://github.com/LFSCamargo/nvim.setup/commit/c4c1a12377ee597fa7d973938caa5394d9940702))
 - add commitlint with conventional commits ([34f73f0](https://github.com/LFSCamargo/nvim.setup/commit/34f73f07f59af22d19595595e1699d2f2c8a13c0))
