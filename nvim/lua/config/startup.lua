@@ -30,7 +30,7 @@ function M.open()
   end
   api.nvim_set_current_win(editor)
   local agents = require('config.agents')
-  if not require('config.session').restore() then
+  if not require('config.settings').get().session_restore or not require('config.session').restore() then
     agents.new('codex')
     local codex = agents.active
     agents.new('cursor')

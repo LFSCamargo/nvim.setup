@@ -780,11 +780,12 @@ function M.files()
   M.view = 'files'
   close_git()
   require('config.settings').close()
+  require('config.extensions').close()
   require('nvim-tree.api').tree.open({ focus = true })
 end
 
 function M.toggle_files()
-  if (M.view == 'git' and valid(git_win)) or M.view == 'settings' then
+  if (M.view == 'git' and valid(git_win)) or M.view == 'settings' or M.view == 'extensions' then
     M.files()
   else
     require('nvim-tree.api').tree.toggle()
@@ -799,8 +800,22 @@ function M.settings()
   M.generation = M.generation + 1
   M.view = 'settings'
   close_git()
+  require('config.extensions').close()
   require('nvim-tree.api').tree.close()
-  require('config.settings').open(M.width())
+  require('config.settings').open(math.max(36, M.width()))
+end
+
+function M.extensions()
+  if M.view == 'extensions' and require('config.extensions').visible() then
+    require('config.extensions').open(math.max(40, M.width()))
+    return
+  end
+  M.generation = M.generation + 1
+  M.view = 'extensions'
+  close_git()
+  require('config.settings').close()
+  require('nvim-tree.api').tree.close()
+  require('config.extensions').open(math.max(40, M.width()))
 end
 
 local function map_buf(buf, mode, key, fn, desc)
@@ -968,6 +983,7 @@ function M.git()
   end
   M.view = 'git'
   require('config.settings').close()
+  require('config.extensions').close()
   require('nvim-tree.api').tree.close()
   vim.cmd('topleft vsplit')
   git_win = api.nvim_get_current_win()
@@ -1029,6 +1045,11 @@ _G.SidebarSettings = function(_, _, button)
     M.settings()
   end
 end
+_G.SidebarExtensions = function(_, _, button)
+  if button == 'l' then
+    M.extensions()
+  end
+end
 function M.winbar()
   local divider = require('config.tabs').divider()
   return '%#PaneTab'
@@ -1041,7 +1062,11 @@ function M.winbar()
     .. divider
     .. '%#PaneTab'
     .. (M.view == 'settings' and 'Active' or 'Inactive')
-    .. '#%0@v:lua.SidebarSettings@ Settings %T%#WinBar#'
+    .. '#%0@v:lua.SidebarSettings@ Settings %T'
+    .. divider
+    .. '%#PaneTab'
+    .. (M.view == 'extensions' and 'Active' or 'Inactive')
+    .. '#%0@v:lua.SidebarExtensions@ Extensions %T%#WinBar#'
 end
 
 return M

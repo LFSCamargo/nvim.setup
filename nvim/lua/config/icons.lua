@@ -2,8 +2,8 @@
 local M = {}
 
 function M.enabled()
-  local ok, settings = pcall(require, 'config.settings')
-  return not ok or settings.get().icons
+  local settings = package.loaded['config.settings']
+  return type(settings) ~= 'table' or settings.get().icons
 end
 
 pcall(function()

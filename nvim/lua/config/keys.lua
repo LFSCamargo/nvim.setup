@@ -125,12 +125,19 @@ end, {})
 vim.api.nvim_create_user_command('SetupSettings', function()
   require('config.sidebar').settings()
 end, {})
+vim.api.nvim_create_user_command('SetupExtensions', function()
+  require('config.sidebar').extensions()
+end, {})
+vim.api.nvim_create_user_command('CommandPalette', function()
+  require('config.palette').open()
+end, {})
 
 local shortcuts = {
   ['<C-s>'] = { 'PaneSave', 'Save editor file' },
   ['<C-b>'] = { 'SidebarFilesToggle', 'Toggle file tree' },
   ['<C-g>'] = { 'GitChanges', 'Show Git changes' },
   ['<C-,>'] = { 'SetupSettings', 'Open Settings' },
+  ['<C-S-p>'] = { 'CommandPalette', 'Command palette' },
   ['<C-p>'] = { 'FindProjectFiles', 'Find project files' },
   ['<C-f>'] = { 'FindProjectText', 'Search project text' },
   ['<C-t>'] = { 'PaneNewTab', 'New editor or chat tab' },
@@ -143,6 +150,7 @@ for key, binding in pairs(shortcuts) do
   -- Leave terminal-input mode first so the command runs in the editor.
   map('t', key, '<C-\\><C-n><Cmd>' .. binding[1] .. '<CR>', binding[2])
 end
+map('n', '<leader>p', '<Cmd>CommandPalette<CR>', 'Command palette')
 
 -- Ctrl+W is remapped above, so splits use leader instead of the window-command prefix.
 map('n', '<leader>ws', '<Cmd>split<CR>', 'Split window below')

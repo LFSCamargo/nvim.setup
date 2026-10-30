@@ -1088,7 +1088,7 @@ local ok, err = xpcall(function()
   end)
   local settings_text = eval("return table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), '\\n')")
   assert(
-    settings_text:find('Icons', 1, true) and settings_text:find('[Reload config]', 1, true),
+    settings_text:find('File icons', 1, true) and settings_text:find('[Reload config]', 1, true),
     'Settings panel missing controls: ' .. settings_text
   )
   assert(
@@ -1097,7 +1097,8 @@ local ok, err = xpcall(function()
       and not settings_text:find('Light', 1, true),
     'Settings should not switch theme: ' .. settings_text
   )
-  eval('vim.api.nvim_win_set_cursor(0, {6, 0})')
+  assert(settings_text:find('Indent width', 1, true), 'Settings should expose editing defaults')
+  eval('vim.api.nvim_win_set_cursor(0, {5, 0})')
   request('nvim_input', '<CR>')
   wait_for('icons off from Settings', function()
     return eval("return require('config.settings').get().icons") == false
@@ -1121,7 +1122,9 @@ local ok, err = xpcall(function()
     local path = require('config.settings').file()
     vim.fn.writefile({ '{"theme":"light","icons":true}' }, path)
   ]])
-  eval('vim.api.nvim_win_set_cursor(0, {8, 0})')
+  eval([[for i, line in ipairs(vim.api.nvim_buf_get_lines(0, 0, -1, false)) do
+    if line:find('[Reload config]', 1, true) then vim.api.nvim_win_set_cursor(0, {i, 0}); break end
+  end]])
   request('nvim_input', '<CR>')
   wait_for('reload settings from disk', function()
     return eval("return require('config.settings').get().icons") == true
@@ -1134,6 +1137,79 @@ local ok, err = xpcall(function()
   end)
   assert(eval("return vim.fn.exists(':SetupSettings')") == 2, ':SetupSettings should open the Settings tab')
   assert(eval("return vim.fn.maparg('<C-,>', 'n')") ~= '', 'Ctrl+, should open Settings')
+  assert(eval("return vim.fn.maparg('<leader>p', 'n')") ~= '', 'Command palette should have a terminal-safe shortcut')
+  assert(eval("return vim.fn.exists(':CommandPalette')") == 2, 'Command palette command missing')
+  assert(eval("return require('config.settings').set('indent', 4)") == true, 'Indent setting should save')
+  assert(eval('return vim.o.shiftwidth') == 4, 'Indent setting should apply immediately')
+  assert(eval("return require('config.settings').reset('indent')") == true, 'Indent setting should reset')
+  assert(eval('return vim.o.shiftwidth') == 2, 'Indent default should be restored')
+  eval("require('config.sidebar').extensions()")
+  wait_for('Extensions sidebar', function()
+    return eval('return vim.bo.filetype') == 'setup-extensions'
+  end)
+  eval([[
+    local installed = false
+    local callbacks = {}
+    local pkg = {
+      is_installed = function() return installed end,
+      is_installing = function() return false end,
+      is_uninstalling = function() return false end,
+      once = function(_, event, callback) callbacks[event] = callback end,
+      install = function() installed = true; callbacks['install:success']() end,
+      uninstall = function() installed = false; callbacks['uninstall:success']() end,
+    }
+    package.loaded['mason-registry'] = {
+      get_installed_package_names = function() return installed and { 'test-tool' } or {} end,
+      get_all_package_names = function() return { 'test-tool', 'other-tool' } end,
+      get_package = function(name) assert(name == 'test-tool'); return pkg end,
+      is_installed = function(name) return name == 'test-tool' and installed end,
+    }
+    require('config.extensions').search_mason('test')
+  ]])
+  assert(
+    eval([[return table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), '\n'):find('MARKETPLACE', 1, true) ~= nil]]),
+    'Extensions should show marketplace heading'
+  )
+  assert(
+    eval([[return table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), '\n'):find('> test', 1, true) ~= nil]]),
+    'Extensions should show search query in sidebar'
+  )
+  assert(
+    eval([[return table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), '\n'):find('test-tool', 1, true) ~= nil]]),
+    'Mason search should list package'
+  )
+  eval([[for i, line in ipairs(vim.api.nvim_buf_get_lines(0, 0, -1, false)) do
+    if line:find('test-tool', 1, true) and line:find('◆', 1, true) then vim.api.nvim_win_set_cursor(0, {i, 0}); break end
+  end]])
+  request('nvim_input', '<CR>')
+  wait_for('Mason package install from Extensions row', function()
+    return eval(
+      [[return table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), '\n'):find('[Installed]', 1, true) ~= nil]]
+    )
+  end)
+  request('nvim_input', '/<BS><BS><BS><BS>other<CR>')
+  wait_for('inline Mason search', function()
+    return eval([[local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+      return lines[3] == '  > other' and table.concat(lines, '\n'):find('other-tool', 1, true) ~= nil]])
+  end)
+  eval("package.loaded['mason-registry'] = nil")
+  assert(eval("return require('config.extensions').add('../unsafe')") == false, 'Reject unsafe plugin IDs')
+  assert(
+    eval(
+      [[return #require('config.extensions').parse_search('{"items":[{"full_name":"folke/todo-comments.nvim","description":"TODO tools"},{"full_name":"../unsafe"}]}')]]
+    ) == 1,
+    'Search results must reject unsafe repositories'
+  )
+  assert(eval("return require('config.extensions').add('folke/todo-comments.nvim')") == true, 'Add user plugin')
+  assert(
+    eval("return require('config.extensions').specs()[1][1]") == 'folke/todo-comments.nvim',
+    'Plugin manifest should load'
+  )
+  assert(eval("return require('config.extensions').remove('folke/todo-comments.nvim')") == true, 'Remove user plugin')
+  request('nvim_input', 'q')
+  wait_for('return to Files from Extensions', function()
+    return eval("return require('config.sidebar').view") == 'files'
+  end)
   print('PASS: Settings sidebar icons, persist, and reload')
 
   -- Ctrl+P must add a mid-editor tab. Vim :edit on a blank [New] buffer replaces it.

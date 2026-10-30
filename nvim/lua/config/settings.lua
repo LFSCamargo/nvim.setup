@@ -1,10 +1,42 @@
 -- User settings: icons and a live reload. Persisted globally, not per project.
 local M = {}
 local api = vim.api
-local defaults = { icons = true }
-local current = { icons = true }
+local defaults = {
+  icons = true,
+  number = true,
+  relativenumber = true,
+  clipboard = true,
+  indent = 2,
+  scrolloff = 5,
+  ignorecase = true,
+  smartcase = true,
+  transparent = true,
+  session_restore = true,
+}
+local current = vim.deepcopy(defaults)
+M.defaults = defaults
+M.options = {
+  { section = 'Appearance', key = 'icons', label = 'File icons', kind = 'boolean' },
+  { section = 'Appearance', key = 'transparent', label = 'Transparent background', kind = 'boolean' },
+  { section = 'Appearance', key = 'number', label = 'Line numbers', kind = 'boolean' },
+  { section = 'Appearance', key = 'relativenumber', label = 'Relative line numbers', kind = 'boolean' },
+  { section = 'Editing', key = 'indent', label = 'Indent width', kind = 'choice', values = { 2, 4, 8 } },
+  { section = 'Editing', key = 'scrolloff', label = 'Scroll margin', kind = 'choice', values = { 0, 3, 5, 8, 10 } },
+  { section = 'Editing', key = 'clipboard', label = 'System clipboard', kind = 'boolean' },
+  { section = 'Search', key = 'ignorecase', label = 'Ignore case', kind = 'boolean' },
+  { section = 'Search', key = 'smartcase', label = 'Smart case', kind = 'boolean' },
+  {
+    section = 'Sessions',
+    key = 'session_restore',
+    label = 'Restore project session',
+    kind = 'boolean',
+    restart = true,
+  },
+}
 local buf, win, rows
 local ns = api.nvim_create_namespace('SetupSettings')
+package.loaded['config.settings'] = M
+local booting = false
 
 local function valid(w)
   return w and api.nvim_win_is_valid(w)
@@ -21,11 +53,20 @@ local function sanitize(data)
   if type(data) ~= 'table' then
     data = {}
   end
-  return { icons = data.icons ~= false }
+  local result = vim.deepcopy(defaults)
+  for _, option in ipairs(M.options) do
+    local value = data[option.key]
+    if option.kind == 'boolean' and type(value) == 'boolean' then
+      result[option.key] = value
+    elseif option.values and vim.tbl_contains(option.values, value) then
+      result[option.key] = value
+    end
+  end
+  return result
 end
 
 function M.get()
-  return { icons = current.icons }
+  return vim.deepcopy(current)
 end
 
 function M.load()
@@ -57,6 +98,19 @@ function M.save()
 end
 
 function M.apply()
+  vim.o.number = current.number
+  vim.o.relativenumber = current.relativenumber
+  vim.o.clipboard = current.clipboard and 'unnamedplus' or ''
+  vim.o.expandtab = true
+  vim.o.shiftwidth = current.indent
+  vim.o.tabstop = current.indent
+  vim.o.scrolloff = current.scrolloff
+  vim.o.ignorecase = current.ignorecase
+  vim.o.smartcase = current.smartcase
+  local appearance = package.loaded['config.appearance']
+  if not booting and appearance and appearance.apply then
+    appearance.apply()
+  end
   require('config.icons').apply()
   pcall(vim.cmd.redrawstatus)
   if M.visible() then
@@ -65,13 +119,31 @@ function M.apply()
 end
 
 function M.set(key, value)
-  if key ~= 'icons' then
+  local option
+  for _, item in ipairs(M.options) do
+    if item.key == key then
+      option = item
+      break
+    end
+  end
+  if
+    not option
+    or (option.kind == 'boolean' and type(value) ~= 'boolean')
+    or (option.values and not vim.tbl_contains(option.values, value))
+  then
     return false
   end
-  current.icons = value ~= false
-  M.save()
+  current[key] = value
+  local ok, err = M.save()
+  if not ok then
+    vim.notify('Could not save settings: ' .. tostring(err), vim.log.levels.ERROR)
+  end
   M.apply()
-  return true
+  return ok
+end
+
+function M.reset(key)
+  return M.set(key, defaults[key])
 end
 
 function M.reload()
@@ -81,8 +153,10 @@ function M.reload()
 end
 
 function M.boot()
+  booting = true
   M.load()
   M.apply()
+  booting = false
 end
 
 function M.visible()
@@ -121,32 +195,36 @@ function M.render()
     return
   end
   local s = M.get()
-  local lines = {
-    '  SETTINGS',
-    '  Saved for this machine. Reload picks them up without quitting.',
-    '',
-    '  Icons',
-    '    [' .. (s.icons and 'x' or ' ') .. '] On',
-    '    [' .. (s.icons and ' ' or 'x') .. '] Off',
-    '',
-    '  [Reload config]',
-    '',
-    '  Enter or click to change. q returns to Files.',
-  }
-  rows = {
-    [5] = { kind = 'icons', value = true },
-    [6] = { kind = 'icons', value = false },
-    [8] = { kind = 'reload' },
-  }
+  local lines = { '  SETTINGS', '  Enter/click to change. x resets. q: Files.', '' }
+  rows = {}
+  local section
+  for _, option in ipairs(M.options) do
+    if section ~= option.section then
+      section = option.section
+      lines[#lines + 1] = '  ' .. section
+    end
+    local value = s[option.key]
+    local display = type(value) == 'boolean' and (value and 'On' or 'Off') or tostring(value)
+    lines[#lines + 1] = '    ' .. option.label .. ': ' .. display .. (option.restart and ' (restart)' or '')
+    rows[#lines] = { kind = 'setting', option = option }
+  end
+  lines[#lines + 1] = ''
+  lines[#lines + 1] = '  [Reload config]'
+  rows[#lines] = { kind = 'reload' }
+  lines[#lines + 1] = '  [Command palette]'
+  rows[#lines] = { kind = 'palette' }
   paint(lines)
   api.nvim_buf_clear_namespace(buf, ns, 0, -1)
   mark(0, 'SetupTitle')
   mark(1, 'SetupHelp')
-  mark(3, 'SetupSection')
-  mark(4, s.icons and 'SetupChoiceOn' or 'SetupChoiceOff')
-  mark(5, s.icons and 'SetupChoiceOff' or 'SetupChoiceOn')
-  mark(7, 'SetupButton')
-  mark(9, 'SetupHelp')
+  for i, line in ipairs(lines) do
+    if line:match('^  %w') and not rows[i] and i > 3 then
+      mark(i - 1, 'SetupSection')
+    end
+    if rows[i] then
+      mark(i - 1, rows[i].kind == 'setting' and 'SetupChoiceOn' or 'SetupButton')
+    end
+  end
 end
 
 local function selected(line)
@@ -162,7 +240,24 @@ local function activate(entry)
     M.reload()
     return
   end
-  M.set(entry.kind, entry.value)
+  if entry.kind == 'palette' then
+    require('config.palette').open()
+    return
+  end
+  local option = entry.option
+  local value = current[option.key]
+  if option.kind == 'boolean' then
+    M.set(option.key, not value)
+  else
+    local index = 1
+    for i, candidate in ipairs(option.values) do
+      if candidate == value then
+        index = i
+        break
+      end
+    end
+    M.set(option.key, option.values[index % #option.values + 1])
+  end
 end
 
 local function bind()
@@ -173,6 +268,12 @@ local function bind()
     require('config.sidebar').files()
   end, { buffer = buf, silent = true, nowait = true, desc = 'Files sidebar' })
   vim.keymap.set('n', 'r', M.reload, { buffer = buf, silent = true, nowait = true, desc = 'Reload settings' })
+  vim.keymap.set('n', 'x', function()
+    local entry = selected()
+    if entry and entry.option then
+      M.reset(entry.option.key)
+    end
+  end, { buffer = buf, silent = true, nowait = true, desc = 'Reset setting' })
   vim.keymap.set('n', '<LeftMouse>', function()
     local pos = vim.fn.getmousepos()
     if pos.winid == win and pos.line > 0 then
@@ -224,7 +325,7 @@ api.nvim_create_autocmd('ColorScheme', { callback = highlights })
 api.nvim_create_autocmd('VimResized', {
   callback = function()
     if M.visible() then
-      api.nvim_win_set_width(win, require('config.sidebar').width())
+      api.nvim_win_set_width(win, math.max(36, require('config.sidebar').width()))
     end
   end,
 })

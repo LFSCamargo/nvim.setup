@@ -25,7 +25,7 @@ Want to change it? [Contributing](CONTRIBUTING.md) is the contract;
 
 ## Features
 
-- Clickable file tree, Settings tab (icons, live reload), editor tabs, and chat tabs
+- Clickable file tree, Settings and Extensions tabs, searchable command palette, editor tabs, and chat tabs
 - File-type Devicons in the Files tree and Git sidebar. Install puts Nerd Font files on the system and, in Warp, uses a Monocraft face with those glyphs at one cell.
 - Per-project session restore for editor tabs, unsaved buffers, and AI chats (UUID resume)
 - `nvim --clean` for a blank editor that does not restore or overwrite the last session
@@ -97,7 +97,9 @@ Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to i
 | Ctrl+]                            | Start a new Codex, Cursor Agent, Gemini, Claude, or OpenCode session                           |
 | Ctrl+B                            | Toggle the file tree                                                                           |
 | Ctrl+G                            | Open Git source control (commit, stage, unstage, revert, bottom commit log; keyboard or mouse) |
-| Ctrl+, / `:SetupSettings`         | Open Settings (file icons, live reload)                                                        |
+| Ctrl+, / `:SetupSettings`         | Open Settings (appearance, editing, search, sessions)                                          |
+| Space p / `:CommandPalette`       | Search coding and configuration actions                                                        |
+| `:SetupExtensions`                | Browse user plugins, tools, and parsers                                                        |
 | Ctrl+P / Ctrl+F                   | Find files / search project text (opens a new editor tab)                                      |
 | Esc                               | Send Escape to the focused agent (stop generation, for example)                                |
 | Ctrl+\ Ctrl+N                     | Leave terminal-input mode (`Esc Esc` also works in other terminals)                            |

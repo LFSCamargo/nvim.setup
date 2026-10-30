@@ -96,6 +96,10 @@ local function restore_selection()
 end
 
 local function clear_backgrounds()
+  local settings = package.loaded['config.settings']
+  if settings and settings.get and not settings.get().transparent then
+    return
+  end
   remember_selection()
   for name, hl in pairs(vim.api.nvim_get_hl(0, { link = true })) do
     -- Leave visual/search/completion selection alone so the fill stays visible.
@@ -115,6 +119,21 @@ local function clear_backgrounds()
   vim.api.nvim_set_hl(0, 'NormalFloat', { link = 'Normal' })
   vim.api.nvim_set_hl(0, 'NormalNC', { link = 'Normal' })
   restore_selection()
+end
+
+function M.apply()
+  local ok, gruvbox = pcall(require, 'gruvbox')
+  if ok then
+    gruvbox.setup({
+      transparent_mode = require('config.settings').get().transparent,
+      terminal_colors = false,
+      inverse = false,
+    })
+    vim.cmd.colorscheme('gruvbox')
+  end
+  if require('config.settings').get().transparent then
+    clear_backgrounds()
+  end
 end
 
 clear_backgrounds()

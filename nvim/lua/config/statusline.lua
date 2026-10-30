@@ -57,6 +57,7 @@ local side_ft = {
   ['git-composer'] = 'Git',
   ['git-log'] = 'Git',
   ['setup-settings'] = 'Settings',
+  ['setup-extensions'] = 'Extensions',
 }
 
 M.fill_highlights = {

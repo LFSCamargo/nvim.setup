@@ -47,14 +47,21 @@ Ctrl shortcuts in the first table work in **normal, insert, and terminal** modes
 
 ### Settings (Ctrl+,)
 
-The Settings tab sits next to Files and Git. File icons apply immediately and persist in `stdpath('state')/nvim-setup/settings.json` (or `$E2E_DIR/settings.json` in tests). **[Reload config]** re-reads that file and refreshes icons without quitting; Lua/keymap edits still need a restart. Enter or click a row to change it; `q` returns to Files.
+The Settings tab sits next to Files and Git. Your preferences persist in `stdpath('state')/nvim-setup/settings.json` (or `$E2E_DIR/settings.json` in tests). The shipped values remain the defaults. Appearance (icons, transparency, line numbers), editing (indent width, scroll margin, clipboard), search case, and session restore can be changed here. Enter or click a row to toggle or cycle its value; `x` restores its default. **[Reload config]** re-reads saved preferences without quitting. Session restore changes take effect on the next launch. `q` returns to Files.
 
 | Keys | Action |
 | --- | --- |
 | Enter / click | Toggle the row under the cursor |
 | `r` | Reload saved settings |
+| `x` | Reset the selected setting to its shipped default |
 | `q` | Return to Files |
 | Click **Settings** | Open Settings, or focus it if it is already showing |
+
+### Extensions and command palette
+
+Click **Extensions** or run `:SetupExtensions` to browse Mason packages in a marketplace-style sidebar. The search field stays at the top: press `/` or Enter on it, type a name, category, or description, then press Enter. Each result shows its name, description, category, and install status; Enter or click a card to install or uninstall. Below the results are installed packages and the existing actions to search GitHub repositories, add a GitHub `owner/repository`, open Mason's full manager, refresh the Mason registry, install a Tree-sitter parser, and reload Neovim. User plugin choices are stored in `stdpath('state')/nvim-setup/extensions.json`, apart from the shipped Lazy plugin list and lockfile. A new plugin is installed and loaded when Neovim starts again; **[Reload Neovim]** saves the project session and uses `:restart` where available. `q` returns to Files.
+
+`:CommandPalette` opens searchable quick actions for file search, save, format, diagnostics, Git, Settings, Extensions, and common appearance settings. Space p is its terminal-safe shortcut; Ctrl+Shift+P is also mapped where the terminal forwards it.
 
 ### Git source control (Ctrl+G)
 
@@ -115,6 +122,8 @@ Space g s still opens Fugitive for the full Git status UI in the mid editor. Fil
 | --- | --- |
 | `:GitChanges` | Open Git source control |
 | `:SetupSettings` | Open the Settings sidebar |
+| `:SetupExtensions` | Open the Extensions sidebar |
+| `:CommandPalette` | Search quick actions |
 | `:SidebarFilesToggle` | Toggle the file tree |
 | `:PaneSave` / `:PaneNewTab` / `:ProjectCloseTab` | Save / new tab / close tab |
 | `:FindProjectFiles` / `:FindProjectText` | Find files / search project text (same as Ctrl+P / Ctrl+F) |
@@ -136,7 +145,7 @@ Tab in insert mode opens completion after text, cycles and inserts suggestions w
 
 ## Chat panes
 
-The sidebar has **Files**, **Git**, and **Settings** tabs. Git loads changes in the background, so you can switch back to Files while it loads.
+The sidebar has **Files**, **Git**, **Settings**, and **Extensions** tabs. Git loads changes in the background, so you can switch back to Files while it loads.
 
 Click pane contents to focus the editor, tree, or chat; clicking a running chat enables terminal input. The editor and chat panes each have their own clickable tabs above their contents, laid out as `icon name × │ icon name × │ + │`. Click a label to switch, **×** on that tab to close it, or **+** to add. File tabs show the same colored Devicon as the Files tree; chat tabs stay text-only. Labels use the same `│` as the pane splits. The tab bar stays transparent like the rest of the UI; the active label is muted gold and bold. **‹ / ›** navigate when tabs overflow. Ctrl+T adds a tab in the focused pane; Ctrl+W closes the current file or chat. File tabs show listed editor buffers and preserve unsaved edits when switching. The Files / Git / Settings sidebar tabs use that divider too.
 

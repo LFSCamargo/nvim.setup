@@ -6,25 +6,27 @@ This setup is not one plugin. It is our Neovim config plus pinned third-party pl
 
 Code we wrote. These live under `nvim/lua/config/` and `scripts/`. They are not Lazy plugins.
 
-| Module     | Path                             | What it does                                                                                         |
-| ---------- | -------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| Agents     | `nvim/lua/config/agents.lua`     | Chat CLI panes (Codex, Cursor Agent, Gemini, Claude, OpenCode), ID resume, Esc, close tab on exit    |
-| Session    | `nvim/lua/config/session.lua`    | Per-project tabs, unsaved snapshots, chat UUIDs, Ctrl+Q, `NVIM_CLEAN`; swap files off                |
-| Sidebar    | `nvim/lua/config/sidebar.lua`    | Files / Git / Settings panel; Files names stay white unless git-dirty; composer, stage, commit, log  |
-| Settings   | `nvim/lua/config/settings.lua`   | Icons and live reload; persisted JSON; Settings sidebar tab                                          |
-| Keys       | `nvim/lua/config/keys.lua`       | Global and leader maps, Ctrl shortcuts, user commands                                                |
-| Tabs       | `nvim/lua/config/tabs.lua`       | Clickable editor/chat winbar tabs; colored Devicons on file tabs; transparent bar; Ctrl+P opens here |
-| LSP        | `nvim/lua/config/lsp.lua`        | Server configs and buffer-local LSP keys                                                             |
-| DAP        | `nvim/lua/config/dap.lua`        | Debug adapters and `:DebugLoadLaunch`                                                                |
-| Appearance | `nvim/lua/config/appearance.lua` | Gruvbox transparency; selection fills stay visible                                                   |
-| Statusline | `nvim/lua/config/statusline.lua` | Global muted Gruvbox bar: mode, git, file, diagnostics, LSP, search, cursor                          |
-| Startup    | `nvim/lua/config/startup.lua`    | Interactive layout: tree, editor focus, restore or default chats                                     |
-| Icons      | `nvim/lua/config/icons.lua`      | Colored Devicons for Files/Git glyphs; names stay white unless git-dirty; toggled from Settings      |
-| Format     | `nvim/lua/config/format.lua`     | Conform formatters: StyLua, prettierd, shfmt, Taplo, rustfmt, gofmt                                  |
-| Tooling    | `nvim/lua/config/tooling.lua`    | Mason package list and Tree-sitter parser list                                                       |
-| Wrapper    | `scripts/nvim-wrapper.sh`        | `nvim --clean` loads this config without restoring a session                                         |
-| Bootstrap  | `scripts/bootstrap.sh`           | One-shot installer: fetch the repo, deps, icon fonts, then the Neovim config                         |
-| Fonts      | `scripts/fonts.sh`               | Symbols Nerd Font and a Monocraft Nerd Font face with those glyphs baked in at one cell              |
+| Module     | Path                             | What it does                                                                                                     |
+| ---------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Agents     | `nvim/lua/config/agents.lua`     | Chat CLI panes (Codex, Cursor Agent, Gemini, Claude, OpenCode), ID resume, Esc, close tab on exit                |
+| Session    | `nvim/lua/config/session.lua`    | Per-project tabs, unsaved snapshots, chat UUIDs, Ctrl+Q, `NVIM_CLEAN`; swap files off                            |
+| Sidebar    | `nvim/lua/config/sidebar.lua`    | Files / Git / Settings / Extensions panel; Files names stay white unless git-dirty; composer, stage, commit, log |
+| Settings   | `nvim/lua/config/settings.lua`   | User preferences, shipped defaults, live reload, and Settings sidebar tab                                        |
+| Extensions | `nvim/lua/config/extensions.lua` | User plugin manifest, suggested plugin browser, Mason/Tree-sitter access, Extensions sidebar tab                 |
+| Palette    | `nvim/lua/config/palette.lua`    | Searchable quick actions for coding and configuration                                                            |
+| Keys       | `nvim/lua/config/keys.lua`       | Global and leader maps, Ctrl shortcuts, user commands                                                            |
+| Tabs       | `nvim/lua/config/tabs.lua`       | Clickable editor/chat winbar tabs; colored Devicons on file tabs; transparent bar; Ctrl+P opens here             |
+| LSP        | `nvim/lua/config/lsp.lua`        | Server configs and buffer-local LSP keys                                                                         |
+| DAP        | `nvim/lua/config/dap.lua`        | Debug adapters and `:DebugLoadLaunch`                                                                            |
+| Appearance | `nvim/lua/config/appearance.lua` | Gruvbox transparency; selection fills stay visible                                                               |
+| Statusline | `nvim/lua/config/statusline.lua` | Global muted Gruvbox bar: mode, git, file, diagnostics, LSP, search, cursor                                      |
+| Startup    | `nvim/lua/config/startup.lua`    | Interactive layout: tree, editor focus, restore or default chats                                                 |
+| Icons      | `nvim/lua/config/icons.lua`      | Colored Devicons for Files/Git glyphs; names stay white unless git-dirty; toggled from Settings                  |
+| Format     | `nvim/lua/config/format.lua`     | Conform formatters: StyLua, prettierd, shfmt, Taplo, rustfmt, gofmt                                              |
+| Tooling    | `nvim/lua/config/tooling.lua`    | Mason package list and Tree-sitter parser list                                                                   |
+| Wrapper    | `scripts/nvim-wrapper.sh`        | `nvim --clean` loads this config without restoring a session                                                     |
+| Bootstrap  | `scripts/bootstrap.sh`           | One-shot installer: fetch the repo, deps, icon fonts, then the Neovim config                                     |
+| Fonts      | `scripts/fonts.sh`               | Symbols Nerd Font and a Monocraft Nerd Font face with those glyphs baked in at one cell                          |
 
 `nvim/init.lua` is the entry point (options, Lazy, then the modules above). Do not grow it; put new behavior in a single-purpose config module.
 

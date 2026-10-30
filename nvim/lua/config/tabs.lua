@@ -10,6 +10,7 @@ local side_ft = {
   ['git-composer'] = true,
   ['git-log'] = true,
   ['setup-settings'] = true,
+  ['setup-extensions'] = true,
 }
 local git_editor_ft = {
   git = true,
@@ -127,7 +128,7 @@ local function recreate_editor()
   if sidebar then
     for _, w in ipairs(api.nvim_tabpage_list_wins(0)) do
       local ft = vim.bo[api.nvim_win_get_buf(w)].filetype
-      if ft == 'NvimTree' or ft == 'git-changes' or ft == 'setup-settings' then
+      if ft == 'NvimTree' or ft == 'git-changes' or ft == 'setup-settings' or ft == 'setup-extensions' then
         pcall(api.nvim_win_set_width, w, sidebar.width())
         break
       end
@@ -633,6 +634,7 @@ local function refresh()
       vim.bo[buf].filetype == 'NvimTree'
       or vim.bo[buf].filetype == 'git-composer'
       or vim.bo[buf].filetype == 'setup-settings'
+      or vim.bo[buf].filetype == 'setup-extensions'
     then
       vim.wo[win].winbar = "%!v:lua.require'config.sidebar'.winbar()"
     elseif vim.bo[buf].filetype == 'git-changes' or vim.bo[buf].filetype == 'git-log' then
