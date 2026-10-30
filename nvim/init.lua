@@ -50,13 +50,15 @@ require('lazy').setup({
       vim.cmd.colorscheme('gruvbox')
     end,
   },
-  { 'nvim-tree/nvim-web-devicons', opts = {} },
+  { 'nvim-tree/nvim-web-devicons', lazy = true },
   {
     'nvim-tree/nvim-tree.lua',
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
     config = function()
+      require('config.icons')
       require('nvim-tree').setup({
         view = { width = function() return require('config.sidebar').width() end },
-        renderer = { icons = { show = { file = false, folder = false, git = false } } },
+        renderer = { icons = require('config.icons').tree_icons() },
         update_focused_file = { enable = true },
       })
     end,

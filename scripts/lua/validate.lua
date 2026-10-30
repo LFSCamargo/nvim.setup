@@ -7,7 +7,7 @@ assert(vim.o.showtabline == 0, 'Global tab bar must be hidden')
 for _, key in ipairs({ '<C-s>', '<C-t>', '<C-w>', '<C-]>' }) do
   assert(vim.fn.maparg(key, 'n') ~= '', 'Missing keybinding: ' .. key)
 end
-for _, name in ipairs({ 'config.agents', 'config.session', 'config.tabs', 'cmp', 'nvim-tree.api', 'dap', 'conform', 'fzf-lua' }) do
+for _, name in ipairs({ 'config.agents', 'config.session', 'config.tabs', 'config.icons', 'cmp', 'nvim-tree.api', 'dap', 'conform', 'fzf-lua', 'nvim-web-devicons' }) do
   assert(pcall(require, name), 'Could not load module: ' .. name)
 end
 local registry = require('mason-registry')

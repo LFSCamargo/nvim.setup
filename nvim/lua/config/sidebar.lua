@@ -23,6 +23,14 @@ function M.width()
   return math.max(1, math.floor(vim.o.columns * 0.20))
 end
 
+function M.file_icon(path)
+  return require('config.icons').file_icon(path)
+end
+
+function M.tree_icons()
+  return require('config.icons').tree_icons()
+end
+
 function M.log_height()
   return math.max(3, math.floor(vim.o.lines * 0.30))
 end
@@ -410,14 +418,18 @@ function M.render(branch, generation)
       elseif file_index <= #items then
         local entry = items[file_index]
         local symbol = name == 'staged' and '−' or '+'
+        local icon, icon_hl = M.file_icon(entry.path)
         local safe = entry.path:gsub('[%c]', '?')
-        local line = ('  %s  %s  %s  x'):format(symbol, entry.status, safe)
+        local prefix = ('  %s  %s  '):format(symbol, entry.status)
+        local line = prefix .. icon .. ' ' .. safe .. '  x'
         lines[#lines + 1] = line
         rows[line_count + #lines] = {
           path = entry.path, old = entry.old, status = entry.status, group = name,
           kind = 'file', revert_col = line:find('x$'),
         }
-        colors[#colors + 1] = { line_count + #lines - 1, change_highlight(entry.status) }
+        local row = line_count + #lines - 1
+        colors[#colors + 1] = { row, change_highlight(entry.status), 0, -1 }
+        colors[#colors + 1] = { row, icon_hl, #prefix, #prefix + #icon }
         file_index = file_index + 1
       else
         lines[#lines + 1] = ''
@@ -428,7 +440,9 @@ function M.render(branch, generation)
       vim.bo[git_buf].modifiable = true
       api.nvim_buf_set_lines(git_buf, -1, -1, false, lines)
       vim.bo[git_buf].modifiable = false
-      for _, color in ipairs(colors) do api.nvim_buf_add_highlight(git_buf, highlights, color[2], color[1], 0, -1) end
+      for _, color in ipairs(colors) do
+        api.nvim_buf_add_highlight(git_buf, highlights, color[2], color[1], color[3] or 0, color[4] or -1)
+      end
       line_count = line_count + #lines
     end
     if section <= #names then vim.defer_fn(batch, 1) end
