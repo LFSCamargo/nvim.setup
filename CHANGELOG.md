@@ -11,6 +11,7 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Features
 
+- **web:** photograph the v1 workspace for the landing page ([2db2181](https://github.com/LFSCamargo/nvim.setup/commit/2db21816aac81f70b0574da303c829d3b2b6aabe))
 - organize modules and update the landing page for v1.0 ([791df95](https://github.com/LFSCamargo/nvim.setup/commit/791df95d83969b9651157c2caf1d7005b2e80d8f))
 - **editor:** add Git diff and context menus ([41b0fa2](https://github.com/LFSCamargo/nvim.setup/commit/41b0fa2f9cda200353d12788d8810026c080b4cf))
 - **editor:** add customizable settings and extension marketplace ([ac8b392](https://github.com/LFSCamargo/nvim.setup/commit/ac8b392fb135f22716da35e90372103ab55beb9c))
