@@ -9,6 +9,21 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ## [Unreleased]
 
+### Features
+
+- **themes:** add theme selection and synchronize editor chrome ([296844c](https://github.com/LFSCamargo/nvim.setup/commit/296844c66ad0f9360ee4f374cf4fbcf470641252))
+- **hscroll:** support horizontal scrolling and trackpad input ([b23290f](https://github.com/LFSCamargo/nvim.setup/commit/b23290f54bed98612ed0f508b9f83b0d5f52be33))
+
+### Bug Fixes
+
+- **agents:** preserve terminal colors and prompt spacing ([0b6005d](https://github.com/LFSCamargo/nvim.setup/commit/0b6005d91175d162b2e13bae4de2ae4ba67cdf82))
+
+### Documentation
+
+- **editor:** describe themes and horizontal scrolling ([969bac0](https://github.com/LFSCamargo/nvim.setup/commit/969bac043b3dc6f1096ef143adfe385fe8b01ee1))
+- **agents:** document themes and scrolling modules ([1a12ea1](https://github.com/LFSCamargo/nvim.setup/commit/1a12ea163203ddfa8f2dfdeed962c988f54c782e))
+- **web:** update site copy for themes and scrolling ([5686714](https://github.com/LFSCamargo/nvim.setup/commit/5686714e6b9862368f16fa59d37dd77d2e3c0768))
+
 ## [1.1.0] - 2026-10-31
 
 ### Features
