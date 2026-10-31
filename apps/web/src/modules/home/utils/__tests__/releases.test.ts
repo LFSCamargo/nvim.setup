@@ -31,6 +31,15 @@ describe('install version refs', () => {
     );
   });
 
+  it('lets main install without the background helper', () => {
+    expect(installCommands('standard', 'main', false)).toContain(
+      '| bash -s -- --no-hscroll',
+    );
+    expect(installCommands('preview', 'main', false)).toContain(
+      '| bash -s -- --preview --no-hscroll',
+    );
+  });
+
   it('lists GitHub releases and always offers main', () => {
     expect(parseGithubReleases(null)).toEqual(defaultInstallRefs());
     expect(

@@ -6,7 +6,7 @@ export type InstallRef = {
 };
 
 export const mainRef = 'main';
-export const fallbackRelease = 'v1.1.0';
+export const fallbackRelease = 'v2.0.0';
 export const bootstrapUrl =
   'https://raw.githubusercontent.com/LFSCamargo/nvim.setup/main/scripts/bootstrap.sh';
 export const githubReleasesUrl =
@@ -54,10 +54,17 @@ export function parseGithubReleases(payload: unknown): InstallRef[] {
   return tags;
 }
 
-export function installCommands(mode: InstallMode, ref: string): string {
+export function installCommands(
+  mode: InstallMode,
+  ref: string,
+  withHscroll = true,
+): string {
   const flags: string[] = [];
   if (mode === 'preview') {
     flags.push('--preview');
+  }
+  if (!withHscroll) {
+    flags.push('--no-hscroll');
   }
   if (ref !== mainRef) {
     flags.push('--version', ref);

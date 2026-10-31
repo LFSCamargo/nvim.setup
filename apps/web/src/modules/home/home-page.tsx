@@ -6,6 +6,8 @@ import { Nav } from '@/shared/components/nav';
 import { Principles } from '@/modules/home/sections/principles';
 import { SiteFooter } from '@/shared/components/site-footer';
 import { Workspace } from '@/modules/home/sections/workspace';
+import { Workflow } from '@/modules/home/sections/workflow';
+import { Trackpad } from '@/modules/home/sections/trackpad';
 import { ScreenshotDialog } from '@/modules/home/components/screenshots/screenshot-dialog';
 import { useDocumentMeta } from '@/shared/hooks/use-document-meta';
 import { useScreenshotLightbox } from '@/modules/home/components/screenshots/use-screenshot-lightbox';
@@ -28,6 +30,8 @@ export function HomePage() {
         <Hero onOpenScreenshot={lightbox.open} />
         <Principles />
         <Workspace onOpenScreenshot={lightbox.open} />
+        <Workflow />
+        <Trackpad />
         <Install />
         <Docs />
         <Help />

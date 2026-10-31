@@ -95,7 +95,7 @@ describe('page metadata', () => {
       document
         .querySelector('meta[property="og:image"]')
         ?.getAttribute('content'),
-    ).toBe('https://example.test/assets/editor.png');
+    ).toBe('https://example.test/assets/workspace-2026-10-31.png');
     expect(
       document
         .querySelector('meta[name="twitter:card"]')

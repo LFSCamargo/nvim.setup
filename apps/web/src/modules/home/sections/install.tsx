@@ -5,9 +5,10 @@ import {
   installSteps,
   requirements,
   type InstallMode,
+  type InstallPlatform,
 } from '@/modules/home/constants/install-content';
 import { useInstallVersions } from '@/modules/home/hooks/use-install-versions';
-import { installCommands } from '@/modules/home/utils/releases';
+import { installCommands, mainRef } from '@/modules/home/utils/releases';
 import { CodeBlock } from '@/shared/components/code-block';
 import { LiquidGlass } from '@/shared/components/liquid-glass';
 import { Reveal } from '@/shared/components/reveal';
@@ -18,8 +19,14 @@ export function Install() {
   const { theme } = useTheme();
   const inverted = theme === 'dark';
   const [mode, setMode] = useState<InstallMode>('standard');
+  const [platform, setPlatform] = useState<InstallPlatform>('macos');
+  const [withHscroll, setWithHscroll] = useState(true);
   const { refs, selected, setSelected } = useInstallVersions();
-  const recipe = installCommands(mode, selected);
+  const recipe = installCommands(
+    mode,
+    selected,
+    platform === 'linux' || withHscroll,
+  );
   const [copy, setCopy] = useState('Copy commands');
 
   useEffect(() => {
@@ -52,7 +59,7 @@ export function Install() {
               inverted ? 'text-zinc-500' : 'text-zinc-400',
             )}
           >
-            02 / FROM HERE TO YOUR TERMINAL
+            04 / FROM HERE TO YOUR TERMINAL
           </p>
           <h2 className="mt-5 text-[clamp(2.4rem,4vw,3.6rem)] leading-tight font-medium tracking-[-0.04em]">
             Less setup.
@@ -69,6 +76,16 @@ export function Install() {
             The installer fetches that version and installs Neovim if you do not
             have it. Choose a fresh install, or try it alongside your current
             configuration.
+          </p>
+          <p
+            className={cn(
+              'mt-5 max-w-md text-sm leading-7',
+              inverted ? 'text-zinc-500' : 'text-zinc-400',
+            )}
+          >
+            {platform === 'macos'
+              ? 'On macOS, run the command in Warp, Terminal.app, or iTerm. The installer may need Xcode Command Line Tools. Enable Accessibility only if you choose the trackpad helper.'
+              : 'On Linux, run the command in your terminal. The installer supports apt, dnf, and pacman and may ask for sudo when installing system packages. No trackpad background helper is needed.'}
           </p>
           <ol className="mt-10 flex flex-col gap-7">
             {installSteps.map((step) => (
@@ -127,6 +144,59 @@ export function Install() {
               <span>YOUR TERMINAL</span>
               <span aria-hidden="true">↗</span>
             </div>
+            <div className="flex gap-5 px-5 pt-4" aria-label="Operating system">
+              {(
+                [
+                  ['macos', 'macOS'],
+                  ['linux', 'Linux'],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={platform === value}
+                  onClick={() => {
+                    setPlatform(value);
+                    if (
+                      value === 'macos' &&
+                      !withHscroll &&
+                      selected !== mainRef
+                    )
+                      setSelected(mainRef);
+                  }}
+                  className={cn(
+                    'border-b pb-2 text-xs text-zinc-500',
+                    platform === value
+                      ? 'border-zinc-100 text-white'
+                      : 'border-transparent',
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            {platform === 'macos' ? (
+              <label className="mx-5 mt-5 flex cursor-pointer items-start gap-3 rounded-lg border border-white/10 p-3 text-xs text-zinc-300">
+                <input
+                  type="checkbox"
+                  checked={withHscroll}
+                  onChange={(event) => {
+                    setWithHscroll(event.target.checked);
+                    if (!event.target.checked && selected !== mainRef)
+                      setSelected(mainRef);
+                  }}
+                  className="mt-0.5 accent-amber-400"
+                />
+                <span>
+                  Install macOS trackpad helper
+                  <span className="mt-1 block text-zinc-500">
+                    Enables sideways swipes in Warp, Terminal.app, and iTerm.
+                    Turn off to skip the background LaunchAgent. The no-helper
+                    option uses main until the next release.
+                  </span>
+                </span>
+              </label>
+            ) : null}
             <label className="flex items-center justify-between gap-4 px-5 pt-4 text-xs text-zinc-400">
               <span className="shrink-0 tracking-[0.12em]">VERSION</span>
               <select
@@ -139,6 +209,11 @@ export function Install() {
                   <option
                     key={item.id}
                     value={item.id}
+                    disabled={
+                      platform === 'macos' &&
+                      !withHscroll &&
+                      item.id !== mainRef
+                    }
                     className="text-zinc-900"
                   >
                     {item.label}
@@ -205,8 +280,9 @@ export function Install() {
               inverted ? 'text-zinc-500' : 'text-zinc-400',
             )}
           >
-            Requires internet access. Missing Neovim, Node, Git, or Homebrew are
-            installed for you. Linux may ask for sudo for system packages.
+            {platform === 'macos'
+              ? 'Requires internet access. Missing Neovim, Node, Git, or Homebrew are installed for you.'
+              : 'Requires internet access. Missing Neovim, Node, and Git are installed for you. System packages may prompt for sudo.'}
           </p>
           <Link
             className={cn(
@@ -245,53 +321,57 @@ export function Install() {
           </p>
         </div>
         <ul className="grid gap-3 md:grid-cols-2">
-          {requirements.map((item) => (
-            <li
-              key={item.name}
-              className={cn(
-                'flex items-start justify-between gap-4 rounded-2xl border px-4 py-4',
-                inverted
-                  ? 'border-zinc-300 bg-white/60'
-                  : 'border-zinc-800 bg-zinc-900/60',
-              )}
-            >
-              <div className="min-w-0">
-                <p className="text-sm font-medium tracking-tight">
-                  {item.name}
-                  {'optional' in item && item.optional ? (
-                    <span
-                      className={cn(
-                        'ml-2 font-mono text-[10px] tracking-[0.12em]',
-                        inverted ? 'text-zinc-500' : 'text-zinc-400',
-                      )}
-                    >
-                      OPTIONAL
-                    </span>
-                  ) : null}
-                </p>
-                <p
-                  className={cn(
-                    'mt-1 text-sm leading-6',
-                    inverted ? 'text-zinc-500' : 'text-zinc-400',
-                  )}
-                >
-                  {item.purpose}
-                </p>
-              </div>
-              <a
+          {requirements
+            .filter(
+              (item) => !('platform' in item) || item.platform === platform,
+            )
+            .map((item) => (
+              <li
+                key={item.name}
                 className={cn(
-                  'shrink-0 text-xs font-semibold underline-offset-4 hover:underline',
-                  inverted ? 'text-zinc-900' : 'text-zinc-50',
+                  'flex items-start justify-between gap-4 rounded-2xl border px-4 py-4',
+                  inverted
+                    ? 'border-zinc-300 bg-white/60'
+                    : 'border-zinc-800 bg-zinc-900/60',
                 )}
-                href={item.href}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={`Install ${item.name}`}
               >
-                Install ↗
-              </a>
-            </li>
-          ))}
+                <div className="min-w-0">
+                  <p className="text-sm font-medium tracking-tight">
+                    {item.name}
+                    {'optional' in item && item.optional ? (
+                      <span
+                        className={cn(
+                          'ml-2 font-mono text-[10px] tracking-[0.12em]',
+                          inverted ? 'text-zinc-500' : 'text-zinc-400',
+                        )}
+                      >
+                        OPTIONAL
+                      </span>
+                    ) : null}
+                  </p>
+                  <p
+                    className={cn(
+                      'mt-1 text-sm leading-6',
+                      inverted ? 'text-zinc-500' : 'text-zinc-400',
+                    )}
+                  >
+                    {item.purpose}
+                  </p>
+                </div>
+                <a
+                  className={cn(
+                    'shrink-0 text-xs font-semibold underline-offset-4 hover:underline',
+                    inverted ? 'text-zinc-900' : 'text-zinc-50',
+                  )}
+                  href={item.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={`Install ${item.name}`}
+                >
+                  Install ↗
+                </a>
+              </li>
+            ))}
         </ul>
       </Reveal>
     </section>

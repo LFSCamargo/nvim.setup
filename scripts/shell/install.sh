@@ -31,7 +31,11 @@ else
 fi
 bash "$SETUP_ROOT/scripts/fonts.sh"
 bash "$SETUP_ROOT/scripts/plugins.sh" restore
-bash "$SETUP_ROOT/scripts/hscroll.sh" install
+if [[ "${NVIM_SETUP_HSCROLL:-1}" != 0 ]]; then
+  bash "$SETUP_ROOT/scripts/hscroll.sh" install
+elif [[ "${NVIM_APPNAME:-nvim}" != nvim-preview ]]; then
+  bash "$SETUP_ROOT/scripts/hscroll.sh" uninstall
+fi
 run_lua "$CONFIG_DIR/scripts/install-parsers.lua"
 run_lua "$CONFIG_DIR/scripts/install-tools.lua"
 bash "$SETUP_ROOT/scripts/validate.sh"

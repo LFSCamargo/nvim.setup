@@ -63,4 +63,25 @@ if [[ -e "$TMP/.local/bin/nvim-setup-hscroll" ]]; then
 fi
 pass 'install is safe without a Darwin toolchain'
 
+# Turning the helper off must unload an existing LaunchAgent and remove its plist.
+rm -f -- "$TMP/bin/uname"
+cat > "$TMP/bin/uname" << 'SH'
+#!/bin/sh
+printf 'Darwin\n'
+SH
+cat > "$TMP/bin/launchctl" << 'SH'
+#!/bin/sh
+printf '%s\n' "$*" >> "$HOME/launchctl.log"
+SH
+chmod +x "$TMP/bin/uname" "$TMP/bin/launchctl"
+mkdir -p "$TMP/Library/LaunchAgents"
+touch "$TMP/Library/LaunchAgents/com.nvimsetup.hscroll.plist"
+env -i HOME="$TMP" PATH="$TMP/bin:/usr/bin:/bin" \
+  /bin/bash "$ROOT/scripts/hscroll.sh" uninstall > "$TMP/uninstall.out"
+[[ ! -e "$TMP/Library/LaunchAgents/com.nvimsetup.hscroll.plist" ]] \
+  || fail 'uninstall must remove the LaunchAgent plist'
+grep -F 'bootout gui/' "$TMP/launchctl.log" > /dev/null \
+  || fail 'uninstall must stop the running LaunchAgent'
+pass 'uninstall stops the background helper and removes its LaunchAgent'
+
 printf 'hscroll tests: %s passed\n' "$PASS"

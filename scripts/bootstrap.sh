@@ -25,11 +25,12 @@ Usage:
 
   ./scripts/bootstrap.sh            # from a clone: skip fetch, install here
   ./scripts/bootstrap.sh --preview  # NVIM_APPNAME=nvim-preview
-  curl ... | bash -s -- --version v1.1.0
+  curl ... | bash -s -- --version v2.0.0
 
 Options:
   --preview         Install alongside your current Neovim config
-  --version <tag>   Install that Git tag (v1.1.0). Accepts 1.1.0 as well.
+  --no-hscroll      Skip the macOS trackpad background helper
+  --version <tag>   Install that Git tag (v2.0.0). Accepts 2.0.0 as well.
   -h, --help        Show this help
 
 Environment:
@@ -208,8 +209,12 @@ while [[ $# -gt 0 ]]; do
       export NVIM_APPNAME="${NVIM_APPNAME:-nvim-preview}"
       shift
       ;;
+    --no-hscroll)
+      export NVIM_SETUP_HSCROLL=0
+      shift
+      ;;
     --version)
-      [[ $# -ge 2 ]] || die '--version needs a tag like v1.1.0'
+      [[ $# -ge 2 ]] || die '--version needs a tag like v2.0.0'
       normalize_ref "$2"
       shift 2
       ;;

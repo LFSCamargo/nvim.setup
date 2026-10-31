@@ -1,4 +1,5 @@
 export type InstallMode = 'standard' | 'preview';
+export type InstallPlatform = 'macos' | 'linux';
 
 export const installSteps = [
   {
@@ -40,6 +41,7 @@ export const requirements = [
     name: 'Homebrew',
     purpose: 'macOS packages when the installer cannot fetch a binary',
     href: 'https://brew.sh',
+    platform: 'macos',
   },
   {
     name: 'Tree-sitter CLI 0.26.1+',

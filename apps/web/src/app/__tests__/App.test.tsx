@@ -85,6 +85,70 @@ describe('landing page visitor paths', () => {
     expect(await screen.findByText('Select and copy below')).toBeTruthy();
   });
 
+  it('offers main without the trackpad worker and explains the manual path', () => {
+    renderApp();
+    expect(
+      screen.getByRole('heading', {
+        name: 'Open a project. Stay in the work.',
+      }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole('heading', { name: 'Sideways swipes, your choice.' }),
+    ).toBeTruthy();
+    fireEvent.click(
+      screen.getByRole('checkbox', { name: /Install macOS trackpad helper/ }),
+    );
+    expect(
+      (screen.getByLabelText('Setup version') as HTMLSelectElement).value,
+    ).toBe('main');
+    expect(
+      screen.getByLabelText('Standard installation commands').textContent,
+    ).toContain('--no-hscroll');
+    expect(screen.getByText(/stops an existing LaunchAgent/)).toBeTruthy();
+    expect(
+      screen.getByText(/Option or Ctrl plus the mouse wheel/),
+    ).toBeTruthy();
+  });
+
+  it('switches the install tutorial between macOS and Linux guidance', () => {
+    renderApp();
+    expect(
+      screen
+        .getByRole('button', { name: 'macOS' })
+        .getAttribute('aria-pressed'),
+    ).toBe('true');
+    expect(
+      screen.getByRole('checkbox', { name: /Install macOS trackpad helper/ }),
+    ).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Linux' }));
+    expect(
+      screen
+        .getByRole('button', { name: 'Linux' })
+        .getAttribute('aria-pressed'),
+    ).toBe('true');
+    expect(screen.getByText(/supports apt, dnf, and pacman/)).toBeTruthy();
+    expect(
+      screen.queryByRole('checkbox', { name: /Install macOS trackpad helper/ }),
+    ).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Install Homebrew' })).toBeNull();
+    expect(
+      screen.getByLabelText('Standard installation commands').textContent,
+    ).not.toContain('--no-hscroll');
+    fireEvent.click(screen.getByRole('button', { name: 'macOS' }));
+    expect(screen.getByRole('link', { name: 'Install Homebrew' })).toBeTruthy();
+    fireEvent.click(
+      screen.getByRole('checkbox', { name: /Install macOS trackpad helper/ }),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Linux' }));
+    fireEvent.change(screen.getByLabelText('Setup version'), {
+      target: { value: 'v2.0.0' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'macOS' }));
+    expect(
+      (screen.getByLabelText('Setup version') as HTMLSelectElement).value,
+    ).toBe('main');
+  });
+
   it('opens the correct screenshot after switching views and closes the lightbox', async () => {
     renderApp();
     fireEvent.click(screen.getByRole('button', { name: 'Source control' }));
@@ -101,9 +165,27 @@ describe('landing page visitor paths', () => {
       'screenshot-dialog-title',
     );
     expect(dialog.querySelector('img')?.getAttribute('src')).toBe(
-      '/assets/git.png',
+      '/assets/git-2026-10-31.png',
     );
     expect(within(dialog).getByText('Source control')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Close screenshot' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    fireEvent.click(screen.getByRole('button', { name: 'Themes' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Enlarge themes screenshot' }),
+    );
+    expect(
+      screen.getByRole('dialog').querySelector('img')?.getAttribute('src'),
+    ).toBe('/assets/themes-2026-10-31.png');
+    fireEvent.click(screen.getByRole('button', { name: 'Close screenshot' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    fireEvent.click(screen.getByRole('button', { name: 'Rosé Pine' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Enlarge rosé pine screenshot' }),
+    );
+    expect(
+      screen.getByRole('dialog').querySelector('img')?.getAttribute('src'),
+    ).toBe('/assets/rose-pine-2026-10-31.png');
     fireEvent.click(screen.getByRole('button', { name: 'Close screenshot' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
@@ -117,7 +199,7 @@ describe('landing page visitor paths', () => {
     );
     expect(
       screen.getByRole('dialog').querySelector('img')?.getAttribute('src'),
-    ).toBe('/assets/settings.png');
+    ).toBe('/assets/settings-2026-10-31.png');
     fireEvent.click(screen.getByRole('button', { name: 'Close screenshot' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     fireEvent.click(screen.getByRole('button', { name: 'Extensions' }));
@@ -131,7 +213,7 @@ describe('landing page visitor paths', () => {
     );
     expect(
       screen.getByRole('dialog').querySelector('img')?.getAttribute('src'),
-    ).toBe('/assets/extensions.png');
+    ).toBe('/assets/extensions-2026-10-31.png');
     fireEvent.click(screen.getByRole('button', { name: 'Close screenshot' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     fireEvent.click(screen.getByRole('button', { name: 'The layout' }));
@@ -163,7 +245,7 @@ describe('landing page visitor paths', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Next screenshot' }));
     expect(
       screen.getByRole('dialog').querySelector('img')?.getAttribute('src'),
-    ).toBe('/assets/editor.png');
+    ).toBe('/assets/workspace-2026-10-31.png');
     fireEvent.click(screen.getByRole('button', { name: 'Close screenshot' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });
@@ -284,10 +366,10 @@ describe('landing page visitor paths', () => {
   it('lets visitors pin a published setup version on the installer', () => {
     renderApp();
     const version = screen.getByLabelText('Setup version');
-    expect((version as HTMLSelectElement).value).toBe('v1.1.0');
+    expect((version as HTMLSelectElement).value).toBe('v2.0.0');
     expect(
       screen.getByLabelText('Standard installation commands').textContent,
-    ).toContain('bash -s -- --version v1.1.0');
+    ).toContain('bash -s -- --version v2.0.0');
     fireEvent.change(version, { target: { value: 'main' } });
     expect(
       screen.getByLabelText('Standard installation commands').textContent,

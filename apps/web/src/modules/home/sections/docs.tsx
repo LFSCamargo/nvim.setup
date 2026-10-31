@@ -10,7 +10,7 @@ export function Docs() {
       <Reveal className="mb-12 flex flex-col justify-between gap-8 md:flex-row md:items-end">
         <div>
           <p className="font-mono text-[10px] tracking-[0.16em] text-muted">
-            03 / A MAP, NOT A MAZE
+            05 / A MAP, NOT A MAZE
           </p>
           <h2 className="mt-5 text-[clamp(2.1rem,4vw,3.4rem)] leading-tight font-medium tracking-[-0.04em]">
             Good tools deserve

@@ -53,16 +53,28 @@ test('installation, screenshots, help and keyboard access work', async ({
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('build');
-  await expect(page.getByLabel('Setup version')).toHaveValue('v1.1.0');
+  await expect(page.getByLabel('Setup version')).toHaveValue('v2.0.0');
   await expect(page.getByLabel('Standard installation commands')).toContainText(
     'scripts/bootstrap.sh',
   );
   await expect(page.getByLabel('Standard installation commands')).toContainText(
-    '--version v1.1.0',
+    '--version v2.0.0',
   );
   await expect(page.getByLabel('Standard installation commands')).toHaveClass(
     /whitespace-pre-wrap/,
   );
+  await page.getByRole('button', { name: 'Linux', exact: true }).click();
+  await expect(page.getByText(/supports apt, dnf, and pacman/)).toBeVisible();
+  await expect(
+    page.getByRole('checkbox', { name: /Install macOS trackpad helper/ }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole('link', { name: 'Install Homebrew' }),
+  ).toHaveCount(0);
+  await page.getByRole('button', { name: 'macOS', exact: true }).click();
+  await expect(
+    page.getByRole('checkbox', { name: /Install macOS trackpad helper/ }),
+  ).toBeVisible();
   await expect(
     page.getByRole('link', { name: 'Install Neovim 0.12+' }),
   ).toHaveAttribute(
@@ -90,8 +102,15 @@ test('installation, screenshots, help and keyboard access work', async ({
   );
   await page.getByRole('button', { name: 'Copy commands' }).click();
   await expect(page.getByText('Copied ✓')).toBeVisible();
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain(
-    'NVIM_APPNAME=nvim-preview',
+  await expect
+    .poll(() => page.evaluate(() => navigator.clipboard.readText()))
+    .toContain('NVIM_APPNAME=nvim-preview');
+  await page
+    .getByRole('checkbox', { name: /Install macOS trackpad helper/ })
+    .uncheck();
+  await expect(page.getByLabel('Setup version')).toHaveValue('main');
+  await expect(page.getByLabel('Preview installation commands')).toContainText(
+    '--no-hscroll',
   );
   await page
     .getByRole('button', { name: 'Source control', exact: true })
@@ -102,7 +121,7 @@ test('installation, screenshots, help and keyboard access work', async ({
   await expect(page.getByRole('dialog')).toBeVisible();
   await expect(page.getByRole('dialog').locator('img')).toHaveAttribute(
     'src',
-    '/assets/git.png',
+    '/assets/git-2026-10-31.png',
   );
   await expect(page.getByRole('dialog')).toContainText('Source control');
   await expect(
@@ -119,13 +138,31 @@ test('installation, screenshots, help and keyboard access work', async ({
   await page.screenshot({ path: 'test-results/screenshot-dialog.png' });
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Themes', exact: true }).click();
+  await page.getByRole('button', { name: 'Enlarge themes screenshot' }).click();
+  await expect(page.getByRole('dialog').locator('img')).toHaveAttribute(
+    'src',
+    '/assets/themes-2026-10-31.png',
+  );
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Rosé Pine', exact: true }).click();
+  await page
+    .getByRole('button', { name: 'Enlarge rosé pine screenshot' })
+    .click();
+  await expect(page.getByRole('dialog').locator('img')).toHaveAttribute(
+    'src',
+    '/assets/rose-pine-2026-10-31.png',
+  );
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page
     .getByRole('button', { name: 'Enlarge settings screenshot' })
     .click();
   await expect(page.getByRole('dialog').locator('img')).toHaveAttribute(
     'src',
-    '/assets/settings.png',
+    '/assets/settings-2026-10-31.png',
   );
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -135,7 +172,7 @@ test('installation, screenshots, help and keyboard access work', async ({
     .click();
   await expect(page.getByRole('dialog').locator('img')).toHaveAttribute(
     'src',
-    '/assets/extensions.png',
+    '/assets/extensions-2026-10-31.png',
   );
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -166,7 +203,7 @@ test('installation, screenshots, help and keyboard access work', async ({
   await page.getByRole('button', { name: 'Next screenshot' }).click();
   await expect(page.getByRole('dialog').locator('img')).toHaveAttribute(
     'src',
-    '/assets/editor.png',
+    '/assets/workspace-2026-10-31.png',
   );
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);

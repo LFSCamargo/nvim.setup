@@ -1,7 +1,7 @@
 # Application screenshots
 
-`editor.png`, `git.png`, `settings.png`, `extensions.png`, `layout.png`, and `agents.png` are photographs of the actual Neovim setup running in Warp on this repository, taken on 2026-10-31. Each image is 1920 × 1080 (16:9) and shows the full Warp window.
+The six `*-2026-10-31.png` images are real 3420 × 2224 captures of this Neovim setup in Warp on 2026-10-31. They show Files, Git, Settings, Themes, Extensions, and Rosé Pine. The landing page uses all six in its screenshot gallery.
 
-The Files view shows the nvim-tree sidebar (project name, then Files / Git / Settings / Extensions), editor tabs, and open buffers. The Git view shows source control with Check Diff, the commit composer, and history. Settings shows appearance, editing, search, and session preferences. Extensions shows the Mason marketplace with installed language servers and formatters. The layout view is the same three-pane arrangement as Git: sidebar, the mid editor, and chat. The AI agents view shows Agent, Codex, and Antigravity tabs beside the editor. No mockups or generated pictures.
+`layout.png` and `agents.png` remain from the earlier 1920 × 1080 capture set and show the three-pane layout and chat tabs. `editor.png`, `git.png`, `settings.png`, and `extensions.png` are retained as earlier captures but are no longer displayed on the landing page.
 
 These captures include the real chat CLIs. No credentials are in the frames.

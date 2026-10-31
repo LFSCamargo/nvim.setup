@@ -46,7 +46,7 @@ if [ "$1" = clone ]; then
   mkdir -p "$clone_dest/scripts" "$clone_dest/nvim"
   printf '%s\n' '#!/bin/sh' "printf 'deps NVIM_APPNAME=%s\n' \"\${NVIM_APPNAME:-nvim}\" >>'__CALLS__'" >"$clone_dest/scripts/deps.sh"
   printf '%s\n' '#!/bin/sh' "printf 'fonts NVIM_APPNAME=%s\n' \"\${NVIM_APPNAME:-nvim}\" >>'__CALLS__'" >"$clone_dest/scripts/fonts.sh"
-  printf '%s\n' '#!/bin/sh' "printf 'install NVIM_APPNAME=%s\n' \"\${NVIM_APPNAME:-nvim}\" >>'__CALLS__'" >"$clone_dest/scripts/install.sh"
+  printf '%s\n' '#!/bin/sh' "printf 'install NVIM_APPNAME=%s HSCROLL=%s\n' \"\${NVIM_APPNAME:-nvim}\" \"\${NVIM_SETUP_HSCROLL:-1}\" >>'__CALLS__'" >"$clone_dest/scripts/install.sh"
   printf '%s\n' '-- fake --' >"$clone_dest/nvim/init.lua"
   printf '%s\n' 'install:' >"$clone_dest/Makefile"
 fi
@@ -110,6 +110,12 @@ assert_file_has "$home/calls.log" 'deps NVIM_APPNAME=nvim-preview'
 assert_file_has "$home/calls.log" 'fonts NVIM_APPNAME=nvim-preview'
 assert_file_has "$home/calls.log" 'install NVIM_APPNAME=nvim-preview'
 pass 'piped bootstrap --preview sets NVIM_APPNAME=nvim-preview'
+
+# A visitor can choose no macOS background helper in either install mode.
+home="$TMP/no-hscroll"
+run_piped "$home" --preview --no-hscroll
+assert_file_has "$home/calls.log" 'install NVIM_APPNAME=nvim-preview HSCROLL=0'
+pass 'piped bootstrap passes the no-helper choice into install'
 
 # 3. Root is refused before any clone or package install.
 home="$TMP/root"

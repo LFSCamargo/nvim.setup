@@ -40,20 +40,22 @@ Want to change it? [Contributing](CONTRIBUTING.md) is the contract;
 You do not need to clone this repository first. One command fetches the setup, installs Neovim and the other dependencies if they are missing, installs icon fonts, then deploys the config.
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/LFSCamargo/nvim.setup/main/scripts/bootstrap.sh | bash -s -- --version v1.1.0
+curl -fsSL https://raw.githubusercontent.com/LFSCamargo/nvim.setup/main/scripts/bootstrap.sh | bash -s -- --version v2.0.0
 nvim .
 ```
 
-The landing page lists published releases. Pick one, or follow `main` for the current branch. Same flag from a terminal: `--version v1.1.0` (or `1.1.0`). Close other Neovim instances first.
+The landing page has macOS and Linux installation instructions and lists published releases. Pick one, or follow `main` for the current branch. The macOS no-helper install choice uses `main` until that option is in a release. Close other Neovim instances first.
 
 To try this without replacing `~/.config/nvim`:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/LFSCamargo/nvim.setup/main/scripts/bootstrap.sh | bash -s -- --preview --version v1.1.0
+curl -fsSL https://raw.githubusercontent.com/LFSCamargo/nvim.setup/main/scripts/bootstrap.sh | bash -s -- --preview --version v2.0.0
 NVIM_APPNAME=nvim-preview nvim .
 ```
 
 Do not pipe the installer to sudo. Close other Neovim instances first. Linux may ask for sudo only for system packages. On macOS, Homebrew and the Xcode Command Line Tools are installed when they are missing.
+
+On macOS, the default install loads a Swift LaunchAgent for sideways trackpad gestures in Warp, Terminal.app, and iTerm. Allow `nvim-setup-hscroll` in Accessibility settings to use it. To install without a background helper, select that option on the landing page or use `--no-hscroll` with `main`; a standard install also stops an existing helper. Preview leaves an existing helper alone. Option or Ctrl plus the mouse wheel and Settings → Scrollbars still work. From a checkout, use `NVIM_SETUP_HSCROLL=0 make install`. Re-enable it later with `make hscroll`.
 
 The script clones into `~/.local/share/nvim.setup` (override with `NVIM_SETUP_HOME`), adds `~/.local/bin` to your shell PATH, runs `make deps`, installs icon fonts (Symbols Nerd Font, Monocraft Nerd Font), then `make install`. Distro packages can be older than this setup needs; if Neovim is missing or below 0.12, or Node is below 22, the installer fetches a current binary into `~/.local/opt`. `make doctor` reports incompatible versions.
 
@@ -155,7 +157,7 @@ Run these from the repository:
 | `make update`                                  | Fast-forward from the configured upstream, then install                                  |
 | `make upgrade`                                 | Upgrade plugins, refresh parsers, validate, and save the lockfile                        |
 | `make capture`                                 | Copy installed config changes back into this repository                                  |
-| `make bump VERSION=1.1.0`                      | Set this setup's release version (`1.2.3` or `1.2.3-beta`)                               |
+| `make bump VERSION=2.0.0`                      | Set this setup's release version (`1.2.3` or `1.2.3-beta`)                               |
 | `make commitlint`                              | Check the latest commit message against Conventional Commits                             |
 | `make changelog`                               | Validate every commit and regenerate `CHANGELOG.md`                                      |
 

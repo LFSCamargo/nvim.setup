@@ -43,14 +43,15 @@ pnpm install
 
 Stay in one area so the review stays small.
 
-| You want to change                         | Start here                                              | Also update                                                  |
-| ------------------------------------------ | ------------------------------------------------------- | ------------------------------------------------------------ |
-| A keymap, click, or user command           | `nvim/lua/modules/keys/init.lua` (or the owning module) | `docs/EDITOR.md`, often README                               |
-| Chat CLIs, Git sidebar, tabs, session, LSP | The matching `nvim/lua/modules/<name>/init.lua` file    | `docs/PLUGINS.md` if the module list changed                 |
-| Install / bootstrap / fonts                | `scripts/`                                              | `docs/PLUGINS.md` if a tool changed                          |
-| Landing page or `/docs` reader             | `apps/web/`                                             | `docs/E2E-TESTPLAN.md` if you add a browser case             |
-| Docs only                                  | `docs/`, `README.md`, `CONTRIBUTING.md`                 | Keep the other docs from going stale                         |
-| Agent skills                               | `.cursor/skills/<name>/SKILL.md`                        | Copy the same file to `.claude/skills/` and `.codex/skills/` |
+| You want to change                         | Start here                                                             | Also update                                                       |
+| ------------------------------------------ | ---------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| A keymap, click, or user command           | `nvim/lua/modules/keys/init.lua` (or the owning module)                | `docs/EDITOR.md`, often README                                    |
+| Chat CLIs, Git sidebar, tabs, session, LSP | The matching `nvim/lua/modules/<name>/init.lua` file                   | `docs/PLUGINS.md` if the module list changed                      |
+| macOS trackpad scrolling                   | `scripts/darwin/hscroll.swift` and `nvim/lua/modules/hscroll/init.lua` | `docs/EDITOR.md` and `docs/E2E-TESTPLAN.md` when behavior changes |
+| Install / bootstrap / fonts                | `scripts/`                                                             | `docs/PLUGINS.md` if a tool changed                               |
+| Landing page or `/docs` reader             | `apps/web/`                                                            | `docs/E2E-TESTPLAN.md` if you add a browser case                  |
+| Docs only                                  | `docs/`, `README.md`, `CONTRIBUTING.md`                                | Keep the other docs from going stale                              |
+| Agent skills                               | `.cursor/skills/<name>/SKILL.md`                                       | Copy the same file to `.claude/skills/` and `.codex/skills/`      |
 
 Do not add a new `nvim/lua/modules/<name>/` module without listing it in
 `docs/PLUGINS.md`, `AGENTS.md`, `CLAUDE.md`, and
@@ -89,6 +90,62 @@ git diff
 ```
 
 Capture only brings back `init.lua`, `lua/`, `scripts/`, and `lazy-lock.json`.
+
+### Work on the macOS trackpad handler
+
+The Swift helper in `scripts/darwin/hscroll.swift` runs in the background so
+sideways trackpad gestures can reach Neovim in Warp, Terminal.app, and iTerm.
+It watches scroll events when one of those terminals is in front. For a
+predominantly horizontal gesture, it looks for live Neovim sockets and asks
+each matching instance to call `modules.hscroll.scroll` over RPC. The Lua
+module chooses an editor or sidebar window and adjusts its horizontal view;
+terminal chat buffers are excluded. Other events pass through, as do gestures
+when no matching Neovim socket is available.
+
+On macOS, `make install` installs the helper as a user LaunchAgent. To install
+it separately, run:
+
+```sh
+make hscroll
+```
+
+To install without the background helper, run
+`./scripts/bootstrap.sh --no-hscroll`, or use `NVIM_SETUP_HSCROLL=0 make install`
+from a checkout. A standard install unloads an existing helper and removes its
+LaunchAgent plist; preview leaves the existing helper alone. The editor still
+scrolls sideways with Option or Ctrl plus the mouse wheel, or by dragging
+Settings → Scrollbars.
+
+The install needs the Xcode Command Line Tools (`swiftc`) and a logged-in
+graphical session. Allow **nvim-setup-hscroll** under System Settings → Privacy
+& Security → Accessibility when prompted. The executable is
+`~/.local/bin/nvim-setup-hscroll`; launchd loads
+`~/Library/LaunchAgents/com.nvimsetup.hscroll.plist` at login and keeps it
+running. If you edit the Swift source, rebuild before reinstalling: the install
+command reuses an existing executable.
+
+```sh
+bash scripts/hscroll.sh build
+make hscroll
+```
+
+Interactive Neovim instances create a PID-named socket under their state
+directory in `nvim-setup-hscroll/` and remove it when they exit. The helper
+checks the default and configured `XDG_STATE_HOME` locations for its own
+`NVIM_APPNAME`; the LaunchAgent needs the same app name and state location as
+the Neovim instance to find nondefault setups. Headless test runs do not start
+the helper.
+
+For a handler change, run the shell and Swift checks below as well as
+`make test`. Then try a sideways swipe over a long line in the editor and file
+tree in a supported terminal. The automated tests cover parsing, socket RPC,
+and the Lua scroll behavior; they do not simulate a macOS trackpad gesture or
+grant Accessibility access.
+
+```sh
+bash scripts/shell/__tests__/hscroll.test.sh
+make test
+```
 
 For the marketing site:
 

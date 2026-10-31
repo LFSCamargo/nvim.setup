@@ -76,10 +76,18 @@ EOF
   say "Loaded ${LABEL}. Allow Accessibility for nvim-setup-hscroll if prompted."
 }
 
+uninstall_agent() {
+  is_darwin || return 0
+  launchctl bootout "gui/$(id -u)/${LABEL}" > /dev/null 2>&1 || true
+  rm -f -- "$PLIST"
+  say "Stopped ${LABEL}. The trackpad helper will not run at login."
+}
+
 cmd="${1:-ensure}"
 case "$cmd" in
   build) build ;;
   ensure) ensure ;;
   install) install_agent ;;
-  *) die "Expected build, ensure, or install" ;;
+  uninstall) uninstall_agent ;;
+  *) die "Expected build, ensure, install, or uninstall" ;;
 esac
