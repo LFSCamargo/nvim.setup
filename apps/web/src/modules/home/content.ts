@@ -7,7 +7,7 @@ export const screens = [
     height: 1016,
     caption:
       'Files, code, and a place to think. Your terminal, thoughtfully arranged.',
-    alt: 'Real Neovim setup screenshot showing the nvim-tree file sidebar and editor tabs',
+    alt: 'Real Neovim setup screenshot showing Files, Git, Settings, and Extensions beside editor tabs and init.lua',
   },
   {
     id: 'git',
@@ -16,7 +16,7 @@ export const screens = [
     width: 1916,
     height: 1016,
     caption: 'See what changed. Stage with a click. Keep your code in view.',
-    alt: 'Real Neovim setup screenshot showing grouped Git changes, the commit composer, and history',
+    alt: 'Real Neovim setup screenshot showing Git source control, Check Diff, the commit composer, and history',
   },
   {
     id: 'layout',
@@ -36,7 +36,7 @@ export const screens = [
     height: 1016,
     caption:
       'Codex, Cursor Agent, Gemini, Claude, OpenCode, and Antigravity run as real CLI sessions in the right pane. Your login, your permissions.',
-    alt: 'Real Neovim setup screenshot showing a Codex session chatting beside open source files',
+    alt: 'Real Neovim setup screenshot showing a Codex session beside the landing-page feature list in the editor',
   },
 ] as const;
 
