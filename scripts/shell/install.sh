@@ -31,6 +31,7 @@ else
 fi
 bash "$SETUP_ROOT/scripts/fonts.sh"
 bash "$SETUP_ROOT/scripts/plugins.sh" restore
+bash "$SETUP_ROOT/scripts/hscroll.sh" install
 run_lua "$CONFIG_DIR/scripts/install-parsers.lua"
 run_lua "$CONFIG_DIR/scripts/install-tools.lua"
 bash "$SETUP_ROOT/scripts/validate.sh"

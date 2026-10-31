@@ -56,6 +56,44 @@ end, 'Format buffer')
 map('n', '<leader>w', '<cmd>write<cr>', 'Save')
 map('t', '<Esc><Esc>', '<C-\\><C-n>', 'Leave terminal input')
 
+require('modules.hscroll')
+
+-- Warp and Terminal.app forward only vertical wheel and keep Shift+wheel.
+-- Option/Ctrl + vertical wheel is the gesture that actually arrives.
+local horiz_keys = {
+  '<ScrollWheelLeft>',
+  '<ScrollWheelRight>',
+  '<A-ScrollWheelUp>',
+  '<A-ScrollWheelDown>',
+  '<C-ScrollWheelUp>',
+  '<C-ScrollWheelDown>',
+  '<A-ScrollWheelLeft>',
+  '<A-ScrollWheelRight>',
+  '<C-ScrollWheelLeft>',
+  '<C-ScrollWheelRight>',
+}
+local horiz_dir = {
+  ['<ScrollWheelLeft>'] = -1,
+  ['<ScrollWheelRight>'] = 1,
+  ['<A-ScrollWheelUp>'] = -1,
+  ['<A-ScrollWheelDown>'] = 1,
+  ['<C-ScrollWheelUp>'] = -1,
+  ['<C-ScrollWheelDown>'] = 1,
+  ['<A-ScrollWheelLeft>'] = -1,
+  ['<A-ScrollWheelRight>'] = 1,
+  ['<C-ScrollWheelLeft>'] = -1,
+  ['<C-ScrollWheelRight>'] = 1,
+}
+local prefixes = { '', '2-', '3-', '4-' }
+for _, prefix in ipairs(prefixes) do
+  for _, key in ipairs(horiz_keys) do
+    local lhs = '<' .. prefix .. key:sub(2)
+    vim.keymap.set({ 'n', 'v', 'x', 's', 'i' }, lhs, function()
+      require('modules.hscroll').scroll(horiz_dir[key])
+    end, { silent = true, desc = 'Scroll sideways' })
+  end
+end
+
 -- Let Neovim handle the click first, then make a clicked live chat writable.
 -- Winbar clicks have no buffer line and must keep their own tab actions.
 vim.keymap.set({ 'n', 'i' }, '<LeftMouse>', function()
@@ -125,6 +163,9 @@ vim.api.nvim_create_user_command('SidebarFilesToggle', function()
 end, {})
 vim.api.nvim_create_user_command('SetupSettings', function()
   require('modules.sidebar').settings()
+end, {})
+vim.api.nvim_create_user_command('SetupThemes', function()
+  require('modules.sidebar').themes()
 end, {})
 vim.api.nvim_create_user_command('SetupExtensions', function()
   require('modules.sidebar').extensions()

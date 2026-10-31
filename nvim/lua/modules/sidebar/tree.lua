@@ -104,6 +104,8 @@ function M.setup(width)
       if tree.config and tree.config.mappings then
         tree.config.mappings.default_on_attach(buf)
       end
+      vim.wo.wrap = false
+      vim.wo.sidescrolloff = 0
       vim.keymap.set('n', '<RightMouse>', function()
         require('modules.context_menu').tree_at_mouse()
       end, { buffer = buf, silent = true, desc = 'File tree context menu' })

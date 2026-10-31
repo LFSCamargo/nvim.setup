@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
-.PHONY: help bootstrap deps doctor install fonts plugins parsers tools validate update upgrade capture bump check e2e test scan commitlint changelog
+.PHONY: help bootstrap deps doctor install fonts plugins parsers tools validate update upgrade capture bump hscroll check e2e test scan commitlint changelog
 help: ## Show available commands
 	@awk 'BEGIN {FS = ":.*## "} /^[a-z0-9-]+:.*## / {printf "  %-12s %s\n", $$1, $$2}' Makefile
 
@@ -45,6 +45,9 @@ capture: ## Copy local configuration changes back into this repository
 
 bump: ## Set the setup release version: make bump VERSION=1.2.3
 	@bash scripts/bump.sh "$(VERSION)"
+
+hscroll: ## Build the macOS terminal trackpad helper and load its LaunchAgent
+	@bash scripts/hscroll.sh install
 
 check: ## Check shell syntax and compile every Lua file without running it
 	@bash scripts/check.sh
