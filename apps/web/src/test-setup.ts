@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import { applyTheme } from '@/lib/theme';
+import { applyTheme } from '@/modules/theme/theme';
 
 const memory = new Map<string, string>();
 Object.defineProperty(window, 'localStorage', {

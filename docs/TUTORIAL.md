@@ -43,16 +43,16 @@ pnpm install
 
 Stay in one area so the review stays small.
 
-| You want to change                         | Start here                                        | Also update                                                  |
-| ------------------------------------------ | ------------------------------------------------- | ------------------------------------------------------------ |
-| A keymap, click, or user command           | `nvim/lua/config/keys.lua` (or the owning module) | `docs/EDITOR.md`, often README                               |
-| Chat CLIs, Git sidebar, tabs, session, LSP | The matching `nvim/lua/config/*.lua` file         | `docs/PLUGINS.md` if the module list changed                 |
-| Install / bootstrap / fonts                | `scripts/`                                        | `docs/PLUGINS.md` if a tool changed                          |
-| Landing page or `/docs` reader             | `apps/web/`                                       | `docs/E2E-TESTPLAN.md` if you add a browser case             |
-| Docs only                                  | `docs/`, `README.md`, `CONTRIBUTING.md`           | Keep the other docs from going stale                         |
-| Agent skills                               | `.cursor/skills/<name>/SKILL.md`                  | Copy the same file to `.claude/skills/` and `.codex/skills/` |
+| You want to change                         | Start here                                              | Also update                                                  |
+| ------------------------------------------ | ------------------------------------------------------- | ------------------------------------------------------------ |
+| A keymap, click, or user command           | `nvim/lua/modules/keys/init.lua` (or the owning module) | `docs/EDITOR.md`, often README                               |
+| Chat CLIs, Git sidebar, tabs, session, LSP | The matching `nvim/lua/modules/<name>/init.lua` file    | `docs/PLUGINS.md` if the module list changed                 |
+| Install / bootstrap / fonts                | `scripts/`                                              | `docs/PLUGINS.md` if a tool changed                          |
+| Landing page or `/docs` reader             | `apps/web/`                                             | `docs/E2E-TESTPLAN.md` if you add a browser case             |
+| Docs only                                  | `docs/`, `README.md`, `CONTRIBUTING.md`                 | Keep the other docs from going stale                         |
+| Agent skills                               | `.cursor/skills/<name>/SKILL.md`                        | Copy the same file to `.claude/skills/` and `.codex/skills/` |
 
-Do not add a new `nvim/lua/config/` module without listing it in
+Do not add a new `nvim/lua/modules/<name>/` module without listing it in
 `docs/PLUGINS.md`, `AGENTS.md`, `CLAUDE.md`, and
 `.cursor/rules/changing-files.mdc`. Do not grow `nvim/init.lua`. Project
 skills must stay identical under `.cursor/skills/`, `.claude/skills/`, and
@@ -172,7 +172,7 @@ dump.
 
 ## Two worked sketches
 
-**A. New leader keymap.** Add the map in `nvim/lua/config/keys.lua`. Extend
+**A. New leader keymap.** Add the map in `nvim/lua/modules/keys/init.lua`. Extend
 `e2e.lua` so the key does the side effect you care about. Add the row to
 `docs/EDITOR.md` and `docs/E2E-TESTPLAN.md`. Run `make test`.
 

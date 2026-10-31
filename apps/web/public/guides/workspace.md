@@ -1,6 +1,6 @@
 # The workspace
 
-The window is three panes. The file tree takes **20%**. The editor takes the middle. Chat takes **25%**. Focus stays in the editor unless you click another pane.
+The window is three panes. The file tree takes **20%**. The editor takes the middle. Chat takes **28%**. Focus stays in the editor unless you click another pane.
 
 ```text
 ┌──────────────┬────────────────────────────────┬─────────────────┐
@@ -10,7 +10,7 @@ The window is three panes. The file tree takes **20%**. The editor takes the mid
 │   main.ts    │           Editor               │    CLI chat     │
 │   utils.ts   │                                │                 │
 │              │     LSP · format · debug       │  independent    │
-│     20%      │              55%               │      25%        │
+│     20%      │              52%               │      28%        │
 └──────────────┴────────────────────────────────┴─────────────────┘
 ```
 
@@ -40,13 +40,13 @@ Stage, unstage, revert, and commit with the keyboard or the mouse. Files and com
 
 ## AI chats
 
-The right pane runs the real **Codex**, **Cursor Agent**, **Gemini**, **Claude**, and **OpenCode** CLIs. They use your login and your permissions. This setup does not inject prompts or bypass approvals.
+The right pane runs the real **Codex**, **Cursor Agent**, **Gemini**, **Claude**, **OpenCode**, and **Antigravity** CLIs. They use your login and your permissions. This setup does not inject prompts or bypass approvals.
 
-Interactive startup opens one Codex session and one Cursor Agent session unless a saved session restores previous chats. Ctrl+] (or chat **+**) starts another independent Codex, Cursor Agent, Gemini, Claude, or OpenCode session. You can run several of any CLI at once. Switching tabs leaves a session running. Closing a tab stops that CLI. If the CLI process exits, that tab closes.
+Interactive startup opens one Codex session and one Cursor Agent session unless a saved session restores previous chats. Ctrl+] (or chat **+**) starts another independent Codex, Cursor Agent, Gemini, Claude, OpenCode, or Antigravity session. You can run several of any CLI at once. Switching tabs leaves a session running. Closing a tab stops that CLI. If the CLI process exits, that tab closes.
 
-Esc in a chat is sent to that CLI (for example to stop generation) and stays in terminal mode. Ctrl+\ Ctrl+N leaves terminal input without sending Esc. Space a c / a u / a g / a l / a o toggle Codex, Cursor Agent, Gemini, Claude, and OpenCode.
+Esc in a chat is sent to that CLI (for example to stop generation) and stays in terminal mode. Ctrl+\ Ctrl+N leaves terminal input without sending Esc. Space a c / a u / a g / a l / a o / a a toggle Codex, Cursor Agent, Gemini, Claude, OpenCode, and Antigravity.
 
-Chats resume by ID on the next launch in that directory (`codex resume <uuid>`, `agent --resume=<uuid>`, `gemini --resume <uuid>`, `claude --resume <uuid>`, `opencode --session <id>`). They do not automatically receive the current selection: mention project-relative paths in the chat.
+Chats resume by ID on the next launch in that directory (`codex resume <uuid>`, `agent --resume=<uuid>`, `gemini --resume <uuid>`, `claude --resume <uuid>`, `opencode --session <id>`, `agy --conversation <id>`). They do not automatically receive the current selection: mention project-relative paths in the chat.
 
 ## Language servers, format, and debug
 

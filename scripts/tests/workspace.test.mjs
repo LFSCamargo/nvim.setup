@@ -47,11 +47,11 @@ test('marketing app is TypeScript with Tailwind and Prettier', () => {
     true,
   );
   assert.equal(
-    existsSync(new URL('../../apps/web/src/App.tsx', import.meta.url)),
+    existsSync(new URL('../../apps/web/src/app/App.tsx', import.meta.url)),
     true,
   );
   assert.equal(
-    existsSync(new URL('../../apps/web/src/App.jsx', import.meta.url)),
+    existsSync(new URL('../../apps/web/src/app/App.jsx', import.meta.url)),
     false,
   );
   assert.match(read('apps/web/src/styles.css'), /@import ['"]tailwindcss['"]/);
@@ -84,13 +84,61 @@ test('marketing app is TypeScript with Tailwind and Prettier', () => {
     ),
     true,
   );
-  assert.match(read('apps/web/src/content.ts'), /id: 'agents'/);
-  assert.match(read('apps/web/src/content.ts'), /id: 'layout'/);
+  const landing = read('apps/web/src/modules/home/content.ts');
+  assert.match(landing, /id: 'agents'/);
+  assert.match(landing, /id: 'layout'/);
+  assert.match(landing, /Settings that stay with you/);
+  assert.match(landing, /Extensions, in the sidebar/);
+  assert.match(landing, /Right-click where you are/);
+  assert.match(landing, /Check Diff opens the change in the mid editor/);
+});
+
+test('editor and website keep feature code in module folders', () => {
+  for (const name of [
+    'agents',
+    'diff',
+    'extensions',
+    'format',
+    'sidebar',
+    'settings',
+  ]) {
+    assert.equal(
+      existsSync(
+        new URL(`../../nvim/lua/modules/${name}/init.lua`, import.meta.url),
+      ),
+      true,
+      `${name} needs a module entry point`,
+    );
+  }
+  for (const name of [
+    'modules/home/home-page.tsx',
+    'modules/docs/docs-page.tsx',
+    'modules/theme/use-theme.tsx',
+    'shared/seo/seo.ts',
+  ]) {
+    assert.equal(
+      existsSync(new URL(`../../apps/web/src/${name}`, import.meta.url)),
+      true,
+      `${name} should have a clear owner`,
+    );
+  }
+  assert.match(read('nvim/init.lua'), /require\('modules.plugins'\)/);
+  assert.match(
+    read('nvim/lua/modules/sidebar/init.lua'),
+    /modules.sidebar.status/,
+  );
+});
+
+test('doctor checks the optional Antigravity CLI', () => {
+  assert.match(
+    read('scripts/doctor.sh'),
+    /for cli in codex agent gemini claude opencode agy/,
+  );
 });
 
 test('bootstrap is a curl-pipeable installer that does not bundle markdown', () => {
   const bootstrap = read('scripts/bootstrap.sh');
-  const content = read('apps/web/src/content.ts');
+  const content = read('apps/web/src/modules/home/install/content.ts');
   assert.match(
     bootstrap,
     /raw\.githubusercontent\.com\/LFSCamargo\/nvim\.setup\/main\/scripts\/bootstrap\.sh/,
@@ -120,8 +168,8 @@ test('marketing site publishes titles, Open Graph tags, robots, and a sitemap', 
   const html = read('apps/web/index.html');
   const robots = read('apps/web/public/robots.txt');
   const sitemap = read('apps/web/public/sitemap.xml');
-  const seo = read('apps/web/src/lib/seo.ts');
-  const content = read('apps/web/src/content.ts');
+  const seo = read('apps/web/src/shared/seo/seo.ts');
+  const content = read('apps/web/src/shared/site.ts');
   assert.match(
     content,
     /site = 'https:\/\/lfscamargo\.github\.io\/nvim\.setup'/,
@@ -138,8 +186,14 @@ test('marketing site publishes titles, Open Graph tags, robots, and a sitemap', 
   assert.match(sitemap, /\/docs\/editor/);
   assert.doesNotMatch(sitemap, /\/guides\//);
   assert.match(seo, /export function applyPageMeta/);
-  assert.match(read('apps/web/src/pages/home-page.tsx'), /useDocumentMeta/);
-  assert.match(read('apps/web/src/pages/docs-page.tsx'), /useDocumentMeta/);
+  assert.match(
+    read('apps/web/src/modules/home/home-page.tsx'),
+    /useDocumentMeta/,
+  );
+  assert.match(
+    read('apps/web/src/modules/docs/docs-page.tsx'),
+    /useDocumentMeta/,
+  );
 });
 
 test('marketing site recovers refreshed docs URLs on static hosts', () => {
@@ -147,7 +201,7 @@ test('marketing site recovers refreshed docs URLs on static hosts', () => {
   assert.match(vite, /appType: 'spa'/);
   assert.match(vite, /writeSpaFallback/);
   assert.match(vite, /name: 'spa-fallback'/);
-  assert.match(read('apps/web/src/lib/spa.ts'), /404\.html/);
+  assert.match(read('apps/web/src/shared/seo/spa.ts'), /404\.html/);
   assert.match(read('apps/web/public/_redirects'), /\/\* +\/index\.html +200/);
   assert.equal(
     existsSync(new URL('../../apps/web/public/.nojekyll', import.meta.url)),
@@ -156,11 +210,14 @@ test('marketing site recovers refreshed docs URLs on static hosts', () => {
 });
 
 test('docs reader loads static public guides instead of bundling markdown', () => {
-  const docs = read('apps/web/src/lib/docs.ts');
+  const docs = read('apps/web/src/modules/docs/docs.ts');
   assert.doesNotMatch(docs, /\?raw/);
   assert.doesNotMatch(docs, /from ['"].+\.md['"]/);
   assert.match(docs, /src: '\/guides\/getting-started\.md'/);
-  assert.match(read('apps/web/src/pages/docs-page.tsx'), /fetch\(page\.src\)/);
+  assert.match(
+    read('apps/web/src/modules/docs/docs-page.tsx'),
+    /fetch\(page\.src\)/,
+  );
   assert.match(read('apps/web/vite.config.ts'), /copy-repo-guides/);
   for (const name of [
     'getting-started.md',

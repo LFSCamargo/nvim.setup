@@ -17,7 +17,7 @@ m = re.search(r'(\d+)\.(\d+)\.(\d+)', v)
 if not m or tuple(map(int, m.groups())) < (0, 26, 1):
     sys.exit('Tree-sitter CLI 0.26.1+ required. Use brew upgrade tree-sitter-cli or cargo install --locked tree-sitter-cli.')
 PY
-for cli in codex agent gemini claude opencode; do
+for cli in codex agent gemini claude opencode agy; do
   if ! command -v "$cli" > /dev/null 2>&1; then printf 'Optional CLI missing: %s (that startup chat will be unavailable)\n' "$cli"; fi
 done
 say 'Prerequisites OK. Ensure ~/.local/bin is on your PATH if using fdfind.'

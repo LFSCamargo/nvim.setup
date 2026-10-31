@@ -1,5 +1,5 @@
--- Headless installer: install any Mason packages listed in config.tooling that are missing.
-local names = require('config.tooling').packages
+-- Headless installer: install any Mason packages listed in modules.tooling that are missing.
+local names = require('modules.tooling').packages
 local registry = require('mason-registry')
 registry.refresh(function()
   for _, name in ipairs(names) do

@@ -8,13 +8,13 @@ for _, key in ipairs({ '<C-s>', '<C-t>', '<C-w>', '<C-]>', '<C-,>' }) do
   assert(vim.fn.maparg(key, 'n') ~= '', 'Missing keybinding: ' .. key)
 end
 for _, name in ipairs({
-  'config.agents',
-  'config.session',
-  'config.tabs',
-  'config.icons',
-  'config.statusline',
-  'config.format',
-  'config.settings',
+  'modules.agents',
+  'modules.session',
+  'modules.tabs',
+  'modules.icons',
+  'modules.statusline',
+  'modules.format',
+  'modules.settings',
   'cmp',
   'nvim-tree.api',
   'dap',
@@ -25,10 +25,10 @@ for _, name in ipairs({
   assert(pcall(require, name), 'Could not load module: ' .. name)
 end
 local registry = require('mason-registry')
-for _, name in ipairs(require('config.tooling').packages) do
+for _, name in ipairs(require('modules.tooling').packages) do
   assert(registry.get_package(name):is_installed(), 'Missing Mason package: ' .. name)
 end
-for _, lang in ipairs(require('config.tooling').parsers) do
+for _, lang in ipairs(require('modules.tooling').parsers) do
   assert(pcall(vim.treesitter.language.add, lang), 'Missing syntax parser: ' .. lang)
 end
 for _, pair in ipairs({ { 'vim', 'let g:example = 1' }, { 'zsh', 'export EXAMPLE=ok' } }) do
@@ -42,7 +42,7 @@ end
 -- Let deferred plugin highlights and transparency cleanup finish before checking.
 vim.defer_fn(function()
   local ok, err = pcall(function()
-    local appearance = require('config.appearance')
+    local appearance = require('modules.appearance')
     for name, hl in pairs(api.nvim_get_hl(0, { link = false })) do
       if not appearance.keeps_fill(name) then
         assert(not hl.bg and not hl.ctermbg and not hl.reverse, 'Unexpected background: ' .. name)
@@ -50,7 +50,7 @@ vim.defer_fn(function()
     end
     local visual = api.nvim_get_hl(0, { name = 'Visual', link = false })
     assert(visual.bg or visual.ctermbg or visual.reverse, 'Visual selection needs a background')
-    for _, name in ipairs(require('config.statusline').fill_highlights) do
+    for _, name in ipairs(require('modules.statusline').fill_highlights) do
       local hl = api.nvim_get_hl(0, { name = name, link = false })
       assert(hl.bg or hl.ctermbg, 'statusline fill missing: ' .. name)
     end
@@ -61,11 +61,11 @@ vim.defer_fn(function()
     assert(not winbar.bg and not winbar.ctermbg, 'WinBar must stay transparent')
     assert(not sep.bg and not sep.ctermbg, 'PaneTabSep must stay transparent')
     assert(not winbar.underline, 'WinBar must not use a bright underline')
-    local formatters = require('config.format').formatters_by_ft
+    local formatters = require('modules.format').formatters_by_ft
     assert(formatters.lua[1] == 'stylua', 'Lua must format with StyLua')
     assert(formatters.html[1] == 'prettierd', 'HTML must format with prettierd')
     assert(formatters.sh[1] == 'shfmt', 'shell must format with shfmt')
-    assert(vim.tbl_isempty(require('config.agents').sessions), 'Headless startup launched chats')
+    assert(vim.tbl_isempty(require('modules.agents').sessions), 'Headless startup launched chats')
     print('PASS: configuration, plugins, Mason tools, parsers, highlighting, transparency and shortcuts')
   end)
   if not ok then

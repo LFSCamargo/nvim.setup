@@ -10,7 +10,7 @@ Do not finish a change that leaves `docs/`, `README.md`, or `AGENTS.md` stale. U
 | If you change | Also update |
 | --- | --- |
 | Keymaps, buffer maps, user commands, or mouse actions (`keys.lua`, `sidebar.lua`, `settings.lua`, `lsp.lua`, `dap.lua`, `agents.lua`, `tabs.lua`) | `docs/EDITOR.md` keybinding tables. User-facing global shortcuts also go in `README.md`. |
-| A `nvim/lua/config/*.lua` module, a lazy plugin in `nvim/init.lua`, or Mason/parser lists in `tooling.lua` | `docs/PLUGINS.md`. New config modules also belong in the spaghetti list in `AGENTS.md`, `CLAUDE.md`, and `.cursor/rules/changing-files.mdc`. |
+| A `nvim/lua/modules/<name>/init.lua` module, a Lazy spec in `nvim/lua/modules/plugins/`, or Mason/parser lists in `tooling.lua` | `docs/PLUGINS.md`. New feature modules also belong in the spaghetti list in `AGENTS.md`, `CLAUDE.md`, and `.cursor/rules/changing-files.mdc`. |
 | `scripts/tests/e2e.lua`, `e2e-init.lua`, or `scripts/e2e.sh` | `docs/E2E-TESTPLAN.md` coverage matrix and “when you change X” rows. |
 | Layout, session restore, `--clean`, or Git sidebar behavior | `docs/EDITOR.md` plus `README.md` if users see it. |
 

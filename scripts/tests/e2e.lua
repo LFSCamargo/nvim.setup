@@ -39,22 +39,49 @@ end
 
 local ok, err = xpcall(function()
   request('nvim_ui_attach', 120, 40, { rgb = true })
+  assert(eval('return vim.o.more == false'), 'e2e-init must disable more so notify cannot hit-enter')
+  assert(
+    eval([[
+    local parsed
+    require('modules.sidebar.status').parse('## main\0 M changed.txt\0R  new.txt\0old.txt\0?? added.txt\0',
+      function() return true end,
+      function(branch, groups) parsed = { branch = branch, groups = groups } end)
+    assert(parsed and parsed.branch == 'main')
+    assert(parsed.groups.staged[1].path == 'new.txt' and parsed.groups.staged[1].old == 'old.txt')
+    assert(parsed.groups.unstaged[1].path == 'changed.txt' and parsed.groups.unstaged[2].path == 'added.txt')
+    local buf = vim.api.nvim_create_buf(false, true)
+    vim.bo[buf].modifiable = false
+    assert(require('modules.shared.buffer').replace(buf, { 'updated' }))
+    assert(vim.api.nvim_buf_get_lines(buf, 0, -1, false)[1] == 'updated' and not vim.bo[buf].modifiable)
+    vim.api.nvim_buf_delete(buf, { force = true })
+    return true
+  ]]),
+    'module parser and shared read-only buffer helper failed'
+  )
+  assert(
+    eval([[
+    local plugins = require('modules.plugins')
+    local first, second = plugins.specs(), plugins.specs()
+    return #first == #second and first[1][1] == 'ellisonleao/gruvbox.nvim'
+  ]]),
+    'plugin module must return stable specs on repeated reads'
+  )
   local visual = eval("return vim.api.nvim_get_hl(0, { name = 'Visual', link = false })")
   local normal = eval("return vim.api.nvim_get_hl(0, { name = 'Normal', link = false })")
   assert(visual.bg or visual.ctermbg or visual.reverse, 'Visual selection needs a background')
   assert(not normal.bg and not normal.ctermbg and not normal.reverse, 'Normal must stay transparent')
   wait_for('startup and chat sessions', function()
-    return eval("local a = require('config.agents'); return vim.tbl_count(a.sessions) == 2 and a.win ~= nil")
+    return eval("local a = require('modules.agents'); return vim.tbl_count(a.sessions) == 2 and a.win ~= nil")
   end)
-  local chat = eval("return require('config.agents').win")
+  local chat = eval("return require('modules.agents').win")
   local editor = request('nvim_get_current_win')
   assert(editor ~= chat, 'Startup should focus the editor')
   assert(
     eval([[
-    local want = math.max(1, math.floor(vim.o.columns * 0.25))
-    return vim.api.nvim_win_get_width(require('config.agents').win) == want
+    local want = math.max(1, math.floor(vim.o.columns * 0.28))
+    return vim.api.nvim_win_get_width(require('modules.agents').win) == want
   ]]),
-    'chat pane should be 25% of the editor width'
+    'chat pane should be 28% of the editor width'
   )
 
   local function statusline()
@@ -182,7 +209,7 @@ local ok, err = xpcall(function()
   ]])
   assert(files:find('Files', 1, true), 'statusline should name the Files tree: ' .. files)
   local chat_stl = eval([[
-    local win = require('config.agents').win
+    local win = require('modules.agents').win
     local prev = vim.api.nvim_get_current_win()
     vim.api.nvim_set_current_win(win)
     vim.cmd.stopinsert()
@@ -215,7 +242,7 @@ local ok, err = xpcall(function()
   assert(search:find('1/2', 1, true), 'statusline should show search matches: ' .. search)
   print('PASS: colorful statusline with mode, git, diagnostics, and file info')
 
-  local formatters = eval('return require("config.format").formatters_by_ft')
+  local formatters = eval('return require("modules.format").formatters_by_ft')
   assert(
     formatters.lua[1] == 'stylua',
     'Lua should format with StyLua, got: ' .. tostring(formatters.lua and formatters.lua[1])
@@ -241,8 +268,8 @@ local ok, err = xpcall(function()
       vim.api.nvim_get_option_value('winbar', { win = win }),
       { use_winbar = true, winid = win }
     ).str
-    local files = vim.api.nvim_eval_statusline(require('config.sidebar').winbar(), { use_winbar = true }).str
-    local chat = require('config.agents').win
+    local files = vim.api.nvim_eval_statusline(require('modules.sidebar').winbar(), { use_winbar = true }).str
+    local chat = require('modules.agents').win
     local chat_bar = vim.api.nvim_eval_statusline(
       vim.api.nvim_get_option_value('winbar', { win = chat }),
       { use_winbar = true, winid = chat }
@@ -322,29 +349,29 @@ local ok, err = xpcall(function()
   request('nvim_input_mouse', 'right', 'press', '', 0, tab_pos[1], tab_pos[2] + 4)
   request('nvim_input_mouse', 'right', 'release', '', 0, tab_pos[1], tab_pos[2] + 4)
   wait_for('right-clicking editor tab', function()
-    return eval("return require('config.context_menu').visible()")
+    return eval("return require('modules.context_menu').visible()")
   end)
   assert(
-    eval([[return vim.tbl_contains(require('config.context_menu').labels(), 'Close tab')]]),
+    eval([[return vim.tbl_contains(require('modules.context_menu').labels(), 'Close tab')]]),
     'editor tab right-click menu missing Close tab'
   )
   request('nvim_input', '<Esc>')
   wait_for('closing editor tab menu', function()
-    return eval("return not require('config.context_menu').visible()")
+    return eval("return not require('modules.context_menu').visible()")
   end)
   local chat_pos = request('nvim_win_get_position', chat)
   request('nvim_input_mouse', 'right', 'press', '', 0, chat_pos[1], chat_pos[2] + 4)
   request('nvim_input_mouse', 'right', 'release', '', 0, chat_pos[1], chat_pos[2] + 4)
   wait_for('right-clicking chat tab', function()
-    return eval("return require('config.context_menu').visible()")
+    return eval("return require('modules.context_menu').visible()")
   end)
   assert(
-    eval([[return vim.tbl_contains(require('config.context_menu').labels(), 'Close chat')]]),
+    eval([[return vim.tbl_contains(require('modules.context_menu').labels(), 'Close chat')]]),
     'chat tab right-click menu missing Close chat'
   )
   request('nvim_input', '<Esc>')
   wait_for('closing chat tab menu', function()
-    return eval("return not require('config.context_menu').visible()")
+    return eval("return not require('modules.context_menu').visible()")
   end)
   request('nvim_input_mouse', 'left', 'press', '', 0, tab_pos[1], tab_pos[2] + tabs.close_col)
   request('nvim_input_mouse', 'left', 'release', '', 0, tab_pos[1], tab_pos[2] + tabs.close_col)
@@ -426,7 +453,7 @@ local ok, err = xpcall(function()
   wait_for('clicking the current chat restores input', function()
     return request('nvim_get_mode').mode == 't'
   end)
-  eval("require('config.agents').show(2)")
+  eval("require('modules.agents').show(2)")
   wait_for('second chat input', function()
     return eval('return vim.b.chat_id') == 2 and request('nvim_get_mode').mode == 't'
   end)
@@ -434,13 +461,13 @@ local ok, err = xpcall(function()
   print('PASS: local chat config, mouse focus, Escape delivery and terminal mode')
 
   -- Process exit (Ctrl+C in the CLI) must close that chat tab, not leave "(exited)".
-  local closed_id = eval("return require('config.agents').active")
-  local closed_buf = eval(string.format('return require("config.agents").sessions[%d].buf', closed_id))
-  eval(string.format('vim.fn.jobstop(require("config.agents").sessions[%d].job)', closed_id))
+  local closed_id = eval("return require('modules.agents').active")
+  local closed_buf = eval(string.format('return require("modules.agents").sessions[%d].buf', closed_id))
+  eval(string.format('vim.fn.jobstop(require("modules.agents").sessions[%d].job)', closed_id))
   wait_for('exited agent chat tab to close', function()
     return eval(string.format(
       [[
-      local a = require('config.agents')
+      local a = require('modules.agents')
       return a.sessions[%d] == nil
         and not vim.api.nvim_buf_is_valid(%d)
         and vim.tbl_count(a.sessions) == 1
@@ -457,18 +484,18 @@ local ok, err = xpcall(function()
   end)
   print('PASS: agent process exit closes the chat tab')
 
-  eval("require('config.agents').new('cursor')")
+  eval("require('modules.agents').new('cursor')")
   wait_for('extra agent tab', function()
-    return eval('return vim.tbl_count(require("config.agents").sessions) == 2')
+    return eval('return vim.tbl_count(require("modules.agents").sessions) == 2')
   end)
-  local leftover_id = eval("return require('config.agents').active")
-  local leftover_buf = eval(string.format('return require("config.agents").sessions[%d].buf', leftover_id))
-  eval(string.format('require("config.agents").sessions[%d].exited = true', leftover_id))
-  eval(string.format('require("config.agents").show(%d)', leftover_id))
+  local leftover_id = eval("return require('modules.agents').active")
+  local leftover_buf = eval(string.format('return require("modules.agents").sessions[%d].buf', leftover_id))
+  eval(string.format('require("modules.agents").sessions[%d].exited = true', leftover_id))
+  eval(string.format('require("modules.agents").show(%d)', leftover_id))
   wait_for('clicking an exited chat tab to close it', function()
     return eval(string.format(
       [[
-      local a = require('config.agents')
+      local a = require('modules.agents')
       return a.sessions[%d] == nil and not vim.api.nvim_buf_is_valid(%d)
     ]],
       leftover_id,
@@ -477,15 +504,15 @@ local ok, err = xpcall(function()
   end)
   print('PASS: clicking an exited chat tab closes it')
 
-  eval("require('config.agents').new('cursor')")
+  eval("require('modules.agents').new('cursor')")
   wait_for('orphan agent tab', function()
-    return eval('return vim.tbl_count(require("config.agents").sessions) >= 2')
+    return eval('return vim.tbl_count(require("modules.agents").sessions) >= 2')
   end)
-  local orphan_id = eval("return require('config.agents').active")
-  local orphan_buf = eval(string.format('return require("config.agents").sessions[%d].buf', orphan_id))
+  local orphan_id = eval("return require('modules.agents').active")
+  local orphan_buf = eval(string.format('return require("modules.agents").sessions[%d].buf', orphan_id))
   eval(string.format(
     [[
-    local a = require('config.agents')
+    local a = require('modules.agents')
     local id, buf = %d, %d
     a.sessions[id].exited = true
     a.sessions[id] = nil
@@ -504,7 +531,7 @@ local ok, err = xpcall(function()
 
   request('nvim_set_current_win', editor)
   eval([[
-    local session = require('config.session')
+    local session = require('modules.session')
     local dir = session.dir()
     assert(dir:find('nvim-setup-sessions', 1, true), 'session dir should be under nvim-setup-sessions')
     assert(not dir:find(vim.fn.getcwd(), 1, true), 'session dir must hash cwd, not embed the path')
@@ -553,10 +580,10 @@ local ok, err = xpcall(function()
     assert(session.clean(), 'NVIM_CLEAN=1 should mark a clean launch')
     assert(session.restore() == false, 'clean launch must skip restore')
     assert(vim.o.swapfile == false, 'clean launch must still disable swap files')
-    local chats = vim.tbl_count(require('config.agents').sessions)
+    local chats = vim.tbl_count(require('modules.agents').sessions)
     session.save()
     assert(table.concat(vim.fn.readfile(session.file()), '\n') == before, 'clean launch must not clobber the session')
-    assert(vim.tbl_count(require('config.agents').sessions) == chats, 'clean restore must not spawn chats')
+    assert(vim.tbl_count(require('modules.agents').sessions) == chats, 'clean restore must not spawn chats')
     vim.env.NVIM_CLEAN = nil
   ]])
 
@@ -582,15 +609,15 @@ local ok, err = xpcall(function()
     }
     local system = vim.system
     vim.system = function(_, _, cb) vim.defer_fn(function() cb({ code = 0, stdout = '/late\n' }) end, 300) end
-    local sidebar = require('config.sidebar')
+    local sidebar = require('modules.sidebar')
     sidebar.git()
     assert(table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), '\n'):find('Loading', 1, true), 'loading indicator missing')
     sidebar.files()
     vim.system = system
   ]])
   vim.wait(500)
-  assert(eval("return require('config.sidebar').view") == 'files', 'late Git result reopened the sidebar')
-  eval("require('config.sidebar').git()")
+  assert(eval("return require('modules.sidebar').view") == 'files', 'late Git result reopened the sidebar')
+  eval("require('modules.sidebar').git()")
   wait_for('Git changes', function()
     return eval([[
       for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
@@ -605,7 +632,7 @@ local ok, err = xpcall(function()
   end)
   assert(
     eval([[
-    local want = require('config.sidebar').width()
+    local want = require('modules.sidebar').width()
     for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
       if vim.bo[vim.api.nvim_win_get_buf(win)].filetype == 'git-changes' then
         return vim.api.nvim_win_get_width(win) == want and want == math.max(1, math.floor(vim.o.columns * 0.20))
@@ -617,7 +644,7 @@ local ok, err = xpcall(function()
   )
   assert(
     eval([[
-    local want = require('config.sidebar').log_height()
+    local want = require('modules.sidebar').log_height()
     for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
       if vim.bo[vim.api.nvim_win_get_buf(win)].filetype == 'git-log' then
         return vim.api.nvim_win_get_height(win) == want and want == math.max(3, math.floor(vim.o.lines * 0.30))
@@ -627,9 +654,9 @@ local ok, err = xpcall(function()
   ]]),
     'Git log pane should be 30% of the editor height'
   )
-  local gen = eval("return require('config.sidebar').generation")
-  eval("require('config.sidebar').git()")
-  assert(eval("return require('config.sidebar').generation") > gen, 'clicking Git should refresh')
+  local gen = eval("return require('modules.sidebar').generation")
+  eval("require('modules.sidebar').git()")
+  assert(eval("return require('modules.sidebar').generation") > gen, 'clicking Git should refresh')
   wait_for('Git sidebar after focusing Git', function()
     return eval([[
       for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
@@ -642,9 +669,9 @@ local ok, err = xpcall(function()
       return false
     ]])
   end)
-  gen = eval("return require('config.sidebar').generation")
+  gen = eval("return require('modules.sidebar').generation")
   eval([[
-    local win = require('config.tabs').editor_win()
+    local win = require('modules.tabs').editor_win()
     if win then vim.api.nvim_set_current_win(win) end
   ]])
   eval([[
@@ -657,7 +684,7 @@ local ok, err = xpcall(function()
     error('git list window missing')
   ]])
   wait_for('Git sidebar refresh after focusing from the editor', function()
-    return eval("return require('config.sidebar').generation") > gen
+    return eval("return require('modules.sidebar').generation") > gen
   end)
   wait_for('Git changes after focusing the git list', function()
     return eval([[
@@ -764,31 +791,62 @@ local ok, err = xpcall(function()
     request('nvim_input_mouse', 'right', 'press', '', 0, sp.row - 1, sp.col - 1)
     request('nvim_input_mouse', 'right', 'release', '', 0, sp.row - 1, sp.col - 1)
   end
+  for _, key in ipairs({ 'v', 'V', '<C-v>' }) do
+    focus_git_list()
+    request('nvim_input', key)
+    vim.wait(80)
+    assert(request('nvim_get_mode').mode == 'n', 'Git file list entered visual mode with ' .. key)
+  end
+  focus_git_list()
+  eval("vim.cmd('normal! v')")
+  wait_for('Git list exits visual mode entered outside mappings', function()
+    return request('nvim_get_mode').mode == 'n'
+  end)
+  focus_log()
+  for _, key in ipairs({ 'v', 'V', '<C-v>' }) do
+    request('nvim_input', key)
+    vim.wait(80)
+    assert(request('nvim_get_mode').mode == 'n', 'Git commit log entered visual mode with ' .. key)
+  end
+  eval([[
+    for _, win in ipairs(vim.api.nvim_list_wins()) do
+      if vim.bo[vim.api.nvim_win_get_buf(win)].filetype == 'git-composer' then
+        vim.api.nvim_set_current_win(win)
+        return
+      end
+    end
+  ]])
+  request('nvim_input', 'v')
+  wait_for('visual mode still available in commit message', function()
+    return request('nvim_get_mode').mode == 'v'
+  end)
+  request('nvim_input', '<Esc>')
+  focus_git_list()
   assert(
     sidebar_line('Staged Changes') > 0 and sidebar_line('deleted.txt') > 0 and sidebar_line('new.txt') > 0,
     'Git sections or changes missing'
   )
   right_click_sidebar(sidebar_line('changed file.txt'), 10)
   wait_for('Git right-click menu', function()
-    return eval("return require('config.context_menu').visible()")
+    return eval("return require('modules.context_menu').visible()")
   end)
   assert(
-    eval([[return vim.tbl_contains(require('config.context_menu').labels(), 'Stage file')]]),
+    eval([[return vim.tbl_contains(require('modules.context_menu').labels(), 'Stage file')]]),
     'unstaged Git menu should offer Stage file'
   )
   request('nvim_input', '<CR>')
   wait_for('Git menu Check Diff action', function()
-    return eval("return require('config.diff').active()")
+    return eval("return require('modules.diff').active()")
   end)
-  eval("require('config.sidebar').close_diff()")
+  eval("require('modules.sidebar').close_diff()")
   focus_git_line('changed file.txt')
   request('nvim_input', '<S-F10>')
   wait_for('keyboard context menu', function()
-    return eval("return require('config.context_menu').visible()")
+    return eval("return require('modules.context_menu').visible()")
   end)
   request('nvim_input', '<Esc>')
   wait_for('dismiss keyboard context menu', function()
-    return eval("return not require('config.context_menu').visible()")
+    return eval("return not require('modules.context_menu').visible()")
   end)
   eval([[
     package.loaded['e2e-tree-api-before-menu'] = package.loaded['nvim-tree.api']
@@ -804,22 +862,22 @@ local ok, err = xpcall(function()
         get_node_under_cursor = function() return { type = 'file', absolute_path = vim.env.E2E_DIR .. '/repo/app.ts' } end,
       },
     }
-    require('config.context_menu').tree({ type = 'file', absolute_path = vim.env.E2E_DIR .. '/repo/app.ts' })
+    require('modules.context_menu').tree({ type = 'file', absolute_path = vim.env.E2E_DIR .. '/repo/app.ts' })
   ]])
   assert(
-    eval([[return vim.tbl_contains(require('config.context_menu').labels(), 'Rename')]]),
+    eval([[return vim.tbl_contains(require('modules.context_menu').labels(), 'Rename')]]),
     'file tree menu should offer Rename'
   )
-  eval([[require('config.context_menu').select(4)]])
+  eval([[require('modules.context_menu').select(4)]])
   wait_for('tree menu rename action', function()
     return eval('return vim.g.context_tree_action') == 'rename'
   end)
-  eval([[require('config.context_menu').tree({ type = 'directory', absolute_path = vim.env.E2E_DIR .. '/repo' })]])
+  eval([[require('modules.context_menu').tree({ type = 'directory', absolute_path = vim.env.E2E_DIR .. '/repo' })]])
   assert(
-    eval([[return vim.tbl_contains(require('config.context_menu').labels(), 'Expand / collapse')]]),
+    eval([[return vim.tbl_contains(require('modules.context_menu').labels(), 'Expand / collapse')]]),
     'folder menu should offer expand/collapse'
   )
-  eval([[require('config.context_menu').select(1)]])
+  eval([[require('modules.context_menu').select(1)]])
   wait_for('folder menu action', function()
     return eval('return vim.g.context_tree_action') == 'toggle'
   end)
@@ -830,50 +888,50 @@ local ok, err = xpcall(function()
     vim.api.nvim_win_set_buf(win, buf)
     vim.api.nvim_buf_set_lines(buf, 0, -1, false, { 'app.ts' })
     vim.bo[buf].filetype = 'NvimTree'
-    require('config.sidebar').tree_setup().on_attach(buf)
+    require('modules.sidebar').tree_setup().on_attach(buf)
     vim.g.e2e_tree_win = win
   ]])
   local tree_pos = eval([[return vim.fn.screenpos(vim.g.e2e_tree_win, 1, 1)]])
   request('nvim_input_mouse', 'right', 'press', '', 0, tree_pos.row, tree_pos.col - 1)
   request('nvim_input_mouse', 'right', 'release', '', 0, tree_pos.row, tree_pos.col - 1)
   wait_for('file tree right-click menu', function()
-    return eval("return require('config.context_menu').visible()")
+    return eval("return require('modules.context_menu').visible()")
   end)
   assert(
-    eval([[return vim.tbl_contains(require('config.context_menu').labels(), 'Open file')]]),
+    eval([[return vim.tbl_contains(require('modules.context_menu').labels(), 'Open file')]]),
     'tree right-click menu missing Open file'
   )
-  eval("require('config.context_menu').close(true)")
+  eval("require('modules.context_menu').close(true)")
   eval([[vim.api.nvim_win_close(vim.g.e2e_tree_win, true)]])
   eval("package.loaded['nvim-tree.api'] = package.loaded['e2e-tree-api-before-menu']")
-  eval("require('config.sidebar').git()")
+  eval("require('modules.sidebar').git()")
   wait_for('Git list after tree context test', function()
     return sidebar_text():find('changed file.txt', 1, true) ~= nil
   end)
   eval([[
-    local win = require('config.tabs').editor_win()
+    local win = require('modules.tabs').editor_win()
     _G.EditorTabClick(vim.api.nvim_win_get_buf(win), 0, 'r')
   ]])
   assert(
-    eval([[return vim.tbl_contains(require('config.context_menu').labels(), 'Close other editor tabs')]]),
+    eval([[return vim.tbl_contains(require('modules.context_menu').labels(), 'Close other editor tabs')]]),
     'editor tab menu should offer tab actions'
   )
-  eval("require('config.context_menu').close(true)")
+  eval("require('modules.context_menu').close(true)")
   eval([[
-    local id = vim.tbl_keys(require('config.agents').sessions)[1]
+    local id = vim.tbl_keys(require('modules.agents').sessions)[1]
     _G.ChatTabClick(id, 0, 'r')
   ]])
   assert(
-    eval([[return vim.tbl_contains(require('config.context_menu').labels(), 'Close chat')]]),
+    eval([[return vim.tbl_contains(require('modules.context_menu').labels(), 'Close chat')]]),
     'chat tab menu should offer Close chat'
   )
-  eval("require('config.context_menu').close(true)")
+  eval("require('modules.context_menu').close(true)")
   eval("_G.SidebarFiles(0, 0, 'r')")
   assert(
-    eval([[return vim.tbl_contains(require('config.context_menu').labels(), 'Open files')]]),
+    eval([[return vim.tbl_contains(require('modules.context_menu').labels(), 'Open files')]]),
     'sidebar tab menu should offer its view'
   )
-  eval("require('config.context_menu').close(true)")
+  eval("require('modules.context_menu').close(true)")
   wait_for('commit graph', function()
     local text = log_text()
     return log_line('COMMITS') > 0 and text:find('initial', 1, true) ~= nil
@@ -896,7 +954,7 @@ local ok, err = xpcall(function()
           and type(icons.glyphs.folder.default) == 'string'
           and type(icons.glyphs.folder.open) == 'string'
       end
-      local icons = require('config.icons')
+      local icons = require('modules.icons')
       if not folder_ok(icons.tree_icons()) then return false end
       local live = package.loaded['nvim-tree.config']
       local drawn = live and live.g and live.g.renderer and live.g.renderer.icons
@@ -905,15 +963,15 @@ local ok, err = xpcall(function()
   end
   assert(tree_icons_safe(), 'Files sidebar should show colored file type icons')
   assert(
-    eval("return require('config.sidebar').tree_setup().renderer.highlight_git") == 'name',
+    eval("return require('modules.sidebar').tree_setup().renderer.highlight_git") == 'name',
     'Files tree should color names from git status, not icons'
   )
   assert(
-    eval("return require('config.sidebar').tree_setup().renderer.root_folder_label") == false,
+    eval("return require('modules.sidebar').tree_setup().renderer.root_folder_label") == false,
     'Files tree should not show the project path/.. root label'
   )
   assert(
-    eval("return require('config.sidebar').tree_setup().renderer.highlight_opened_files") == 'none',
+    eval("return require('modules.sidebar').tree_setup().renderer.highlight_opened_files") == 'none',
     'opened files should not get a non-git color'
   )
   assert(
@@ -995,18 +1053,18 @@ local ok, err = xpcall(function()
     'change colors missing'
   )
   local function diff_text()
-    return eval([[local buf = require('config.diff').buffer()
+    return eval([[local buf = require('modules.diff').buffer()
       return buf and table.concat(vim.api.nvim_buf_get_lines(buf, 0, -1, false), '\n') or '' ]])
   end
   local windows_before_diff = eval('return #vim.api.nvim_tabpage_list_wins(0)')
-  local previous_editor_buf = eval("return vim.api.nvim_win_get_buf(require('config.tabs').editor_win())")
+  local previous_editor_buf = eval("return vim.api.nvim_win_get_buf(require('modules.tabs').editor_win())")
   click_sidebar(sidebar_line('[Check Diff]'), 6)
   wait_for('diff button to open in editor', function()
     return diff_text():find('Unstaged diff:', 1, true) and diff_text():find('%+after')
   end)
   assert(
-    eval([[local tabs = require('config.tabs')
-    return vim.api.nvim_win_get_buf(tabs.editor_win()) == require('config.diff').buffer()]]),
+    eval([[local tabs = require('modules.tabs')
+    return vim.api.nvim_win_get_buf(tabs.editor_win()) == require('modules.diff').buffer()]]),
     'diff must open in editor pane'
   )
   assert(eval('return #vim.api.nvim_tabpage_list_wins(0)') == windows_before_diff, 'diff must not create a split')
@@ -1022,10 +1080,10 @@ local ok, err = xpcall(function()
   assert(close_line > 0, 'Close Diff button missing')
   click_sidebar(close_line, 6)
   wait_for('closing diff restores editor tab', function()
-    return eval("return not require('config.diff').active()")
+    return eval("return not require('modules.diff').active()")
   end)
   assert(
-    eval("return vim.api.nvim_win_get_buf(require('config.tabs').editor_win())") == previous_editor_buf,
+    eval("return vim.api.nvim_win_get_buf(require('modules.tabs').editor_win())") == previous_editor_buf,
     'Close Diff should restore previous editor tab'
   )
   focus_git_line('changed file.txt')
@@ -1033,10 +1091,10 @@ local ok, err = xpcall(function()
   wait_for('d opens selected file diff', function()
     return diff_text():find('changed file.txt', 1, true) and diff_text():find('%+after')
   end)
-  eval("vim.api.nvim_set_current_win(require('config.tabs').editor_win())")
+  eval("vim.api.nvim_set_current_win(require('modules.tabs').editor_win())")
   request('nvim_input', '<C-w>')
   wait_for('Ctrl-W closes diff tab', function()
-    return eval("return not require('config.diff').active()")
+    return eval("return not require('modules.diff').active()")
   end)
   click_sidebar(sidebar_line('Changes  ('), 2)
   wait_for('collapsing changes with mouse', function()
@@ -1047,13 +1105,38 @@ local ok, err = xpcall(function()
   wait_for('expanding changes with mouse', function()
     return sidebar_line('changed file.txt') > 0
   end)
+  focus_git_line('changed file.txt')
+  eval([[
+    local original = vim.system
+    package.loaded['e2e-git-system'] = original
+    vim.g.e2e_git_status_delayed = false
+    vim.system = function(args, opts, callback)
+      if args[4] == 'status' and not vim.g.e2e_git_status_delayed then
+        vim.g.e2e_git_status_delayed = true
+        return original(args, opts, function(result)
+          vim.defer_fn(function() callback(result) end, 400)
+        end)
+      end
+      return original(args, opts, callback)
+    end
+    require('modules.sidebar').refresh()
+  ]])
+  wait_for('delayed Git status refresh', function()
+    return eval('return vim.g.e2e_git_status_delayed') == true
+  end)
+  assert(sidebar_text():find('changed file.txt', 1, true), 'Git refresh must keep the clickable file list visible')
   click_sidebar(sidebar_line('changed file.txt'), 2)
+  eval("vim.system = package.loaded['e2e-git-system']")
   wait_for('staging from Git sidebar', function()
     local result = vim
       .system({ 'git', '-C', vim.env.E2E_DIR .. '/repo', 'diff', '--cached', '--name-only' }, { text = true })
       :wait()
     return result.stdout:find('changed file.txt', 1, true) ~= nil
   end)
+  assert(
+    eval('return vim.bo.filetype') == 'git-changes' and request('nvim_get_mode').mode == 'n',
+    'single Git click during refresh should keep focus and normal mode in the file list'
+  )
   wait_for('Git sidebar refresh', function()
     return sidebar_text():find('M  T changed file.txt', 1, true) ~= nil
   end)
@@ -1106,10 +1189,10 @@ local ok, err = xpcall(function()
   end)
   right_click_sidebar(sidebar_line('new.txt'), 10)
   wait_for('staged Git context menu', function()
-    return eval("return require('config.context_menu').visible()")
+    return eval("return require('modules.context_menu').visible()")
   end)
   assert(
-    eval([[return vim.tbl_contains(require('config.context_menu').labels(), 'Unstage file')]]),
+    eval([[return vim.tbl_contains(require('modules.context_menu').labels(), 'Unstage file')]]),
     'staged Git menu should offer Unstage file'
   )
   request('nvim_input', '<Esc>')
@@ -1118,7 +1201,7 @@ local ok, err = xpcall(function()
   wait_for('staged new file diff', function()
     return diff_text():find('Staged diff: new.txt', 1, true) and diff_text():find('%+new')
   end)
-  eval("require('config.sidebar').close_diff()")
+  eval("require('modules.sidebar').close_diff()")
   eval([[
     for _, win in ipairs(vim.api.nvim_list_wins()) do
       local buf = vim.api.nvim_win_get_buf(win)
@@ -1147,26 +1230,26 @@ local ok, err = xpcall(function()
     return log_text():find('e2e commit from sidebar', 1, true) ~= nil
   end)
   focus_log_line('e2e commit from sidebar')
-  eval("require('config.sidebar').context_menu('log')")
+  eval("require('modules.sidebar').context_menu('log')")
   assert(
-    eval([[return vim.tbl_contains(require('config.context_menu').labels(), 'Copy commit hash')]]),
+    eval([[return vim.tbl_contains(require('modules.context_menu').labels(), 'Copy commit hash')]]),
     'commit log menu should offer hash action'
   )
   request('nvim_input', '<Esc>')
   local function in_mid_editor()
     return eval([[
-      local tabs = require('config.tabs')
+      local tabs = require('modules.tabs')
       local win = vim.api.nvim_get_current_win()
       local ft = vim.bo[vim.api.nvim_win_get_buf(win)].filetype
       return win == tabs.editor_win()
-        and win ~= require('config.agents').win
+        and win ~= require('modules.agents').win
         and ft ~= 'git-changes' and ft ~= 'git-log' and ft ~= 'git-composer' and ft ~= 'NvimTree' and ft ~= 'setup-settings'
     ]])
   end
   local function has_editor_tab()
     return eval([[
       for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-        if require('config.tabs').editor_buf(buf) then return true end
+        if require('modules.tabs').editor_buf(buf) then return true end
       end
       return false
     ]])
@@ -1182,7 +1265,7 @@ local ok, err = xpcall(function()
     eval('return #vim.api.nvim_tabpage_list_wins(0)') == wins_before_open,
     'git file should reuse the mid editor, not split'
   )
-  eval("require('config.sidebar').git()")
+  eval("require('modules.sidebar').git()")
   wait_for('Git sidebar after opening a file', function()
     return sidebar_line('changed file.txt') > 0 and log_text():find('e2e commit from sidebar', 1, true) ~= nil
   end)
@@ -1195,7 +1278,7 @@ local ok, err = xpcall(function()
     ]])
   end)
   assert(in_mid_editor(), 'git commit should open in the mid editor')
-  eval("require('config.sidebar').git()")
+  eval("require('modules.sidebar').git()")
   wait_for('Git sidebar after showing a commit', function()
     return sidebar_line('changed file.txt') > 0
   end)
@@ -1207,10 +1290,10 @@ local ok, err = xpcall(function()
   assert(in_mid_editor(), 'git file after a commit view should open in the mid editor')
   eval('vim.cmd("quit")')
   wait_for('keeping the editor pane after :q', function()
-    return eval("return require('config.tabs').editor_win() ~= nil") and has_editor_tab()
+    return eval("return require('modules.tabs').editor_win() ~= nil") and has_editor_tab()
   end)
   eval([[
-    local tabs = require('config.tabs')
+    local tabs = require('modules.tabs')
     local win = tabs.ensure()
     local scratch = vim.api.nvim_create_buf(false, true)
     if win then vim.api.nvim_win_set_buf(win, scratch) end
@@ -1224,7 +1307,7 @@ local ok, err = xpcall(function()
   wait_for('no editor tabs remaining', function()
     return not has_editor_tab()
   end)
-  eval("require('config.sidebar').git()")
+  eval("require('modules.sidebar').git()")
   wait_for('Git sidebar after closing editor tabs', function()
     return sidebar_line('changed file.txt') > 0
   end)
@@ -1235,7 +1318,7 @@ local ok, err = xpcall(function()
   end)
   assert(in_mid_editor(), 'git file should open in a new mid-editor tab')
   assert(has_editor_tab(), 'opening from git should add a tab when none remain')
-  eval("require('config.sidebar').git()")
+  eval("require('modules.sidebar').git()")
   wait_for('Git sidebar after opening a file with no tabs', function()
     return sidebar_line('changed file.txt') > 0
   end)
@@ -1267,33 +1350,33 @@ local ok, err = xpcall(function()
       and sidebar_line('changed file.txt') == 0
       and sidebar_line('deleted.txt') > 0
   end)
-  eval("require('config.sidebar').files()")
-  eval("require('config.tabs').focus()")
+  eval("require('modules.sidebar').files()")
+  eval("require('modules.tabs').focus()")
   print('PASS: asynchronous Git sidebar, switching, staging and opening files')
 
   assert(eval("return vim.fn.exists(':IconTheme')") == 0, 'icon pack picker should be removed')
   assert(eval("return vim.fn.maparg('<C-S-i>', 'n')") == '', 'Ctrl+Shift+I should not switch icon packs')
-  assert(eval("return require('config.icons').file_icon('app.ts')") == 'S', 'Devicons should mark .ts files')
-  assert(eval("return require('config.icons').file_icon('lib.rs')") == 'R', 'Devicons should mark .rs files')
+  assert(eval("return require('modules.icons').file_icon('app.ts')") == 'S', 'Devicons should mark .ts files')
+  assert(eval("return require('modules.icons').file_icon('lib.rs')") == 'R', 'Devicons should mark .rs files')
   assert(
-    eval("local _, hl = require('config.icons').file_icon('app.ts'); return hl") == 'DevIconTest',
+    eval("local _, hl = require('modules.icons').file_icon('app.ts'); return hl") == 'DevIconTest',
     'Devicons should return a type color group'
   )
-  assert(eval("return require('config.icons').tree_icons().web_devicons.file.enable") == true)
+  assert(eval("return require('modules.icons').tree_icons().web_devicons.file.enable") == true)
   assert(
-    eval("return require('config.icons').tree_icons().web_devicons.file.color") == true,
+    eval("return require('modules.icons').tree_icons().web_devicons.file.color") == true,
     'Files icons should keep file-type colors'
   )
   assert(
-    eval("return require('config.icons').tree_icons().web_devicons.folder.enable") == false,
+    eval("return require('modules.icons').tree_icons().web_devicons.folder.enable") == false,
     'folders must not use file Devicons'
   )
   assert(tree_icons_safe(), 'Files sidebar should keep nvim-tree folder icons')
-  assert(eval("return require('config.icons').tree_icons().show.folder_arrow") == true)
-  assert(eval("return require('config.icons').tree_icons().glyphs.folder.arrow_closed") == '>')
+  assert(eval("return require('modules.icons').tree_icons().show.folder_arrow") == true)
+  assert(eval("return require('modules.icons').tree_icons().glyphs.folder.arrow_closed") == '>')
   print('PASS: Devicons only, one-cell Nerd Font glyphs')
 
-  eval("require('config.sidebar').settings()")
+  eval("require('modules.sidebar').settings()")
   wait_for('Settings sidebar', function()
     return eval('return vim.bo.filetype') == 'setup-settings'
   end)
@@ -1312,16 +1395,16 @@ local ok, err = xpcall(function()
   eval('vim.api.nvim_win_set_cursor(0, {5, 0})')
   request('nvim_input', '<CR>')
   wait_for('icons off from Settings', function()
-    return eval("return require('config.settings').get().icons") == false
-      and eval("return require('config.icons').file_icon('app.ts')") == ' '
+    return eval("return require('modules.settings').get().icons") == false
+      and eval("return require('modules.icons').file_icon('app.ts')") == ' '
   end)
   assert(
-    eval("return require('config.icons').tree_icons().web_devicons.file.enable") == false,
+    eval("return require('modules.icons').tree_icons().web_devicons.file.enable") == false,
     'Files tree should hide Devicons when icons are off'
   )
   assert(eval('return vim.o.background') == 'dark', 'Settings must not change the colorscheme')
   local saved = eval([[
-    local path = require('config.settings').file()
+    local path = require('modules.settings').file()
     return table.concat(vim.fn.readfile(path), '\n')
   ]])
   assert(not saved:find('theme', 1, true), 'settings.json should not persist theme')
@@ -1330,7 +1413,7 @@ local ok, err = xpcall(function()
     'settings.json should persist icons'
   )
   eval([[
-    local path = require('config.settings').file()
+    local path = require('modules.settings').file()
     vim.fn.writefile({ '{"theme":"light","icons":true}' }, path)
   ]])
   eval([[for i, line in ipairs(vim.api.nvim_buf_get_lines(0, 0, -1, false)) do
@@ -1338,23 +1421,23 @@ local ok, err = xpcall(function()
   end]])
   request('nvim_input', '<CR>')
   wait_for('reload settings from disk', function()
-    return eval("return require('config.settings').get().icons") == true
-      and eval("return require('config.icons').file_icon('app.ts')") == 'S'
+    return eval("return require('modules.settings').get().icons") == true
+      and eval("return require('modules.icons').file_icon('app.ts')") == 'S'
   end)
   assert(eval('return vim.o.background') == 'dark', 'Reload must ignore a leftover theme in settings.json')
   request('nvim_input', 'q')
   wait_for('return to Files from Settings', function()
-    return eval("return require('config.sidebar').view") == 'files'
+    return eval("return require('modules.sidebar').view") == 'files'
   end)
   assert(eval("return vim.fn.exists(':SetupSettings')") == 2, ':SetupSettings should open the Settings tab')
   assert(eval("return vim.fn.maparg('<C-,>', 'n')") ~= '', 'Ctrl+, should open Settings')
   assert(eval("return vim.fn.maparg('<leader>p', 'n')") ~= '', 'Command palette should have a terminal-safe shortcut')
   assert(eval("return vim.fn.exists(':CommandPalette')") == 2, 'Command palette command missing')
-  assert(eval("return require('config.settings').set('indent', 4)") == true, 'Indent setting should save')
+  assert(eval("return require('modules.settings').set('indent', 4)") == true, 'Indent setting should save')
   assert(eval('return vim.o.shiftwidth') == 4, 'Indent setting should apply immediately')
-  assert(eval("return require('config.settings').reset('indent')") == true, 'Indent setting should reset')
+  assert(eval("return require('modules.settings').reset('indent')") == true, 'Indent setting should reset')
   assert(eval('return vim.o.shiftwidth') == 2, 'Indent default should be restored')
-  eval("require('config.sidebar').extensions()")
+  eval("require('modules.sidebar').extensions()")
   wait_for('Extensions sidebar', function()
     return eval('return vim.bo.filetype') == 'setup-extensions'
   end)
@@ -1375,7 +1458,7 @@ local ok, err = xpcall(function()
       get_package = function(name) assert(name == 'test-tool'); return pkg end,
       is_installed = function(name) return name == 'test-tool' and installed end,
     }
-    require('config.extensions').search_mason('test')
+    require('modules.extensions').search_mason('test')
   ]])
   assert(
     eval([[return table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), '\n'):find('MARKETPLACE', 1, true) ~= nil]]),
@@ -1404,27 +1487,65 @@ local ok, err = xpcall(function()
       return lines[3] == '  > other' and table.concat(lines, '\n'):find('other-tool', 1, true) ~= nil]])
   end)
   eval("package.loaded['mason-registry'] = nil")
-  assert(eval("return require('config.extensions').add('../unsafe')") == false, 'Reject unsafe plugin IDs')
+  assert(eval("return require('modules.extensions').add('../unsafe')") == false, 'Reject unsafe plugin IDs')
   assert(
     eval(
-      [[return #require('config.extensions').parse_search('{"items":[{"full_name":"folke/todo-comments.nvim","description":"TODO tools"},{"full_name":"../unsafe"}]}')]]
+      [[return #require('modules.extensions').parse_search('{"items":[{"full_name":"folke/todo-comments.nvim","description":"TODO tools"},{"full_name":"../unsafe"}]}')]]
     ) == 1,
     'Search results must reject unsafe repositories'
   )
-  assert(eval("return require('config.extensions').add('folke/todo-comments.nvim')") == true, 'Add user plugin')
+  assert(eval("return require('modules.extensions').add('folke/todo-comments.nvim')") == true, 'Add user plugin')
   assert(
-    eval("return require('config.extensions').specs()[1][1]") == 'folke/todo-comments.nvim',
+    eval("return require('modules.extensions').specs()[1][1]") == 'folke/todo-comments.nvim',
     'Plugin manifest should load'
   )
-  assert(eval("return require('config.extensions').remove('folke/todo-comments.nvim')") == true, 'Remove user plugin')
+  assert(eval("return require('modules.extensions').remove('folke/todo-comments.nvim')") == true, 'Remove user plugin')
+  local reload_win = request('nvim_get_current_win')
+  local reload_buf = request('nvim_get_current_buf')
+  local reload_tab = request('nvim_get_current_tabpage')
+  local reload_windows = eval('return #vim.api.nvim_tabpage_list_wins(0)')
+  local reload_pos = eval([[
+    package.loaded['e2e-original-restart'] = vim.cmd.restart
+    vim.g.e2e_restart_opts = nil
+    vim.cmd.restart = function(opts) vim.g.e2e_restart_opts = opts end
+    for i, line in ipairs(vim.api.nvim_buf_get_lines(0, 0, -1, false)) do
+      if line:find('[Reload Neovim]', 1, true) then
+        vim.api.nvim_win_set_cursor(0, { i, 0 })
+        return vim.fn.screenpos(vim.api.nvim_get_current_win(), i, 3)
+      end
+    end
+    error('Reload Neovim action missing')
+  ]])
+  assert(reload_pos.row > 0 and reload_pos.col > 0, 'Reload Neovim button must be visible for a click')
+  request('nvim_input_mouse', 'left', 'press', '', 0, reload_pos.row - 1, reload_pos.col - 1)
+  request('nvim_input_mouse', 'left', 'release', '', 0, reload_pos.row - 1, reload_pos.col - 1)
+  wait_for('Reload Neovim click', function()
+    return eval('return vim.g.e2e_restart_opts ~= nil')
+  end)
+  assert(
+    eval([[
+    local opts = vim.g.e2e_restart_opts
+    vim.cmd.restart = package.loaded['e2e-original-restart']
+    return opts.bang == true and opts.args[1] == '+qall!'
+  ]]),
+    'Reload Neovim must skip native window restore and use the saved project session'
+  )
+  assert(
+    request('nvim_get_current_win') == reload_win
+      and request('nvim_get_current_buf') == reload_buf
+      and request('nvim_get_current_tabpage') == reload_tab
+      and request('nvim_get_mode').mode == 'n'
+      and eval('return #vim.api.nvim_tabpage_list_wins(0)') == reload_windows,
+    'Reload click must not alter the current pane, tab, buffer, or mode before restart'
+  )
   request('nvim_input', 'q')
   wait_for('return to Files from Extensions', function()
-    return eval("return require('config.sidebar').view") == 'files'
+    return eval("return require('modules.sidebar').view") == 'files'
   end)
   print('PASS: Settings sidebar icons, persist, and reload')
 
   -- Ctrl+P must add a mid-editor tab. Vim :edit on a blank [New] buffer replaces it.
-  eval("require('config.tabs').new()")
+  eval("require('modules.tabs').new()")
   wait_for('blank editor tab before Ctrl-P', function()
     return eval("return vim.api.nvim_buf_get_name(0) == ''")
   end)
@@ -1432,7 +1553,7 @@ local ok, err = xpcall(function()
   local wins_before_find = eval('return #vim.api.nvim_tabpage_list_wins(0)')
   eval([[
     vim.api.nvim_create_user_command('FindProjectFiles', function()
-      require('config.tabs').open_from_fzf({ vim.env.E2E_DIR .. '/repo/new.txt' })
+      require('modules.tabs').open_from_fzf({ vim.env.E2E_DIR .. '/repo/new.txt' })
     end, { force = true })
   ]])
   request('nvim_input', '<C-p>')
@@ -1458,7 +1579,7 @@ local ok, err = xpcall(function()
   local file_tabs = eval([[
     local n = 0
     for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-      if vim.api.nvim_buf_get_name(buf):find('new.txt', 1, true) and require('config.tabs').editor_buf(buf) then
+      if vim.api.nvim_buf_get_name(buf):find('new.txt', 1, true) and require('modules.tabs').editor_buf(buf) then
         n = n + 1
       end
     end
@@ -1471,7 +1592,7 @@ local ok, err = xpcall(function()
   assert(eval([[
       local n = 0
       for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-        if vim.api.nvim_buf_get_name(buf):find('new.txt', 1, true) and require('config.tabs').editor_buf(buf) then
+        if vim.api.nvim_buf_get_name(buf):find('new.txt', 1, true) and require('modules.tabs').editor_buf(buf) then
           n = n + 1
         end
       end
@@ -1479,15 +1600,58 @@ local ok, err = xpcall(function()
     ]]) == file_tabs, 'Ctrl-P should switch to an existing tab instead of duplicating it')
   print('PASS: Ctrl-P opens a new mid-editor tab')
 
+  eval([[
+    local path = vim.env.E2E_DIR .. '/agy-cache.json'
+    vim.fn.writefile({ vim.json.encode({ [vim.fn.getcwd()] = '11111111-aaaa-4bbb-8ccc-111111111111' }) }, path)
+  ]])
+  local before_agy = eval("return vim.tbl_count(require('modules.agents').sessions)")
+  assert(eval("return vim.fn.maparg('<leader>aa', 'n')") ~= '', 'Antigravity shortcut missing')
+  assert(eval("return vim.fn.exists(':Antigravity')") == 2, 'Antigravity command missing')
+  assert(request('nvim_get_mode').mode == 'n', 'Antigravity shortcut needs normal-mode editor focus')
+  request('nvim_input', ' aa')
+  wait_for('Antigravity chat shortcut', function()
+    return eval("return vim.tbl_count(require('modules.agents').sessions)") == before_agy + 1
+      and eval([[local a = require('modules.agents'); return a.sessions[a.active].name]]) == 'antigravity'
+  end)
+  assert(
+    eval([[local a = require('modules.agents'); return a.sessions[a.active].uuid == nil]]),
+    'new Antigravity chat must not reuse a stale cached conversation'
+  )
+  wait_for('Antigravity new-session argv', function()
+    local f = io.open(vim.env.E2E_DIR .. '/agy-args', 'r')
+    if not f then
+      return false
+    end
+    local args = f:read('*a')
+    f:close()
+    return args == '\n'
+  end)
+  eval([[
+    local path = vim.env.E2E_DIR .. '/agy-cache.json'
+    vim.fn.writefile({ vim.json.encode({ [vim.fn.getcwd()] = '22222222-bbbb-4ccc-8ddd-222222222222' }) }, path)
+    require('modules.session').save()
+  ]])
   assert(
     eval([[
-    local a = require('config.agents')
-    return a.is_cli('gemini') and a.is_cli('claude') and a.is_cli('opencode')
-      and a.order[3] == 'gemini' and a.order[4] == 'claude' and a.order[5] == 'opencode'
+    local a = require('modules.agents')
+    local id = a.sessions[a.active].uuid
+    local saved = table.concat(vim.fn.readfile(require('modules.session').file()), '\n')
+    return id == '22222222-bbbb-4ccc-8ddd-222222222222' and saved:find(id, 1, true) ~= nil
   ]]),
-    'Gemini, Claude, and OpenCode must be registered chat CLIs'
+    'Antigravity conversation ID must be saved with the project session'
   )
-  eval("require('config.agents').new('codex', { uuid = 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee' })")
+  eval("vim.api.nvim_set_current_win(require('modules.tabs').editor_win()); vim.cmd.stopinsert()")
+
+  assert(
+    eval([[
+    local a = require('modules.agents')
+    return a.is_cli('gemini') and a.is_cli('claude') and a.is_cli('opencode') and a.is_cli('antigravity')
+      and a.order[3] == 'gemini' and a.order[4] == 'claude' and a.order[5] == 'opencode'
+      and a.order[6] == 'antigravity'
+  ]]),
+    'Gemini, Claude, OpenCode, and Antigravity must be registered chat CLIs'
+  )
+  eval("require('modules.agents').new('codex', { uuid = 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee' })")
   wait_for('codex resume argv', function()
     local f = io.open(vim.env.E2E_DIR .. '/codex-args', 'r')
     if not f then
@@ -1497,7 +1661,7 @@ local ok, err = xpcall(function()
     f:close()
     return args:find('resume aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee', 1, true)
   end)
-  eval("require('config.agents').new('cursor', { uuid = '11111111-2222-4333-8444-555555555555' })")
+  eval("require('modules.agents').new('cursor', { uuid = '11111111-2222-4333-8444-555555555555' })")
   wait_for('agent resume argv', function()
     local f = io.open(vim.env.E2E_DIR .. '/agent-args', 'r')
     if not f then
@@ -1507,7 +1671,7 @@ local ok, err = xpcall(function()
     f:close()
     return args:find('--resume=11111111-2222-4333-8444-555555555555', 1, true)
   end)
-  eval("require('config.agents').new('gemini', { uuid = '22222222-3333-4444-8555-666666666666' })")
+  eval("require('modules.agents').new('gemini', { uuid = '22222222-3333-4444-8555-666666666666' })")
   wait_for('gemini resume argv', function()
     local f = io.open(vim.env.E2E_DIR .. '/gemini-args', 'r')
     if not f then
@@ -1517,7 +1681,7 @@ local ok, err = xpcall(function()
     f:close()
     return args:find('--resume 22222222-3333-4444-8555-666666666666', 1, true)
   end)
-  eval("require('config.agents').new('claude', { uuid = '33333333-4444-4555-8666-777777777777' })")
+  eval("require('modules.agents').new('claude', { uuid = '33333333-4444-4555-8666-777777777777' })")
   wait_for('claude resume argv', function()
     local f = io.open(vim.env.E2E_DIR .. '/claude-args', 'r')
     if not f then
@@ -1527,7 +1691,7 @@ local ok, err = xpcall(function()
     f:close()
     return args:find('--resume 33333333-4444-4555-8666-777777777777', 1, true)
   end)
-  eval("require('config.agents').new('opencode', { uuid = 'ses_deadbeefcafebabe' })")
+  eval("require('modules.agents').new('opencode', { uuid = 'ses_deadbeefcafebabe' })")
   wait_for('opencode resume argv', function()
     local f = io.open(vim.env.E2E_DIR .. '/opencode-args', 'r')
     if not f then
@@ -1537,7 +1701,17 @@ local ok, err = xpcall(function()
     f:close()
     return args:find('--session ses_deadbeefcafebabe', 1, true)
   end)
-  eval("require('config.agents').new('gemini')")
+  eval("require('modules.agents').new('antigravity', { uuid = '33333333-cccc-4ddd-8eee-333333333333' })")
+  wait_for('Antigravity resume argv', function()
+    local f = io.open(vim.env.E2E_DIR .. '/agy-args', 'r')
+    if not f then
+      return false
+    end
+    local args = f:read('*a')
+    f:close()
+    return args:find('--conversation 33333333-cccc-4ddd-8eee-333333333333', 1, true)
+  end)
+  eval("require('modules.agents').new('gemini')")
   wait_for('gemini new session-id argv', function()
     local f = io.open(vim.env.E2E_DIR .. '/gemini-args', 'r')
     if not f then
@@ -1547,7 +1721,7 @@ local ok, err = xpcall(function()
     f:close()
     return args:find('--session-id ', 1, true)
   end)
-  eval("require('config.agents').new('opencode')")
+  eval("require('modules.agents').new('opencode')")
   wait_for('opencode new session argv', function()
     local f = io.open(vim.env.E2E_DIR .. '/opencode-args', 'r')
     if not f then
@@ -1558,7 +1732,7 @@ local ok, err = xpcall(function()
     return args:find('--session ses_', 1, true)
   end)
   eval([[
-    require('config.session').restore_chats({
+    require('modules.session').restore_chats({
       chats = {
         active = 1,
         sessions = {
@@ -1566,20 +1740,22 @@ local ok, err = xpcall(function()
           { name = 'gemini', uuid = 'aaaa1111-bbbb-4ccc-8ddd-eeeeeeeeeeee', label = 'Gemini saved' },
           { name = 'claude', uuid = 'bbbb2222-cccc-4ddd-8eee-ffffffffffff', label = 'Claude saved' },
           { name = 'opencode', uuid = 'ses_cafef00d12345678', label = 'OpenCode saved' },
+          { name = 'antigravity', uuid = '44444444-dddd-4eee-8fff-444444444444', label = 'Antigravity saved' },
         },
       },
     })
   ]])
   wait_for('restored chat uuid', function()
     return eval([[
-      local found = { codex = false, gemini = false, claude = false, opencode = false }
-      for _, s in pairs(require('config.agents').sessions) do
+      local found = { codex = false, gemini = false, claude = false, opencode = false, antigravity = false }
+      for _, s in pairs(require('modules.agents').sessions) do
         if s.uuid == '99999999-aaaa-4bbb-8ccc-dddddddddddd' then found.codex = true end
         if s.uuid == 'aaaa1111-bbbb-4ccc-8ddd-eeeeeeeeeeee' then found.gemini = true end
         if s.uuid == 'bbbb2222-cccc-4ddd-8eee-ffffffffffff' then found.claude = true end
         if s.uuid == 'ses_cafef00d12345678' then found.opencode = true end
+        if s.uuid == '44444444-dddd-4eee-8fff-444444444444' then found.antigravity = true end
       end
-      return found.codex and found.gemini and found.claude and found.opencode
+      return found.codex and found.gemini and found.claude and found.opencode and found.antigravity
     ]])
   end)
   wait_for('restored codex resume argv', function()
@@ -1618,10 +1794,19 @@ local ok, err = xpcall(function()
     f:close()
     return args:find('--session ses_cafef00d12345678', 1, true)
   end)
+  wait_for('restored Antigravity conversation argv', function()
+    local f = io.open(vim.env.E2E_DIR .. '/agy-args', 'r')
+    if not f then
+      return false
+    end
+    local args = f:read('*a')
+    f:close()
+    return args:find('--conversation 44444444-dddd-4eee-8fff-444444444444', 1, true)
+  end)
   print('PASS: session persist, unsaved buffers, UUID resume and NVIM_CLEAN')
 
   eval([[
-    local a = require('config.agents')
+    local a = require('modules.agents')
     local keep = a.active
     local extra = {}
     for id, _ in pairs(a.sessions) do
@@ -1632,23 +1817,23 @@ local ok, err = xpcall(function()
   ]])
   wait_for('last exited agent chat to close the pane', function()
     return eval([[
-      local a = require('config.agents')
+      local a = require('modules.agents')
       return vim.tbl_count(a.sessions) == 0
         and (a.win == nil or not vim.api.nvim_win_is_valid(a.win))
     ]])
   end)
   print('PASS: last agent process exit closes the chat pane')
 
-  eval("require('config.agents').new('cursor')")
+  eval("require('modules.agents').new('cursor')")
   wait_for('replacement chat for Ctrl-Q', function()
     return eval([[
-      local a = require('config.agents')
+      local a = require('modules.agents')
       return vim.tbl_count(a.sessions) == 1
         and a.win ~= nil
         and vim.api.nvim_win_is_valid(a.win)
     ]])
   end)
-  eval("vim.api.nvim_set_current_win(require('config.agents').win)")
+  eval("vim.api.nvim_set_current_win(require('modules.agents').win)")
   wait_for('terminal input before Ctrl-Q', function()
     return request('nvim_get_mode').mode == 't'
   end)

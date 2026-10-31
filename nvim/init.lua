@@ -45,135 +45,15 @@ if not vim.uv.fs_stat(lazy) then
 end
 vim.opt.rtp:prepend(lazy)
 
-require('lazy').setup(
-  vim.list_extend({
-    {
-      'ellisonleao/gruvbox.nvim',
-      lazy = false,
-      priority = 1000,
-      config = function()
-        -- Transparent backgrounds so the terminal color shows through.
-        require('gruvbox').setup({ transparent_mode = true, terminal_colors = false, inverse = false })
-        vim.o.background = 'dark'
-        vim.cmd.colorscheme('gruvbox')
-      end,
-    },
-    { 'nvim-tree/nvim-web-devicons', lazy = true },
-    {
-      'nvim-tree/nvim-tree.lua',
-      dependencies = { 'nvim-tree/nvim-web-devicons' },
-      config = function()
-        require('nvim-tree').setup(require('config.sidebar').tree_setup())
-      end,
-    },
-    {
-      'ibhagwan/fzf-lua',
-      opts = {
-        fzf_opts = { ['--layout'] = 'reverse' },
-        files = {
-          cmd = 'fd --type f --hidden --exclude .git --exclude node_modules --exclude target --exclude .svelte-kit --exclude .nuxt --exclude dist',
-        },
-      },
-    },
-    {
-      'lewis6991/gitsigns.nvim',
-      opts = { current_line_blame = true, current_line_blame_opts = { delay = 700 } },
-    },
-    { 'tpope/vim-fugitive' },
-    { 'folke/trouble.nvim', opts = { icons = false } },
-    { 'folke/which-key.nvim', event = 'VeryLazy', opts = { icons = { mappings = false } } },
-    {
-      'nvim-treesitter/nvim-treesitter',
-      branch = 'main',
-      build = ':TSUpdate',
-      config = function()
-        vim.cmd('syntax enable')
-        vim.api.nvim_create_autocmd('FileType', {
-          callback = function(ev)
-            pcall(vim.treesitter.start, ev.buf)
-          end,
-        })
-      end,
-    },
-    { 'mason-org/mason.nvim', opts = {} },
-    {
-      'neovim/nvim-lspconfig',
-      dependencies = { 'mason-org/mason.nvim', 'hrsh7th/cmp-nvim-lsp' },
-      config = function()
-        require('config.lsp')
-      end,
-    },
-    {
-      'hrsh7th/nvim-cmp',
-      dependencies = { 'hrsh7th/cmp-nvim-lsp', 'hrsh7th/cmp-buffer', 'hrsh7th/cmp-path' },
-      config = function()
-        local cmp = require('cmp')
-        cmp.setup({
-          snippet = {
-            expand = function(args)
-              vim.snippet.expand(args.body)
-            end,
-          },
-          mapping = cmp.mapping.preset.insert({
-            ['<C-Space>'] = cmp.mapping.complete(),
-            ['<CR>'] = cmp.mapping.confirm({ select = false }),
-            ['<C-e>'] = cmp.mapping.abort(),
-            -- Tab: next item, snippet jump, complete after text, otherwise indent.
-            ['<Tab>'] = cmp.mapping(function(fallback)
-              if cmp.visible() then
-                cmp.select_next_item({ behavior = cmp.SelectBehavior.Insert })
-              elseif vim.snippet.active({ direction = 1 }) then
-                vim.snippet.jump(1)
-              else
-                local before = vim.api.nvim_get_current_line():sub(1, vim.api.nvim_win_get_cursor(0)[2])
-                if before:match('%S$') then
-                  cmp.complete()
-                else
-                  fallback()
-                end
-              end
-            end, { 'i', 's' }),
-            ['<S-Tab>'] = cmp.mapping(function(fallback)
-              if cmp.visible() then
-                cmp.select_prev_item({ behavior = cmp.SelectBehavior.Insert })
-              elseif vim.snippet.active({ direction = -1 }) then
-                vim.snippet.jump(-1)
-              else
-                fallback()
-              end
-            end, { 'i', 's' }),
-          }),
-          sources = cmp.config.sources(
-            { { name = 'nvim_lsp' }, { name = 'path' } },
-            { { name = 'buffer', keyword_length = 3 } }
-          ),
-        })
-      end,
-    },
-    {
-      'stevearc/conform.nvim',
-      opts = function()
-        return require('config.format')
-      end,
-    },
-    {
-      'mfussenegger/nvim-dap',
-      dependencies = { 'rcarriga/nvim-dap-ui', 'nvim-neotest/nvim-nio', 'leoluz/nvim-dap-go' },
-      config = function()
-        require('config.dap')
-      end,
-    },
-  }, require('config.extensions').specs()),
-  {
-    rocks = { enabled = false },
-    checker = { enabled = false },
-    change_detection = { notify = false },
-  }
-)
+require('lazy').setup(require('modules.plugins').specs(), {
+  rocks = { enabled = false },
+  checker = { enabled = false },
+  change_detection = { notify = false },
+})
 
-require('config.agents')
-require('config.session')
-require('config.keys')
-require('config.appearance')
-require('config.statusline')
-require('config.startup')
+require('modules.agents')
+require('modules.session')
+require('modules.keys')
+require('modules.appearance')
+require('modules.statusline')
+require('modules.startup')

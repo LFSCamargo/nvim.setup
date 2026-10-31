@@ -30,10 +30,10 @@ printf '%s\n' "$*" > "$E2E_DIR/$(basename "$0")-args"
 stty raw -echo
 cat > "$E2E_DIR/$(basename "$0")-input"
 SCRIPT
-for bin in agent gemini claude opencode; do
+for bin in agent gemini claude opencode agy; do
   cp "$work_dir/bin/codex" "$work_dir/bin/$bin"
 done
-chmod +x "$work_dir/bin/codex" "$work_dir/bin/agent" "$work_dir/bin/gemini" "$work_dir/bin/claude" "$work_dir/bin/opencode"
+chmod +x "$work_dir/bin/codex" "$work_dir/bin/agent" "$work_dir/bin/gemini" "$work_dir/bin/claude" "$work_dir/bin/opencode" "$work_dir/bin/agy"
 
 wrap_root="$work_dir/wrapper"
 mkdir -p "$wrap_root/local" "$wrap_root/real" "$wrap_root/config/nvim"

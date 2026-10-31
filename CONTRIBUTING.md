@@ -38,10 +38,11 @@ After any code, script, or test edit, finish all five:
    **fails without the patch**. A bug fix must drive the same keys, clicks, or
    commands and assert the broken window, tab, buffer, or mode. List the case
    in [docs/E2E-TESTPLAN.md](docs/E2E-TESTPLAN.md).
-2. **No spaghetti.** Keep `nvim/lua/config/*.lua` single-purpose (`agents`,
-   `session`, `sidebar`, `keys`, `tabs`, `lsp`, `dap`, `appearance`,
-   `statusline`, `startup`, `icons`, `format`, `settings`). Do not grow `nvim/init.lua`. Put shell in
-   `scripts/` and share `scripts/common.sh`.
+2. **No spaghetti.** Keep `nvim/lua/modules/<name>/init.lua` focused on its
+   feature. Put feature helpers beside it and shared helpers in `modules/shared/`.
+   Website features live in `apps/web/src/modules/`; reusable UI and layout
+   live in `apps/web/src/shared/`. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+   Do not grow `nvim/init.lua`. Put shell in `scripts/` and share `scripts/common.sh`.
 3. **Checks.** `make check` and `make e2e` (or `make test`) must pass. Website
    work also needs `pnpm --filter web test` and `pnpm format:check`.
 4. **Safety.** Quote shell variables. Prefer argv arrays over `sh -c`. Escape

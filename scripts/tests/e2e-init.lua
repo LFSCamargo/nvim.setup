@@ -1,5 +1,8 @@
 -- Child Neovim startup for e2e.lua: load keys/agents/session and open two fake CLI sessions.
 vim.o.mouse = 'a'
+vim.o.more = false
+vim.g.mapleader = ' '
+vim.g.maplocalleader = ' '
 package.loaded['nvim-web-devicons'] = {
   setup = function() end,
   get_icon = function(_, ext)
@@ -66,12 +69,12 @@ package.loaded['nvim-tree.api'] = {
     end,
   },
 }
-require('config.appearance')
-require('config.statusline')
-require('config.session')
-require('config.keys')
+require('modules.appearance')
+require('modules.statusline')
+require('modules.session')
+require('modules.keys')
 local editor = vim.api.nvim_get_current_win()
-local agents = require('config.agents')
+local agents = require('modules.agents')
 agents.new('codex')
 agents.new('cursor')
 agents.show(1)
