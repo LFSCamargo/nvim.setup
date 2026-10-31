@@ -6,30 +6,33 @@ This setup is not one plugin. It is our Neovim config plus pinned third-party pl
 
 Code we wrote. These live under `nvim/lua/modules/` and `scripts/`. They are not Lazy plugins.
 
-| Module       | Path                                     | What it does                                                                                                                                                                                          |
-| ------------ | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Agents       | `nvim/lua/modules/agents/init.lua`       | Chat CLI panes (Codex, Cursor Agent, Gemini, Claude, OpenCode, Antigravity), ID resume, Esc, close tab on exit                                                                                        |
-| Session      | `nvim/lua/modules/session/init.lua`      | Per-project tabs, unsaved snapshots, chat UUIDs, Ctrl+Q, `NVIM_CLEAN`; swap files off                                                                                                                 |
-| Sidebar      | `nvim/lua/modules/sidebar/init.lua`      | Files / Git / Settings / Extensions panel (yellow active tab with black text/icon and solid point, transparent inactive tabs with hollow ``); Files names stay white unless git-dirty; composer, log |
-| Diff         | `nvim/lua/modules/diff/init.lua`         | Read-only staged and unstaged Git diffs in the editor pane, selected from the Git sidebar                                                                                                             |
-| Context menu | `nvim/lua/modules/context_menu/init.lua` | Shared right-click and keyboard menu for Files, Git, editor/chat tabs, and sidebar tabs                                                                                                               |
-| Settings     | `nvim/lua/modules/settings/init.lua`     | User preferences, shipped defaults, live reload, and Settings sidebar tab                                                                                                                             |
-| Extensions   | `nvim/lua/modules/extensions/init.lua`   | User plugin manifest, suggested plugin browser, Mason/Tree-sitter access, Extensions sidebar tab                                                                                                      |
-| Palette      | `nvim/lua/modules/palette/init.lua`      | Searchable quick actions for coding and configuration                                                                                                                                                 |
-| Keys         | `nvim/lua/modules/keys/init.lua`         | Global and leader maps, Ctrl shortcuts, user commands                                                                                                                                                 |
-| Tabs         | `nvim/lua/modules/tabs/init.lua`         | Clickable editor/chat winbar tabs; yellow active tab, transparent inactive tabs; editor ``/`` left, agents `+` ``/`` right; Ctrl+P opens here                                                     |
-| LSP          | `nvim/lua/modules/lsp/init.lua`          | Server configs and buffer-local LSP keys                                                                                                                                                              |
-| DAP          | `nvim/lua/modules/dap/init.lua`          | Debug adapters and `:DebugLoadLaunch`                                                                                                                                                                 |
-| Appearance   | `nvim/lua/modules/appearance/init.lua`   | Gruvbox transparency; selection, statusline, and top-bar fills stay visible                                                                                                                           |
-| Statusline   | `nvim/lua/modules/statusline/init.lua`   | Global muted Gruvbox bar: mode, git, file, diagnostics, LSP, search, cursor                                                                                                                           |
-| Startup      | `nvim/lua/modules/startup/init.lua`      | Interactive layout: tree, editor focus, restore or default chats                                                                                                                                      |
-| Icons        | `nvim/lua/modules/icons/init.lua`        | Colored Devicons for Files/Git glyphs; names stay white unless git-dirty; toggled from Settings                                                                                                       |
-| Format       | `nvim/lua/modules/format/init.lua`       | Conform formatters: StyLua, prettierd, shfmt, Taplo, rustfmt, gofmt                                                                                                                                   |
-| Images       | `nvim/lua/modules/images/init.lua`       | Opens PNG/JPEG/GIF/WebP/SVG and similar files in the system viewer (`open` / `xdg-open`)                                                                                                              |
-| Tooling      | `nvim/lua/modules/tooling/init.lua`      | Mason package list and Tree-sitter parser list                                                                                                                                                        |
-| Wrapper      | `scripts/nvim-wrapper.sh`                | `nvim --clean` loads this config without restoring a session                                                                                                                                          |
-| Bootstrap    | `scripts/bootstrap.sh`                   | One-shot installer: fetch a branch or `--version` tag, deps, icon fonts, then the Neovim config                                                                                                       |
-| Fonts        | `scripts/fonts.sh`                       | Symbols Nerd Font and a Monocraft Nerd Font face with one-cell Devicons and pixelated Powerline glyphs                                                                                                |
+| Module         | Path                                                  | What it does                                                                                                                                                                                                       |
+| -------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Agents         | `nvim/lua/modules/agents/init.lua`                    | Chat CLI panes (Codex, Cursor Agent, Gemini, Claude, OpenCode, Antigravity), ID resume, Esc, close tab on exit; xterm-256 TTY (no Warp); chat windows stay nowrap and drop gutters/`~`                             |
+| Session        | `nvim/lua/modules/session/init.lua`                   | Per-project tabs, unsaved snapshots, chat UUIDs, Ctrl+Q, `NVIM_CLEAN`; swap files off                                                                                                                              |
+| Sidebar        | `nvim/lua/modules/sidebar/init.lua`                   | Files / Git / Settings / Themes / Extensions panel (active tab with solid point, transparent inactive tabs with hollow ``); Files names stay white unless git-dirty; composer, log                                |
+| Diff           | `nvim/lua/modules/diff/init.lua`                      | Read-only staged and unstaged Git diffs in the editor pane, selected from the Git sidebar                                                                                                                          |
+| Context menu   | `nvim/lua/modules/context_menu/init.lua`              | Shared right-click and keyboard menu for Files, Git, editor/chat tabs, and sidebar tabs                                                                                                                            |
+| Settings       | `nvim/lua/modules/settings/init.lua`                  | User preferences, shipped defaults, live reload, and Settings sidebar tab; Scrollbars defaults off                                                                                                                 |
+| Extensions     | `nvim/lua/modules/extensions/init.lua`                | User plugin manifest, suggested plugin browser, Mason/Tree-sitter access, Extensions sidebar tab                                                                                                                   |
+| Themes         | `nvim/lua/modules/themes/init.lua`                    | Catalog of 20 dark colorschemes, searchable Themes sidebar, chrome tokens that match each scheme                                                                                                                   |
+| Palette        | `nvim/lua/modules/palette/init.lua`                   | Searchable quick actions for coding and configuration                                                                                                                                                              |
+| Keys           | `nvim/lua/modules/keys/init.lua`                      | Global and leader maps, Ctrl shortcuts, user commands; Option/Ctrl+wheel scrolls the editor and left sidebar sideways                                                                                              |
+| Tabs           | `nvim/lua/modules/tabs/init.lua`                      | Clickable editor/chat winbar tabs; yellow active tab, transparent inactive tabs; editor ``/`` left, agents `+` ``/`` right; Ctrl+P opens here; nowrap on editor, sidebar, and chat windows                     |
+| LSP            | `nvim/lua/modules/lsp/init.lua`                       | Server configs and buffer-local LSP keys                                                                                                                                                                           |
+| DAP            | `nvim/lua/modules/dap/init.lua`                       | Debug adapters and `:DebugLoadLaunch`                                                                                                                                                                              |
+| Appearance     | `nvim/lua/modules/appearance/init.lua`                | Transparency and chrome tokens for the active catalog theme; selection, statusline, top-bar fills, and muted scrollbars stay visible; `Terminal` stays transparent; ANSI 1–6/8–14 follow chrome; 0/7/15 stay stock |
+| Statusline     | `nvim/lua/modules/statusline/init.lua`                | Global bar: mode, git, file, diagnostics, LSP, search, cursor; colors follow the active theme                                                                                                                      |
+| Startup        | `nvim/lua/modules/startup/init.lua`                   | Interactive layout: tree, editor focus, restore or default chats                                                                                                                                                   |
+| Icons          | `nvim/lua/modules/icons/init.lua`                     | Colored Devicons for Files/Git glyphs; names stay white unless git-dirty; toggled from Settings                                                                                                                    |
+| Format         | `nvim/lua/modules/format/init.lua`                    | Conform formatters: StyLua, prettierd, shfmt, Taplo, rustfmt, gofmt                                                                                                                                                |
+| Images         | `nvim/lua/modules/images/init.lua`                    | Opens PNG/JPEG/GIF/WebP/SVG and similar files in the system viewer (`open` / `xdg-open`)                                                                                                                           |
+| Hscroll        | `nvim/lua/modules/hscroll/init.lua`                   | Sidescroll helper; on macOS a terminal trackpad worker RPCs here so sideways swipes do not need TTY wheel events                                                                                                   |
+| Tooling        | `nvim/lua/modules/tooling/init.lua`                   | Mason package list and Tree-sitter parser list                                                                                                                                                                     |
+| Wrapper        | `scripts/nvim-wrapper.sh`                             | `nvim --clean` loads this config without restoring a session                                                                                                                                                       |
+| Bootstrap      | `scripts/bootstrap.sh`                                | One-shot installer: fetch a branch or `--version` tag, deps, icon fonts, then the Neovim config                                                                                                                    |
+| Fonts          | `scripts/fonts.sh`                                    | Symbols Nerd Font and a Monocraft Nerd Font face with one-cell Devicons and pixelated Powerline glyphs                                                                                                             |
+| Hscroll worker | `scripts/hscroll.sh` / `scripts/darwin/hscroll.swift` | macOS LaunchAgent: reads trackpad axis-2 in Warp/Terminal/iTerm and calls `hscroll.scroll` over a local socket                                                                                                     |
 
 `nvim/init.lua` is the entry point (options, Lazy, then the modules above). Add behavior to its owning module. `agents/antigravity.lua` reads workspace conversation IDs; `sidebar/tree.lua` owns the file-tree options and highlights; `sidebar/status.lua` parses Git status; `shared/buffer.lua` updates read-only UI buffers. Lazy specs live in `modules/plugins/ui.lua` and `modules/plugins/tools.lua`, assembled by `modules/plugins/init.lua`. See [Architecture](ARCHITECTURE.md) for module boundaries.
 
@@ -37,29 +40,43 @@ Code we wrote. These live under `nvim/lua/modules/` and `scripts/`. They are not
 
 Pinned in `nvim/lazy-lock.json`. Restored by `make plugins`. Declared in `nvim/lua/modules/plugins/`.
 
-| Plugin                                                                | Role                                                  |
-| --------------------------------------------------------------------- | ----------------------------------------------------- |
-| [lazy.nvim](https://github.com/folke/lazy.nvim)                       | Plugin manager                                        |
-| [gruvbox.nvim](https://github.com/ellisonleao/gruvbox.nvim)           | Colorscheme (transparent)                             |
-| [nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons)   | File icons in the Files tree and Git                  |
-| [nvim-tree.lua](https://github.com/nvim-tree/nvim-tree.lua)           | File tree (Files tab)                                 |
-| [fzf-lua](https://github.com/ibhagwan/fzf-lua)                        | Find files and live grep                              |
-| [gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim)           | Hunk signs, blame, preview/stage hunk                 |
-| [vim-fugitive](https://github.com/tpope/vim-fugitive)                 | `:Git` status, blame, log, diff                       |
-| [trouble.nvim](https://github.com/folke/trouble.nvim)                 | Project diagnostics list                              |
-| [which-key.nvim](https://github.com/folke/which-key.nvim)             | Keybinding popup (no mapping icons)                   |
-| [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter) | Syntax parsers (`main` branch)                        |
-| [mason.nvim](https://github.com/mason-org/mason.nvim)                 | Installs language servers, formatters, debug adapters |
-| [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig)            | Language-server configs                               |
-| [nvim-cmp](https://github.com/hrsh7th/nvim-cmp)                       | Completion                                            |
-| [cmp-nvim-lsp](https://github.com/hrsh7th/cmp-nvim-lsp)               | LSP completion source                                 |
-| [cmp-buffer](https://github.com/hrsh7th/cmp-buffer)                   | Buffer completion source                              |
-| [cmp-path](https://github.com/hrsh7th/cmp-path)                       | Path completion source                                |
-| [conform.nvim](https://github.com/stevearc/conform.nvim)              | Format on demand (Space f)                            |
-| [nvim-dap](https://github.com/mfussenegger/nvim-dap)                  | Debugger                                              |
-| [nvim-dap-ui](https://github.com/rcarriga/nvim-dap-ui)                | Debugger panels                                       |
-| [nvim-nio](https://github.com/nvim-neotest/nvim-nio)                  | Async IO for dap-ui                                   |
-| [nvim-dap-go](https://github.com/leoluz/nvim-dap-go)                  | Delve adapter helper                                  |
+| Plugin                                                                | Role                                                           |
+| --------------------------------------------------------------------- | -------------------------------------------------------------- |
+| [lazy.nvim](https://github.com/folke/lazy.nvim)                       | Plugin manager                                                 |
+| [gruvbox.nvim](https://github.com/ellisonleao/gruvbox.nvim)           | Default colorscheme (transparent)                              |
+| [cursor-dark.nvim](https://github.com/ydkulks/cursor-dark.nvim)       | Cursor Dark / Midnight ports                                   |
+| [vscode.nvim](https://github.com/Mofiqul/vscode.nvim)                 | VS Code Dark+ port                                             |
+| [github-nvim-theme](https://github.com/projekt0n/github-nvim-theme)   | GitHub Dark                                                    |
+| [onedark.nvim](https://github.com/navarasu/onedark.nvim)              | One Dark                                                       |
+| [dracula.nvim](https://github.com/Mofiqul/dracula.nvim)               | Dracula                                                        |
+| [catppuccin](https://github.com/catppuccin/nvim)                      | Catppuccin Mocha / Macchiato                                   |
+| [tokyonight.nvim](https://github.com/folke/tokyonight.nvim)           | Tokyo Night / Storm                                            |
+| [kanagawa.nvim](https://github.com/rebelot/kanagawa.nvim)             | Kanagawa Wave / Dragon                                         |
+| [rose-pine](https://github.com/rose-pine/neovim)                      | Rosé Pine / Moon                                               |
+| [nord.nvim](https://github.com/gbprod/nord.nvim)                      | Nord                                                           |
+| [everforest-nvim](https://github.com/neanias/everforest-nvim)         | Everforest                                                     |
+| [nightfox.nvim](https://github.com/EdenEast/nightfox.nvim)            | Nightfox / Carbonfox                                           |
+| [vim-moonfly-colors](https://github.com/bluz71/vim-moonfly-colors)    | Moonfly                                                        |
+| [nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons)   | File icons in the Files tree and Git                           |
+| [nvim-tree.lua](https://github.com/nvim-tree/nvim-tree.lua)           | File tree (Files tab)                                          |
+| [fzf-lua](https://github.com/ibhagwan/fzf-lua)                        | Find files and live grep                                       |
+| [gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim)           | Hunk signs, blame, preview/stage hunk                          |
+| [vim-fugitive](https://github.com/tpope/vim-fugitive)                 | `:Git` status, blame, log, diff                                |
+| [trouble.nvim](https://github.com/folke/trouble.nvim)                 | Project diagnostics list                                       |
+| [which-key.nvim](https://github.com/folke/which-key.nvim)             | Keybinding popup (no mapping icons)                            |
+| [scroll.nvim](https://github.com/mihovilrak/scroll.nvim)              | Optional draggable scrollbars; off until Settings → Scrollbars |
+| [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter) | Syntax parsers (`main` branch)                                 |
+| [mason.nvim](https://github.com/mason-org/mason.nvim)                 | Installs language servers, formatters, debug adapters          |
+| [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig)            | Language-server configs                                        |
+| [nvim-cmp](https://github.com/hrsh7th/nvim-cmp)                       | Completion                                                     |
+| [cmp-nvim-lsp](https://github.com/hrsh7th/cmp-nvim-lsp)               | LSP completion source                                          |
+| [cmp-buffer](https://github.com/hrsh7th/cmp-buffer)                   | Buffer completion source                                       |
+| [cmp-path](https://github.com/hrsh7th/cmp-path)                       | Path completion source                                         |
+| [conform.nvim](https://github.com/stevearc/conform.nvim)              | Format on demand (Space f)                                     |
+| [nvim-dap](https://github.com/mfussenegger/nvim-dap)                  | Debugger                                                       |
+| [nvim-dap-ui](https://github.com/rcarriga/nvim-dap-ui)                | Debugger panels                                                |
+| [nvim-nio](https://github.com/nvim-neotest/nvim-nio)                  | Async IO for dap-ui                                            |
+| [nvim-dap-go](https://github.com/leoluz/nvim-dap-go)                  | Delve adapter helper                                           |
 
 The Files tree and Git sidebar use [nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons). `make install` / `scripts/bootstrap.sh` runs `scripts/fonts.sh`, which installs [Symbols Nerd Font](https://github.com/ryanoasis/nerd-fonts) and a Regular [Monocraft](https://github.com/IdreesInc/Monocraft) face named **Monocraft Nerd Font** into the user font directory (`~/Library/Fonts` on macOS, `~/.local/share/fonts/nvim-setup` on Linux). That face has Nerd Font Devicons baked in at one cell, plus pixelated Powerline points and chevrons (Warp has no fallback list). If Warp’s terminal font is Monocraft, that setting becomes **Monocraft Nerd Font**. Kitty and Ghostty configs that already exist get fallback/`symbol_map` lines.
 

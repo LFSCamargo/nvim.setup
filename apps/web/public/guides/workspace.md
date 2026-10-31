@@ -18,19 +18,23 @@ Click a pane to focus it. Click a running chat to type into it. Click tabs to sw
 
 ## Files
 
-The left sidebar is an nvim-tree file browser. The header is icon tabs: file (Files), git branch (Git), settings (Settings), and plug (Extensions). The active tab’s icon and name are yellow on the solid gray top bar; the active tab uses a solid `` and the others use a hollow ``. Files show a Devicon for the type or extension. Names stay the default foreground unless git marks them (yellow modified, green added, red deleted). Folders use folder glyphs with `>` / `v` expand markers. The project path/`..` root label is hidden. Click a file to open it in the mid editor. Image files (PNG, JPEG, GIF, WebP, SVG, and similar) open in the system viewer (`open` on macOS, `xdg-open` on Linux) instead of a tab. Ctrl+B or Space e toggles the tree. Ctrl+P finds files (hidden files included; build directories excluded) and opens a new mid-editor tab, or focuses the tab if that file is already open. Ctrl+F searches project text the same way.
+The left sidebar is an nvim-tree file browser. The header is icon tabs: file (Files), git branch (Git), settings (Settings), palette (Themes), and plug (Extensions). The active tab’s icon and name use the current theme accent; the active tab uses a solid `` and the others use a hollow ``. Files show a Devicon for the type or extension. Names stay the default foreground unless git marks them (yellow modified, green added, red deleted). Folders use folder glyphs with `>` / `v` expand markers. The project path/`..` root label is hidden. Click a file to open it in the mid editor. Image files (PNG, JPEG, GIF, WebP, SVG, and similar) open in the system viewer (`open` on macOS, `xdg-open` on Linux) instead of a tab. Ctrl+B or Space e toggles the tree. Ctrl+P finds files (hidden files included; build directories excluded) and opens a new mid-editor tab, or focuses the tab if that file is already open. Ctrl+F searches project text the same way.
 
 Switching to Git does not freeze the editor: status loads in the background, and you can go back to Files while it finishes. Settings turns file icons on or off immediately, and **Reload config** applies the saved file without quitting.
 
 ## Editor tabs
 
-The middle pane is the editor. Tabs above it are clickable: a label switches buffers, **+** adds a tab, **×** closes the active one, and **‹ / ›** scroll when tabs overflow. File tabs show the same colored Devicon as the Files tree. Labels use the same `│` as the pane splits. Ctrl+T adds a tab. Ctrl+W closes one, and refuses if the file is unsaved. Ctrl+S saves (it asks for a name if the buffer is unnamed).
+The middle pane is the editor. Tabs above it are clickable: a label switches buffers, **+** adds a tab, **×** closes the active one, and **‹ / ›** scroll when tabs overflow. File tabs show the same colored Devicon as the Files tree. Labels use the same `│` as the pane splits. Long lines do not wrap in the editor or the left sidebar; use Option (or Ctrl) plus the mouse wheel to scroll them sideways, or turn on Settings → Scrollbars and drag the bar. Ctrl+T adds a tab. Ctrl+W closes one, and refuses if the file is unsaved. Ctrl+S saves (it asks for a name if the buffer is unnamed).
 
 `:q` on the last editor window keeps the pane and leaves a tab, so the layout does not collapse.
 
 ## Settings
 
-Ctrl+, or the Settings icon opens that sidebar next to Files and Git. Turn file icons on or off; the change applies immediately and persists for this machine. **[Reload config]** re-reads the saved file so you can pick up that choice without quitting Neovim. Enter or click a row to change it; `q` returns to Files. Lua and keymap edits still need a restart.
+Ctrl+, or the Settings icon opens that sidebar next to Files and Git. Color theme, file icons, transparency, indent, search case, and session restore persist for this machine. Click **Color theme** (or run `:SetupThemes`) to open the Themes list. **[Reload config]** re-reads the saved file so you can pick up that choice without quitting Neovim. Enter or click a row to change it; `q` returns to Files. Lua and keymap edits still need a restart.
+
+## Themes
+
+The Themes tab lists the 20 dark schemes this setup supports (Gruvbox Dark by default, plus Cursor Dark, VS Code Dark+, Tokyo Night, and others). Press `/` to search, then Enter or click a row to apply it. Tabs and the statusline follow that scheme’s chrome. `x` on the Color theme row in Settings restores Gruvbox Dark.
 
 ## Git source control
 

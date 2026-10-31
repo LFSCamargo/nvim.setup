@@ -2,7 +2,7 @@
 
 A portable Neovim config that puts your files, editor, and AI chats in one window.
 
-Codex, Cursor Agent, Gemini, Claude, OpenCode, and Antigravity run as real CLI sessions next to your code. Language servers, formatters, and debuggers come with the install. Gruvbox colors sit on a transparent UI, so your terminal keeps the background.
+Codex, Cursor Agent, Gemini, Claude, OpenCode, and Antigravity run as real CLI sessions next to your code. Language servers, formatters, and debuggers come with the install. Gruvbox is the default colorscheme; the Themes sidebar switches among 20 supported dark schemes on a transparent UI, so your terminal keeps the background. Chat CLIs stay transparent like the editor. Cursor’s prompt uses stock ANSI white so spaces do not collapse.
 
 ```text
 ┌──────────────┬────────────────────────────────┬─────────────────┐
@@ -25,7 +25,7 @@ Want to change it? [Contributing](CONTRIBUTING.md) is the contract;
 
 ## Features
 
-- Clickable file tree, Settings and Extensions tabs, searchable command palette, editor tabs, and chat tabs
+- Clickable file tree, Settings, Themes, and Extensions tabs, searchable command palette, editor tabs, and chat tabs
 - File-type Devicons in the Files tree and Git sidebar. Install puts Nerd Font files on the system and, in Warp, uses a Monocraft face with those glyphs at one cell.
 - Git source control with Check Diff in the mid editor, plus right-click menus on files, changes, and tabs
 - Per-project session restore for editor tabs, unsaved buffers, and AI chats (UUID resume)
@@ -87,7 +87,7 @@ Install and authenticate the chat CLIs separately: [Codex](https://github.com/op
 
 ## Using the editor
 
-Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to insert, `Esc` for normal mode, and Ctrl+Q to quit (unsaved tabs come back next time). Swap files are off; the project session is what restores unsaved tabs. `nvim --clean` skips restored tabs and chats. The leader key is **Space**; press leader shortcuts as a sequence in normal mode. The bottom bar is one muted Gruvbox strip for the whole UI: colored mode, git branch and hunks, the focused file or chat, diagnostics, and cursor position.
+Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to insert, `Esc` for normal mode, and Ctrl+Q to quit (unsaved tabs come back next time). Swap files are off; the project session is what restores unsaved tabs. `nvim --clean` skips restored tabs and chats. The leader key is **Space**; press leader shortcuts as a sequence in normal mode. The bottom bar is one muted strip for the whole UI: colored mode, git branch and hunks, the focused file or chat, diagnostics, and cursor position. Gruvbox Dark is the default; the Themes sidebar switches among 20 supported dark schemes.
 
 | Shortcut or click                       | Action                                                                                         |
 | --------------------------------------- | ---------------------------------------------------------------------------------------------- |
@@ -100,7 +100,8 @@ Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to i
 | Ctrl+]                                  | Start a new Codex, Cursor Agent, Gemini, Claude, OpenCode, or Antigravity session              |
 | Ctrl+B                                  | Toggle the file tree                                                                           |
 | Ctrl+G                                  | Open Git source control (commit, stage, unstage, revert, bottom commit log; keyboard or mouse) |
-| Ctrl+, / `:SetupSettings`               | Open Settings (appearance, editing, search, sessions)                                          |
+| Ctrl+, / `:SetupSettings`               | Open Settings (color theme, appearance, editing, search, sessions)                             |
+| `:SetupThemes`                          | Open the Themes sidebar (20 supported dark schemes)                                            |
 | Right-click / Shift+F10                 | Open an action menu for a file, Git item, or tab                                               |
 | Space p / `:CommandPalette`             | Search coding and configuration actions                                                        |
 | `:SetupExtensions`                      | Browse user plugins, tools, and parsers                                                        |
@@ -113,7 +114,7 @@ Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to i
 | gd / gr / K                             | Definition / references / documentation                                                        |
 | F5 / Space d b                          | Start or continue debugging / toggle a breakpoint                                              |
 
-Closing a chat tab stops that CLI. The tab also closes if the CLI process exits. Switching tabs leaves it running. Unsaved files are protected when you close a tab. Git files, commits, and Fugitive views open in the mid editor; `:q` there keeps that pane and a tab. Quitting with Ctrl+Q snapshots unsaved buffers and resumes chat CLIs by ID on the next launch in that directory. `make install` puts a wrapper at `~/.local/bin/nvim` so `nvim --clean` still loads this config. Maintenance scripts set `NVIM_WRAPPER=0` when they need Neovim's factory `--clean`.
+Closing a chat tab stops that CLI. The tab also closes if the CLI process exits. Switching tabs leaves it running. Unsaved files are protected when you close a tab. Git files, commits, and Fugitive views open in the mid editor; `:q` there keeps that pane and a tab. Long lines stay on one row in the editor and left sidebar; use Option (or Ctrl) plus the mouse wheel to scroll them sideways, or turn on Settings → Scrollbars and drag the bar. On macOS, `make hscroll` installs a trackpad helper for Warp, Terminal.app, and iTerm (allow Accessibility for `nvim-setup-hscroll`). Quitting with Ctrl+Q snapshots unsaved buffers and resumes chat CLIs by ID on the next launch in that directory. `make install` puts a wrapper at `~/.local/bin/nvim` so `nvim --clean` still loads this config. Maintenance scripts set `NVIM_WRAPPER=0` when they need Neovim's factory `--clean`.
 
 The full keybinding list, language notes, and debugging details live in [the editor guide](docs/EDITOR.md). Plugins we wrote versus plugins and tools we install are in [the plugin overview](docs/PLUGINS.md). What `make e2e` covers — and what to add when behavior changes — is in [the E2E test plan](docs/E2E-TESTPLAN.md).
 
