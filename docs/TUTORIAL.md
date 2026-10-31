@@ -60,13 +60,13 @@ skills must stay identical under `.cursor/skills/`, `.claude/skills/`, and
 
 ## 4. Write the test first (runtime changes)
 
-For a Neovim UI change, extend `scripts/tests/e2e.lua` so the new path **fails
+For a Neovim UI change, extend `scripts/e2e/e2e.lua` so the new path **fails
 on the unpatched code**. Drive the same key, click, or command a user would.
 Assert the window, tab, buffer, or mode that was wrong. Add a row to
 [E2E-TESTPLAN.md](E2E-TESTPLAN.md).
 
 Shell and Node checks live next to the thing they cover:
-`scripts/tests/bootstrap.test.sh`, `fonts.test.sh`, `scan.test.sh`,
+`scripts/shell/__tests__/bootstrap.test.sh`, `scripts/shell/__tests__/fonts.test.sh`, `scripts/shell/__tests__/scan.test.sh`,
 `format.test.sh`, `bump.test.sh`, `workspace.test.mjs`, and
 `apps/web/src/**/*.test.ts(x)`.
 

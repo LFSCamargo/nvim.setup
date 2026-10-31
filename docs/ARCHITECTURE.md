@@ -10,6 +10,7 @@ nvim/
     diff/init.lua             editor diff view
     extensions/init.lua       plugin and Mason browser
     format/init.lua           formatter configuration
+    images/init.lua           open image files in the system viewer
     sidebar/
       init.lua                public sidebar API and Git actions
       tree.lua                file tree options and highlights
@@ -25,11 +26,10 @@ apps/web/src/
     docs/                     documentation reader and its content
     theme/                    theme state, switch, persistence
   shared/
-    layout/                   navigation, footer, brand
-    seo/                      metadata and static-host fallback
-    ui/                       reusable visual components
-    site.ts                   site-wide URLs and metadata
-    utils.ts                  generic class-name helper
+    components/               navigation, footer, brand, reusable UI
+    hooks/                    document meta and nav contrast
+    utils/                    class names, highlight, SEO, SPA fallback
+    constants/                site-wide URLs and metadata
 ```
 
 Neovim entry points are `modules/<name>/init.lua`, imported as `require('modules.<name>')`. Put code used by only one feature beside that entry point. Plugin specs belong in `modules/plugins/`; Mason package and parser lists remain in `modules/tooling/`. Keep `nvim/init.lua` limited to startup wiring.

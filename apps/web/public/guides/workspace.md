@@ -18,9 +18,9 @@ Click a pane to focus it. Click a running chat to type into it. Click tabs to sw
 
 ## Files
 
-The left sidebar is an nvim-tree file browser with a **Files** tab. Files show a Devicon for the type or extension. Names stay the default foreground unless git marks them (yellow modified, green added, red deleted). Folders use folder glyphs with `>` / `v` expand markers. The project path/`..` root label is hidden. Click a file to open it in the mid editor. Ctrl+B or Space e toggles the tree. Ctrl+P finds files (hidden files included; build directories excluded) and opens a new mid-editor tab, or focuses the tab if that file is already open. Ctrl+F searches project text the same way.
+The left sidebar is an nvim-tree file browser. The header is icon tabs: file (Files), git branch (Git), settings (Settings), and plug (Extensions). The active tab’s icon and name are yellow on the solid gray top bar; the active tab uses a solid `` and the others use a hollow ``. Files show a Devicon for the type or extension. Names stay the default foreground unless git marks them (yellow modified, green added, red deleted). Folders use folder glyphs with `>` / `v` expand markers. The project path/`..` root label is hidden. Click a file to open it in the mid editor. Image files (PNG, JPEG, GIF, WebP, SVG, and similar) open in the system viewer (`open` on macOS, `xdg-open` on Linux) instead of a tab. Ctrl+B or Space e toggles the tree. Ctrl+P finds files (hidden files included; build directories excluded) and opens a new mid-editor tab, or focuses the tab if that file is already open. Ctrl+F searches project text the same way.
 
-The same sidebar has **Git** and **Settings** tabs. Switching to Git does not freeze the editor: status loads in the background, and you can go back to Files while it finishes. Settings turns file icons on or off immediately, and **Reload config** applies the saved file without quitting.
+Switching to Git does not freeze the editor: status loads in the background, and you can go back to Files while it finishes. Settings turns file icons on or off immediately, and **Reload config** applies the saved file without quitting.
 
 ## Editor tabs
 
@@ -30,7 +30,7 @@ The middle pane is the editor. Tabs above it are clickable: a label switches buf
 
 ## Settings
 
-Ctrl+, or the **Settings** tab opens a sidebar next to Files and Git. Turn file icons on or off; the change applies immediately and persists for this machine. **[Reload config]** re-reads the saved file so you can pick up that choice without quitting Neovim. Enter or click a row to change it; `q` returns to Files. Lua and keymap edits still need a restart.
+Ctrl+, or the Settings icon opens that sidebar next to Files and Git. Turn file icons on or off; the change applies immediately and persists for this machine. **[Reload config]** re-reads the saved file so you can pick up that choice without quitting Neovim. Enter or click a row to change it; `q` returns to Files. Lua and keymap edits still need a restart.
 
 ## Git source control
 

@@ -32,7 +32,7 @@ Want to change it? [Contributing](CONTRIBUTING.md) is the contract;
 - `nvim --clean` for a blank editor that does not restore or overwrite the last session
 - Independent Codex, Cursor Agent, Gemini, Claude, OpenCode, and Antigravity sessions (your login, your permissions)
 - TypeScript, JavaScript, React, Vue, Svelte, Rust, Go, Solidity, Lua, HTML, CSS, JSON, YAML, TOML
-- Completion, diagnostics, go-to-definition, format-on-demand, Git, and debugging
+- Completion, diagnostics, go-to-definition, format-on-demand, Git, debugging, and opening images in the system viewer
 - Pinned plugins, a lockfile, and Makefile commands for install, capture, update, and validation
 
 ## Install
@@ -210,7 +210,7 @@ If a download fails, the new config stays installed and the backup is kept. Fix 
 | `nvim/`                                                | Deployable config, plugin lockfile, and tool installers             |
 | `nvim/lua/modules/`                                    | Editor features, plugin specs, and shared UI helpers                |
 | `apps/web/src/modules/`                                | Website features: home, docs, and theme                             |
-| `apps/web/src/shared/`                                 | Website layout, SEO, and reusable UI components                     |
+| `apps/web/src/shared/`                                 | Website components, hooks, utils, and constants                     |
 | `.luarc.json`                                          | lua-language-server settings so `vim` is a known global             |
 | `scripts/`                                             | Install, update, capture, and validation                            |
 | `docs/EDITOR.md`                                       | Keybindings, language, chat, and debug reference                    |
