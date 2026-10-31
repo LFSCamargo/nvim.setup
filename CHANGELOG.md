@@ -37,6 +37,7 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Chores
 
+- **release:** v1.1.0 ([d2b9d8d](https://github.com/LFSCamargo/nvim.setup/commit/d2b9d8d529b5a9ec48eacfff94ceda2851248db5))
 - **release:** v1.0.0 ([005a61c](https://github.com/LFSCamargo/nvim.setup/commit/005a61c2b624b657da49483205d3f56784ebdb97))
 
 ## [1.0.0] - 2026-10-31
