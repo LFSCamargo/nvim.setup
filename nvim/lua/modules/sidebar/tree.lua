@@ -38,7 +38,6 @@ local function setup_highlights()
     'NvimTreeOpenedFolderName',
     'NvimTreeEmptyFolderName',
     'NvimTreeSymlinkFolderName',
-    'NvimTreeRootFolder',
     'NvimTreeExecFile',
     'NvimTreeOpenedFile',
     'NvimTreeOpenedHL',
@@ -52,6 +51,7 @@ local function setup_highlights()
   for _, name in ipairs(white) do
     api.nvim_set_hl(0, name, { link = 'Normal' })
   end
+  api.nvim_set_hl(0, 'NvimTreeRootFolder', { fg = '#a89984', bold = true })
   api.nvim_set_hl(0, 'NvimTreeIndentMarker', { fg = '#665c54' })
   api.nvim_set_hl(0, 'NvimTreeFolderArrowClosed', { fg = '#665c54' })
   api.nvim_set_hl(0, 'NvimTreeFolderArrowOpen', { fg = '#665c54' })
@@ -85,6 +85,17 @@ api.nvim_create_autocmd('VimEnter', {
   end,
 })
 
+function M.root_name(path)
+  if type(path) ~= 'string' or path == '' then
+    return ''
+  end
+  local name = vim.fn.fnamemodify(path:gsub('[\r\n]', ''), ':t')
+  if name == '' or name == '/' then
+    name = vim.fn.fnamemodify(path, ':h:t')
+  end
+  return name
+end
+
 function M.setup(width)
   return {
     on_attach = function(buf)
@@ -109,7 +120,7 @@ function M.setup(width)
       highlight_diagnostics = 'none',
       highlight_opened_files = 'none',
       highlight_modified = 'none',
-      root_folder_label = false,
+      root_folder_label = M.root_name,
     },
     git = { enable = true, show_on_dirs = true },
     diagnostics = { enable = false },

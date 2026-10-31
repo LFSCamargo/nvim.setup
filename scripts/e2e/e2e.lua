@@ -1236,8 +1236,13 @@ local ok, err = xpcall(function()
     'Files tree should color names from git status, not icons'
   )
   assert(
-    eval("return require('modules.sidebar').tree_setup().renderer.root_folder_label") == false,
-    'Files tree should not show the project path/.. root label'
+    eval([[
+      local label = require('modules.sidebar').tree_setup().renderer.root_folder_label
+      return type(label) == 'function'
+        and label('/tmp/work/nvim.setup') == 'nvim.setup'
+        and label('/tmp/work/nvim.setup/..') ~= '/tmp/work/nvim.setup/..'
+    ]]),
+    'Files tree should show only the project folder name on the first line'
   )
   assert(
     eval("return require('modules.sidebar').tree_setup().renderer.highlight_opened_files") == 'none',
