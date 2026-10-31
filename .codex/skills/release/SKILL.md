@@ -66,39 +66,49 @@ Run from the repository root. Do not skip hooks.
 
 6. `make changelog` again. This is what folds **Unreleased** into
    `## [1.2.3] - YYYY-MM-DD`. Commit that changelog.
-7. If the tag is **not** on `origin`, move the local tag onto the changelog
-   commit so the tag’s tree contains the dated section:
+7. Write the version’s changelog section to a notes file. This is the markdown
+   that goes on the annotated tag and the GitHub release:
+
+   ```sh
+   NOTES_FILE="$(mktemp)"
+   bash scripts/changelog.sh --notes 1.2.3 > "$NOTES_FILE"
+   ```
+
+8. If the tag is **not** on `origin`, move the local tag onto the changelog
+   commit so the tag’s tree contains the dated section and the annotation is
+   that markdown:
 
    ```sh
    git tag -d v1.2.3
-   git tag -a v1.2.3 -m "v1.2.3"
+   git tag -a v1.2.3 -F "$NOTES_FILE"
    ```
 
    If `origin` already has `v1.2.3`, do not delete or force-push it.
 
-8. Push the branch and the tag:
+9. Push the branch and the tag:
 
    ```sh
    git push origin HEAD
    git push origin v1.2.3
    ```
 
-9. Publish GitHub. Add `--prerelease` when the version contains `-`:
+10. Publish GitHub from the same notes file. Add `--prerelease` when the
+    version contains `-`:
 
-   ```sh
-   gh release create v1.2.3 --title "v1.2.3" --notes "$(
-     cat << 'EOF'
-   See CHANGELOG.md for commits in this version.
-   
-   EOF
-   )"
-   ```
+    ```sh
+    gh release create v1.2.3 --title "v1.2.3" --notes-file "$NOTES_FILE"
+    rm -f -- "$NOTES_FILE"
+    ```
 
-10. Return the release URL.
+    Do not use placeholder notes. `make changelog NOTES=1.2.3` prints the same
+    text.
+
+11. Return the release URL.
 
 ## Do not
 
 - Edit `CHANGELOG.md` by hand.
 - `git commit --amend` or `--force` a tag that is already on `origin`.
 - Skip `make changelog` after the tag (Unreleased will not move).
+- Publish a release without the changelog section for that version.
 - Retag an older release the user did not name (for example an earlier beta).

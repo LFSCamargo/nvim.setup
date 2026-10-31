@@ -95,7 +95,9 @@ Visitor-path and Playwright suites stay local (`pnpm --filter web test`,
 ## Releases
 
 Maintainers bump `VERSION` and fold **Unreleased** into a dated section with
-`make bump` plus `make changelog`. Agents follow the `release` skill
+`make bump` plus `make changelog`. The annotated tag and GitHub release use
+that section (`make changelog NOTES=1.2.3` or `bash scripts/changelog.sh
+--notes 1.2.3`). Agents follow the `release` skill
 ([`.cursor/skills/release/SKILL.md`](.cursor/skills/release/SKILL.md), with
 identical copies under `.claude/skills/` and `.codex/skills/`).
 

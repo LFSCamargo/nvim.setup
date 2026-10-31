@@ -160,6 +160,7 @@ Run these from the repository:
 | `make bump VERSION=2.0.0`                      | Set this setup's release version (`1.2.3` or `1.2.3-beta`)                               |
 | `make commitlint`                              | Check the latest commit message against Conventional Commits                             |
 | `make changelog`                               | Validate every commit and regenerate `CHANGELOG.md`                                      |
+| `make changelog NOTES=2.0.0`                   | Print the changelog markdown for that version (tag and GitHub release notes)             |
 
 Prefer editing `nvim/` here and running `make install`. If you edited the installed config instead:
 
@@ -190,7 +191,7 @@ Use `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `
 
 After each commit, run `make changelog`. If `CHANGELOG.md` changed, commit it as `chore(changelog): regenerate from commits` before pushing. A `pre-push` hook and CI fail when the file is stale. Regeneration commits are omitted from the changelog so that extra commit does not loop.
 
-`make changelog` lints the full history with those rules and rewrites [CHANGELOG.md](CHANGELOG.md). Conventional commits are grouped by type; older messages without a type go under Other. Tagged `vX.Y.Z` or `vX.Y.Z-beta` releases become dated sections; untagged commits stay under Unreleased. Agents fold Unreleased into a version with the `release` skill.
+`make changelog` lints the full history with those rules and rewrites [CHANGELOG.md](CHANGELOG.md). Conventional commits are grouped by type; older messages without a type go under Other. Tagged `vX.Y.Z` or `vX.Y.Z-beta` releases become dated sections; untagged commits stay under Unreleased. `make changelog NOTES=2.0.0` prints that section for a Git tag annotation and the GitHub release body. Agents fold Unreleased into a version with the `release` skill.
 
 Cursor, Claude Code, and Codex follow [AGENTS.md](AGENTS.md). After code changes they write tests, check for spaghetti, run `make test`, review for vulnerabilities, and keep `docs/` in sync. Claude Code also reads [CLAUDE.md](CLAUDE.md); Cursor also loads `.cursor/rules/`. Project skills (`commit-separately`, `release`) are identical copies under `.cursor/skills/`, `.claude/skills/`, and `.codex/skills/`. If you ask to commit separately, they follow `commit-separately`. If you ask to release or bump the version, they follow `release`. Humans follow [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/TUTORIAL.md](docs/TUTORIAL.md).
 

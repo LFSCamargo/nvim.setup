@@ -63,5 +63,5 @@ scan: ## Fail on OWASP SAST findings and moderate-or-higher npm advisories
 commitlint: ## Check the latest commit message against Conventional Commits
 	@pnpm exec commitlint --last --verbose
 
-changelog: ## Validate every commit and regenerate CHANGELOG.md
-	@bash scripts/changelog.sh
+changelog: ## Validate every commit and regenerate CHANGELOG.md; NOTES=1.2.3 prints that section
+	@if [[ -n "$(NOTES)" ]]; then bash scripts/changelog.sh --notes "$(NOTES)"; else bash scripts/changelog.sh; fi
