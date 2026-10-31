@@ -31,6 +31,13 @@ local actions = {
     end,
   },
   {
+    'Open image',
+    'image',
+    function()
+      vim.cmd.ImageOpen()
+    end,
+  },
+  {
     'Show diagnostics',
     'errors',
     function()

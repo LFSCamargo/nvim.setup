@@ -54,6 +54,7 @@ require('lazy').setup(require('modules.plugins').specs(), {
 require('modules.agents')
 require('modules.session')
 require('modules.keys')
+require('modules.images')
 require('modules.appearance')
 require('modules.statusline')
 require('modules.startup')
