@@ -13,6 +13,7 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Features
 
+- refresh landing page and make trackpad helper optional ([713983f](https://github.com/LFSCamargo/nvim.setup/commit/713983f4537e47f63b8fef698cbd002bbfbadc8f))
 - **themes:** add theme selection and synchronize editor chrome ([296844c](https://github.com/LFSCamargo/nvim.setup/commit/296844c66ad0f9360ee4f374cf4fbcf470641252))
 - **hscroll:** support horizontal scrolling and trackpad input ([b23290f](https://github.com/LFSCamargo/nvim.setup/commit/b23290f54bed98612ed0f508b9f83b0d5f52be33))
 
