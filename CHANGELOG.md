@@ -9,6 +9,10 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ## [Unreleased]
 
+### Features
+
+- **changelog:** export release notes for tags and GitHub releases ([fbc1341](https://github.com/LFSCamargo/nvim.setup/commit/fbc134132e86dd0895548d33af2efdc565e3d42e))
+
 ## [2.0.0] - 2026-10-31
 
 ### Features
