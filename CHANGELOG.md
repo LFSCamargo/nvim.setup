@@ -30,10 +30,14 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 - **release:** v1.0.0 ([005a61c](https://github.com/LFSCamargo/nvim.setup/commit/005a61c2b624b657da49483205d3f56784ebdb97))
 
-## [1.0.0-beta] - 2026-10-30
+## [1.0.0] - 2026-10-31
 
 ### Features
 
+- organize modules and update the landing page for v1.0 ([791df95](https://github.com/LFSCamargo/nvim.setup/commit/791df95d83969b9651157c2caf1d7005b2e80d8f))
+- **editor:** add Git diff and context menus ([41b0fa2](https://github.com/LFSCamargo/nvim.setup/commit/41b0fa2f9cda200353d12788d8810026c080b4cf))
+- **editor:** add customizable settings and extension marketplace ([ac8b392](https://github.com/LFSCamargo/nvim.setup/commit/ac8b392fb135f22716da35e90372103ab55beb9c))
+- **editor:** add Settings sidebar and extract format and statusline ([8801c16](https://github.com/LFSCamargo/nvim.setup/commit/8801c1613bdd345b44c6010c21d95be6f937fbd1))
 - **web:** publish titles, Open Graph tags, and a sitemap ([e83f390](https://github.com/LFSCamargo/nvim.setup/commit/e83f390e663862bc54c10f9bb7a30a1672080e35))
 - **web:** render docs and install samples as terminal blocks ([6b24ba8](https://github.com/LFSCamargo/nvim.setup/commit/6b24ba80c80cdf7cfebdfb72c54d1f926e6014bd))
 - **web:** add a fourth cropped workspace screenshot ([9fd1412](https://github.com/LFSCamargo/nvim.setup/commit/9fd14120606ba231b457ba67f18fedbbb5e2b594))
@@ -59,6 +63,7 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Bug Fixes
 
+- **session:** disable swap files without touching restore ([e147837](https://github.com/LFSCamargo/nvim.setup/commit/e1478371dc425c053b06a56be6a1b9c1a9d31770))
 - **web:** serve the SPA shell when a docs URL is refreshed ([e316170](https://github.com/LFSCamargo/nvim.setup/commit/e3161705bf980d02267bdde01d2b97cffe5932c6))
 - **theme:** pick nav black or white from the real backdrop ([bb7fb7f](https://github.com/LFSCamargo/nvim.setup/commit/bb7fb7f4a4045e2c0cb6736f0255442f767dc2bb))
 - **deps:** patch npm advisories and harden the workspace ([c94e9ac](https://github.com/LFSCamargo/nvim.setup/commit/c94e9ac765aa6833b563591f61cf0877b587259b))
@@ -69,6 +74,9 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Documentation
 
+- **editor:** explain Git diff and context menu actions ([c96795b](https://github.com/LFSCamargo/nvim.setup/commit/c96795b0af3167bdc8908b6386a21c41ab8d1869))
+- add a contributing guide and the MIT license ([d43e0c0](https://github.com/LFSCamargo/nvim.setup/commit/d43e0c01d20025a253add11437f0a807817e57b5))
+- add a release skill for version bumps ([bdaf13d](https://github.com/LFSCamargo/nvim.setup/commit/bdaf13df8bf57626035acb39a49e5d5214bd0021))
 - record fonts, extra chat CLIs, and light-mode nav contrast ([79dc8d6](https://github.com/LFSCamargo/nvim.setup/commit/79dc8d6f420112ffd810332af9e37781cbfb0b91))
 - **agents:** add a skill to commit separately by scope ([dc3e772](https://github.com/LFSCamargo/nvim.setup/commit/dc3e77252cf64e3c7cb3bc105018152ee243d1a8))
 - **security:** document the OWASP scan and audit gate ([37beafd](https://github.com/LFSCamargo/nvim.setup/commit/37beafd817303ef3359b10d315c5df386ef3ed6f))
@@ -99,6 +107,7 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Chores
 
+- **release:** v1.0.0 ([005a61c](https://github.com/LFSCamargo/nvim.setup/commit/005a61c2b624b657da49483205d3f56784ebdb97))
 - **release:** v1.0.0-beta ([3db91f9](https://github.com/LFSCamargo/nvim.setup/commit/3db91f9a9f9af93d9a12c4fe58b5a30754bfec96))
 - **workspace:** keep Nx target defaults formatted ([073f9cf](https://github.com/LFSCamargo/nvim.setup/commit/073f9cffb9e90b3cb11d433764e385c7351341fe))
 - adds new view for recent commits from the repository ([9057d9b](https://github.com/LFSCamargo/nvim.setup/commit/9057d9b28fdb3be095a10505a158e22603eeb59a))
@@ -111,4 +120,4 @@ Scopes are optional. Commits from before that convention are listed under Other.
 - Package Neovim setup with portable install and maintenance scripts ([4a3edaa](https://github.com/LFSCamargo/nvim.setup/commit/4a3edaabc8c887c475080a22263e0a66af1a05f9))
 
 [Unreleased]: https://github.com/LFSCamargo/nvim.setup/compare/v1.0.0-beta...HEAD
-[1.0.0-beta]: https://github.com/LFSCamargo/nvim.setup/releases/tag/v1.0.0-beta
+[1.0.0]: https://github.com/LFSCamargo/nvim.setup/releases/tag/v1.0.0
