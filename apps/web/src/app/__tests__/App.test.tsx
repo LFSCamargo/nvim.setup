@@ -253,6 +253,22 @@ describe('landing page visitor paths', () => {
     }
   });
 
+  it('lets visitors pin a published setup version on the installer', () => {
+    renderApp();
+    const version = screen.getByLabelText('Setup version');
+    expect((version as HTMLSelectElement).value).toBe('v1.1.0');
+    expect(
+      screen.getByLabelText('Standard installation commands').textContent,
+    ).toContain('bash -s -- --version v1.1.0');
+    fireEvent.change(version, { target: { value: 'main' } });
+    expect(
+      screen.getByLabelText('Standard installation commands').textContent,
+    ).toContain('scripts/bootstrap.sh | bash');
+    expect(
+      screen.getByLabelText('Standard installation commands').textContent,
+    ).not.toContain('--version');
+  });
+
   it('exposes installation, documentation, and a real help destination', () => {
     renderApp();
     expect(

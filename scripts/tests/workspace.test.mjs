@@ -37,6 +37,15 @@ test('workspace test commands resolve after the scripts move', () => {
   }
 });
 
+test('website install fallback matches the repo VERSION', () => {
+  const version = read('VERSION').trim();
+  assert.match(version, /^\d+\.\d+\.\d+/);
+  assert.match(
+    read('apps/web/src/modules/home/utils/releases.ts'),
+    new RegExp(`fallbackRelease = 'v${version.replaceAll('.', '\\.')}'`),
+  );
+});
+
 test('web shared files sit in components, hooks, utils, or constants', () => {
   const kinds = new Set(['components', 'hooks', 'utils', 'constants']);
   const files = readdirSync(new URL('apps/web/src/shared/', root), {

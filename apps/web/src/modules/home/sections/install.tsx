@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { docs } from '@/shared/constants/site';
 import {
-  commands,
   installSteps,
   requirements,
   type InstallMode,
 } from '@/modules/home/constants/install-content';
+import { useInstallVersions } from '@/modules/home/hooks/use-install-versions';
+import { installCommands } from '@/modules/home/utils/releases';
 import { CodeBlock } from '@/shared/components/code-block';
 import { LiquidGlass } from '@/shared/components/liquid-glass';
 import { Reveal } from '@/shared/components/reveal';
@@ -17,6 +18,8 @@ export function Install() {
   const { theme } = useTheme();
   const inverted = theme === 'dark';
   const [mode, setMode] = useState<InstallMode>('standard');
+  const { refs, selected, setSelected } = useInstallVersions();
+  const recipe = installCommands(mode, selected);
   const [copy, setCopy] = useState('Copy commands');
 
   useEffect(() => {
@@ -26,7 +29,7 @@ export function Install() {
 
   async function copyCommands() {
     try {
-      await navigator.clipboard.writeText(commands[mode]);
+      await navigator.clipboard.writeText(recipe);
       setCopy('Copied ✓');
     } catch {
       setCopy('Select and copy below');
@@ -62,9 +65,10 @@ export function Install() {
               inverted ? 'text-zinc-500' : 'text-zinc-400',
             )}
           >
-            One command. A complete workspace. The installer fetches this setup
-            and installs Neovim if you do not have it. Choose a fresh install,
-            or try it alongside your current configuration.
+            One command. A complete workspace. Pick a release, or follow main.
+            The installer fetches that version and installs Neovim if you do not
+            have it. Choose a fresh install, or try it alongside your current
+            configuration.
           </p>
           <ol className="mt-10 flex flex-col gap-7">
             {installSteps.map((step) => (
@@ -123,6 +127,25 @@ export function Install() {
               <span>YOUR TERMINAL</span>
               <span aria-hidden="true">↗</span>
             </div>
+            <label className="flex items-center justify-between gap-4 px-5 pt-4 text-xs text-zinc-400">
+              <span className="shrink-0 tracking-[0.12em]">VERSION</span>
+              <select
+                aria-label="Setup version"
+                value={selected}
+                onChange={(event) => setSelected(event.target.value)}
+                className="min-w-0 flex-1 bg-transparent text-right text-zinc-100 outline-none"
+              >
+                {refs.map((item) => (
+                  <option
+                    key={item.id}
+                    value={item.id}
+                    className="text-zinc-900"
+                  >
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+            </label>
             <div
               className="flex gap-5 px-5 pt-4"
               aria-label="Installation method"
@@ -149,7 +172,7 @@ export function Install() {
               ))}
             </div>
             <CodeBlock
-              code={commands[mode]}
+              code={recipe}
               language="sh"
               showHeader={false}
               framed={false}

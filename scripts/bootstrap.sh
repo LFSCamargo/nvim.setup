@@ -25,16 +25,18 @@ Usage:
 
   ./scripts/bootstrap.sh            # from a clone: skip fetch, install here
   ./scripts/bootstrap.sh --preview  # NVIM_APPNAME=nvim-preview
+  curl ... | bash -s -- --version v1.1.0
 
 Options:
-  --preview   Install alongside your current Neovim config
-  -h, --help  Show this help
+  --preview         Install alongside your current Neovim config
+  --version <tag>   Install that Git tag (v1.1.0). Accepts 1.1.0 as well.
+  -h, --help        Show this help
 
 Environment:
   NVIM_APPNAME        Neovim app name (default: nvim)
   NVIM_SETUP_HOME     Clone destination (default: ~/.local/share/nvim.setup)
   NVIM_SETUP_REPO     Git URL (default: official GitHub repo)
-  NVIM_SETUP_BRANCH   Branch or tag (default: main)
+  NVIM_SETUP_BRANCH   Branch or tag (default: main, overridden by --version)
 EOF
 }
 
@@ -108,11 +110,35 @@ validate_repo() {
   esac
 }
 
+normalize_ref() {
+  local raw="$1"
+  if [[ "$raw" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][A-Za-z0-9.]+)?$ ]]; then
+    raw="v$raw"
+  fi
+  BRANCH="$raw"
+}
+
 validate_branch() {
   case "$BRANCH" in
     '' | *..* | *[[:space:]]* | -*) die 'Invalid NVIM_SETUP_BRANCH.' ;;
   esac
   [[ "$BRANCH" =~ ^[A-Za-z0-9._/-]+$ ]] || die 'Invalid NVIM_SETUP_BRANCH.'
+}
+
+fetch_ref() {
+  local dest="$1"
+  if [[ "$BRANCH" == main || "$BRANCH" == master ]]; then
+    git -C "$dest" fetch --depth 1 origin "$BRANCH"
+    git -C "$dest" checkout --force "$BRANCH"
+    git -C "$dest" pull --ff-only origin "$BRANCH"
+    return 0
+  fi
+  if git -C "$dest" fetch --depth 1 origin "refs/tags/$BRANCH:refs/tags/$BRANCH"; then
+    git -C "$dest" checkout --force "$BRANCH"
+    return 0
+  fi
+  git -C "$dest" fetch --depth 1 origin "$BRANCH"
+  git -C "$dest" checkout --force "$BRANCH"
 }
 
 validate_dest() {
@@ -148,9 +174,7 @@ ensure_repo() {
   if [[ -e "$DEST" ]]; then
     [[ -d "$DEST/.git" ]] || die "Refusing to overwrite $DEST (not a git checkout)."
     say "Updating $DEST"
-    git -C "$DEST" fetch --depth 1 origin "$BRANCH"
-    git -C "$DEST" checkout --force "$BRANCH"
-    git -C "$DEST" pull --ff-only origin "$BRANCH"
+    fetch_ref "$DEST"
   else
     say "Cloning nvim.setup into $DEST"
     mkdir -p -- "$(dirname -- "$DEST")"
@@ -178,16 +202,28 @@ ensure_login_path() {
   say "Added PATH to $rc. Open a new terminal if nvim is not found."
 }
 
-for arg in "$@"; do
-  case "$arg" in
-    --preview) export NVIM_APPNAME="${NVIM_APPNAME:-nvim-preview}" ;;
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --preview)
+      export NVIM_APPNAME="${NVIM_APPNAME:-nvim-preview}"
+      shift
+      ;;
+    --version)
+      [[ $# -ge 2 ]] || die '--version needs a tag like v1.1.0'
+      normalize_ref "$2"
+      shift 2
+      ;;
+    --version=*)
+      normalize_ref "${1#--version=}"
+      shift
+      ;;
     -h | --help)
       usage
       exit 0
       ;;
     *)
       usage >&2
-      die "Unknown option: $arg"
+      die "Unknown option: $1"
       ;;
   esac
 done

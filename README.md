@@ -40,14 +40,16 @@ Want to change it? [Contributing](CONTRIBUTING.md) is the contract;
 You do not need to clone this repository first. One command fetches the setup, installs Neovim and the other dependencies if they are missing, installs icon fonts, then deploys the config.
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/LFSCamargo/nvim.setup/main/scripts/bootstrap.sh | bash
+curl -fsSL https://raw.githubusercontent.com/LFSCamargo/nvim.setup/main/scripts/bootstrap.sh | bash -s -- --version v1.1.0
 nvim .
 ```
+
+The landing page lists published releases. Pick one, or follow `main` for the current branch. Same flag from a terminal: `--version v1.1.0` (or `1.1.0`). Close other Neovim instances first.
 
 To try this without replacing `~/.config/nvim`:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/LFSCamargo/nvim.setup/main/scripts/bootstrap.sh | bash -s -- --preview
+curl -fsSL https://raw.githubusercontent.com/LFSCamargo/nvim.setup/main/scripts/bootstrap.sh | bash -s -- --preview --version v1.1.0
 NVIM_APPNAME=nvim-preview nvim .
 ```
 

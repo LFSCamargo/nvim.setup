@@ -22,9 +22,11 @@ Keep `~/.local/bin` on your PATH, and `~/.cargo/bin` if you use Cargo. The termi
 ## Install
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/LFSCamargo/nvim.setup/main/scripts/bootstrap.sh | bash
+curl -fsSL https://raw.githubusercontent.com/LFSCamargo/nvim.setup/main/scripts/bootstrap.sh | bash -s -- --version v1.1.0
 nvim .
 ```
+
+The landing-page installer lists published releases. `--version v1.1.0` (or `1.1.0`) pins that tag. Omit it, or pass nothing after selecting **main**, to follow the current branch.
 
 Do not pipe that command to sudo. Close other Neovim instances first. The script clones into `~/.local/share/nvim.setup`, installs missing tools (including Neovim 0.12+ and Node 22+), deploys the config, and installs the Nerd Font files used by the Files and Git Devicons. Distro packages can be older than this setup needs; the installer fetches current binaries when it has to. Restart the terminal once so those fonts load.
 
@@ -33,7 +35,7 @@ Fork the repo if you want a copy you can customize, then run `./scripts/bootstra
 ## Try it without replacing your config
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/LFSCamargo/nvim.setup/main/scripts/bootstrap.sh | bash -s -- --preview
+curl -fsSL https://raw.githubusercontent.com/LFSCamargo/nvim.setup/main/scripts/bootstrap.sh | bash -s -- --preview --version v1.1.0
 NVIM_APPNAME=nvim-preview nvim .
 ```
 

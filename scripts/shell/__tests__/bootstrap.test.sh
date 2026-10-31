@@ -132,7 +132,34 @@ fi
 grep -F 'Unknown option: --evil' "$home.err" > /dev/null || fail 'unknown option message missing'
 pass 'bootstrap rejects unknown flags'
 
-# 5. Running from a checkout skips git clone and uses that tree.
+# 5. --version pins the clone to that tag and accepts a bare semver.
+home="$TMP/version"
+run_piped "$home" --version 1.1.0
+assert_file_has "$home/calls.log" 'git clone --branch v1.1.0 --depth 1 -- https://github.com/LFSCamargo/nvim.setup.git'
+assert_file_has "$home/calls.log" 'install NVIM_APPNAME=nvim'
+pass 'piped bootstrap --version clones the requested tag'
+
+# 6. --preview and --version can be combined, and a missing tag is rejected.
+home="$TMP/preview-version"
+run_piped "$home" --preview --version v1.0.0
+assert_file_has "$home/calls.log" 'git clone --branch v1.0.0 --depth 1 --'
+assert_file_has "$home/calls.log" 'install NVIM_APPNAME=nvim-preview'
+home="$TMP/badversion"
+if run_piped "$home" --version '../evil' 2> "$home.err"; then
+  fail '--version with a path must exit non-zero'
+fi
+grep -F 'Invalid NVIM_SETUP_BRANCH' "$home.err" > /dev/null || fail 'invalid version message missing'
+if grep -F 'git clone' "$home/calls.log" > /dev/null 2>&1; then
+  fail 'invalid --version must not clone'
+fi
+home="$TMP/missingversion"
+if run_piped "$home" --version 2> "$home.err"; then
+  fail 'missing --version value should exit non-zero'
+fi
+grep -F -- '--version needs a tag' "$home.err" > /dev/null || fail 'missing version message missing'
+pass 'bootstrap combines --preview --version and rejects bad tags'
+
+# 7. Running from a checkout skips git clone and uses that tree.
 home="$TMP/checkout"
 mkdir -p "$home/repo/scripts" "$home/repo/nvim" "$home/bin"
 calls="$home/calls.log"
@@ -169,7 +196,7 @@ if grep -F 'git clone' "$calls" > /dev/null; then
 fi
 pass 'bootstrap from a clone skips fetch and installs in place'
 
-# 6. Reject a non-GitHub repo URL (no arbitrary remote execution).
+# 8. Reject a non-GitHub repo URL (no arbitrary remote execution).
 home="$TMP/badrepo"
 mkdir -p "$home"
 calls="$home/calls.log"
@@ -189,7 +216,7 @@ if grep -F 'git clone' "$calls" > /dev/null; then
 fi
 pass 'bootstrap rejects a non-GitHub NVIM_SETUP_REPO'
 
-# 7. Script source keeps the public one-liner and never pipes curl into sh -c without quoting.
+# 9. Script source keeps the public one-liner and never pipes curl into sh -c without quoting.
 grep -F 'raw.githubusercontent.com/LFSCamargo/nvim.setup/main/scripts/bootstrap.sh' "$ROOT/scripts/bootstrap.sh" > /dev/null \
   || fail 'bootstrap help should show the public curl URL'
 grep -F 'git clone --branch' "$ROOT/scripts/bootstrap.sh" > /dev/null \

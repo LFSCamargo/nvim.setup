@@ -1,15 +1,4 @@
-export const commands = {
-  standard: [
-    'curl -fsSL https://raw.githubusercontent.com/LFSCamargo/nvim.setup/main/scripts/bootstrap.sh | bash',
-    'nvim .',
-  ].join('\n'),
-  preview: [
-    'curl -fsSL https://raw.githubusercontent.com/LFSCamargo/nvim.setup/main/scripts/bootstrap.sh | bash -s -- --preview',
-    'NVIM_APPNAME=nvim-preview nvim .',
-  ].join('\n'),
-} as const;
-
-export type InstallMode = keyof typeof commands;
+export type InstallMode = 'standard' | 'preview';
 
 export const installSteps = [
   {

@@ -53,8 +53,12 @@ test('installation, screenshots, help and keyboard access work', async ({
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('build');
+  await expect(page.getByLabel('Setup version')).toHaveValue('v1.1.0');
   await expect(page.getByLabel('Standard installation commands')).toContainText(
     'scripts/bootstrap.sh',
+  );
+  await expect(page.getByLabel('Standard installation commands')).toContainText(
+    '--version v1.1.0',
   );
   await expect(page.getByLabel('Standard installation commands')).toHaveClass(
     /whitespace-pre-wrap/,
