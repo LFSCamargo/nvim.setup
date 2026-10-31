@@ -24,6 +24,10 @@ Scopes are optional. Commits from before that convention are listed under Other.
 - **agents:** document themes and scrolling modules ([1a12ea1](https://github.com/LFSCamargo/nvim.setup/commit/1a12ea163203ddfa8f2dfdeed962c988f54c782e))
 - **web:** update site copy for themes and scrolling ([5686714](https://github.com/LFSCamargo/nvim.setup/commit/5686714e6b9862368f16fa59d37dd77d2e3c0768))
 
+### Chores
+
+- **release:** v2.0.0 ([bb194bb](https://github.com/LFSCamargo/nvim.setup/commit/bb194bb29770a3089211ad06280618cae91553b4))
+
 ## [1.1.0] - 2026-10-31
 
 ### Features
