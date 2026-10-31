@@ -9,6 +9,8 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-31
+
 ### Features
 
 - **editor:** restyle pane headers with powerline tabs ([0eefbec](https://github.com/LFSCamargo/nvim.setup/commit/0eefbeccc42335a3dcd3a5244fc0814bc85df9b8))
@@ -129,5 +131,6 @@ Scopes are optional. Commits from before that convention are listed under Other.
 - Let clicking a chat pane enter terminal input and add a simulated UI e2e check. ([12dce18](https://github.com/LFSCamargo/nvim.setup/commit/12dce188d82256d71d64432a354c01115fec7243))
 - Package Neovim setup with portable install and maintenance scripts ([4a3edaa](https://github.com/LFSCamargo/nvim.setup/commit/4a3edaabc8c887c475080a22263e0a66af1a05f9))
 
-[Unreleased]: https://github.com/LFSCamargo/nvim.setup/compare/v1.0.0-beta...HEAD
+[Unreleased]: https://github.com/LFSCamargo/nvim.setup/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/LFSCamargo/nvim.setup/compare/v1.0.0-beta...v1.1.0
 [1.0.0]: https://github.com/LFSCamargo/nvim.setup/releases/tag/v1.0.0
