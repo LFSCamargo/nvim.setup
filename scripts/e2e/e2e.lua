@@ -16,7 +16,7 @@ local child = vim.fn.jobstart({
   '-u',
   'NONE',
   '-c',
-  'luafile ' .. vim.fn.fnameescape(vim.env.SETUP_ROOT .. '/scripts/tests/e2e-init.lua'),
+  'luafile ' .. vim.fn.fnameescape(vim.env.SETUP_ROOT .. '/scripts/e2e/e2e-init.lua'),
 }, {
   rpc = true,
   on_exit = function(_, status)
@@ -39,6 +39,18 @@ end
 
 local ok, err = xpcall(function()
   request('nvim_ui_attach', 120, 40, { rgb = true })
+  assert(
+    eval([[
+      local tree = require('nvim-tree.api').tree
+      local reload = tree.reload
+      local calls = 0
+      tree.reload = function() calls = calls + 1 end
+      require('modules.icons').apply()
+      tree.reload = reload
+      return calls == 0
+    ]]),
+    'applying icons before the Files tree opens must not reload an unconfigured nvim-tree'
+  )
   assert(eval('return vim.o.more == false'), 'e2e-init must disable more so notify cannot hit-enter')
   assert(
     eval([[
@@ -102,16 +114,23 @@ local ok, err = xpcall(function()
   end
   assert(hl_hex(mode_hl) == '#d79921', 'NORMAL should be faded Gruvbox yellow, got ' .. hl_hex(mode_hl))
   assert(hl_hex(insert_hl) == '#cc241d', 'INSERT should be faded Gruvbox red, got ' .. hl_hex(insert_hl))
+  local terminal_hl = eval("return vim.api.nvim_get_hl(0, { name = 'SLModeTerminal', link = false })")
+  assert(hl_hex(terminal_hl) == '#d79921', 'TERMINAL should use the yellow accent')
+  local right_hl = eval("return vim.api.nvim_get_hl(0, { name = 'SLRight', link = false })")
+  local right_sep_hl = eval("return vim.api.nvim_get_hl(0, { name = 'SLRightSep', link = false })")
+  assert(right_hl.bg == right_sep_hl.fg, 'right powerline point must meet its segment without a seam')
+  assert(right_sep_hl.bg == bar_hl.bg, 'right powerline point must blend into the statusline')
   local tab_hl = eval("return vim.api.nvim_get_hl(0, { name = 'PaneTabActive', link = false })")
   local tab_fg = tab_hl.fg or tab_hl.ctermfg
   assert(tab_fg, 'active tab needs a foreground')
   assert(
-    string.format('#%06x', tab_fg) == '#d79921',
-    'active tab should be faded Gruvbox yellow, got ' .. string.format('#%06x', tab_fg)
+    string.format('#%06x', tab_fg) == '#1d2021' and hl_hex(tab_hl) == '#fabd2f',
+    'active tab should use black text on a bright yellow fill'
   )
   assert(bar_hl.bg or bar_hl.ctermbg, 'statusline bar needs a fill')
   local stl = statusline()
   assert(stl:find('NORMAL', 1, true), 'statusline should show NORMAL, got: ' .. stl)
+  assert(stl:find('', 1, true), 'statusline should end in a raised cursor segment: ' .. stl)
   assert(not stl:find('utf%-8'), 'default utf-8 should stay off the statusline: ' .. stl)
   request('nvim_input', 'i')
   wait_for('insert mode for statusline', function()
@@ -268,7 +287,61 @@ local ok, err = xpcall(function()
       vim.api.nvim_get_option_value('winbar', { win = win }),
       { use_winbar = true, winid = win }
     ).str
-    local files = vim.api.nvim_eval_statusline(require('modules.sidebar').winbar(), { use_winbar = true }).str
+    local sidebar = require('modules.sidebar')
+    local files = vim.api.nvim_eval_statusline(sidebar.winbar(), { use_winbar = true }).str
+    local icons = require('modules.icons').sidebar
+    sidebar.view = 'git'
+    local git_raw = sidebar.winbar()
+    local git_bar = vim.api.nvim_eval_statusline(sidebar.winbar(), { use_winbar = true }).str
+    sidebar.view = 'settings'
+    local settings_bar = vim.api.nvim_eval_statusline(sidebar.winbar(), { use_winbar = true }).str
+    sidebar.view = 'extensions'
+    local extensions_bar = vim.api.nvim_eval_statusline(sidebar.winbar(), { use_winbar = true }).str
+    sidebar.view = 'files'
+    local function has(bar, ...)
+      for _, needle in ipairs({ ... }) do
+        if not bar:find(needle, 1, true) then
+          return false
+        end
+      end
+      return true
+    end
+    local function lacks(bar, ...)
+      for _, needle in ipairs({ ... }) do
+        if bar:find(needle, 1, true) then
+          return false
+        end
+      end
+      return true
+    end
+    local function count(bar, needle)
+      local n, from = 0, 1
+      while true do
+        local i = bar:find(needle, from, true)
+        if not i then
+          return n
+        end
+        n = n + 1
+        from = i + #needle
+      end
+    end
+    local thin = ''
+    local icon_bar = has(files, icons.files, icons.git, icons.settings, icons.extensions, 'Files', '', thin)
+      and lacks(files, 'Git', 'Settings', 'Extensions', '>')
+      and count(files, '') == 1
+      and count(files, thin) == 2
+      and has(git_bar, icons.files, icons.git, 'Git', '', thin)
+      and lacks(git_bar, 'Files', 'Settings', 'Extensions', '>')
+      and count(git_bar, '') == 1
+      and count(git_bar, thin) == 1
+      and has(settings_bar, icons.files, icons.git, icons.settings, 'Settings', '', thin)
+      and lacks(settings_bar, 'Files', 'Git', 'Extensions', '>')
+      and count(settings_bar, '') == 1
+      and count(settings_bar, thin) == 1
+      and has(extensions_bar, icons.files, icons.git, icons.settings, icons.extensions, 'Extensions', '', thin)
+      and lacks(extensions_bar, 'Files', 'Git', 'Settings', '>')
+      and count(extensions_bar, '') == 1
+      and count(extensions_bar, thin) == 2
     local chat = require('modules.agents').win
     local chat_bar = vim.api.nvim_eval_statusline(
       vim.api.nvim_get_option_value('winbar', { win = chat }),
@@ -288,9 +361,37 @@ local ok, err = xpcall(function()
     local needle = 'two.lua ×'
     local i = bar:find(needle, 1, true)
     local close_col = i and vim.fn.strdisplaywidth(bar:sub(1, i + #'two.lua ' - 1)) or -1
+    local raw = require('modules.tabs').render()
+    local here = vim.api.nvim_get_current_win()
+    vim.api.nvim_set_current_win(chat)
+    local chat_raw = require('modules.tabs').render()
+    local agents = require('modules.agents')
+    local fake_id = 1
+    for id in pairs(agents.sessions) do
+      fake_id = math.max(fake_id, id + 1)
+    end
+    local fake_buf = vim.api.nvim_create_buf(false, true)
+    agents.sessions[fake_id] = { buf = fake_buf, label = 'Agent 2', exited = false }
+    local chat_width = vim.api.nvim_win_get_width(chat)
+    vim.api.nvim_win_set_width(chat, 60)
+    local two_chat_raw = require('modules.tabs').render()
+    local two_chat_bar = vim.api.nvim_eval_statusline(two_chat_raw, { use_winbar = true, winid = chat }).str
+    vim.api.nvim_win_set_width(chat, chat_width)
+    agents.sessions[fake_id] = nil
+    vim.api.nvim_buf_delete(fake_buf, { force = true })
+    vim.api.nvim_set_current_win(here)
+    local mark = chat_bar:find('×', 1, true) or chat_bar:find('%S') or 1
+    local chat_tab_col = mark > 1 and vim.fn.strdisplaywidth(chat_bar:sub(1, mark - 1)) or 0
+    if not chat_bar:find('^%s') then
+      chat_tab_col = chat_tab_col + math.max(0, vim.api.nvim_win_get_width(chat) - vim.fn.strdisplaywidth(chat_bar))
+    end
     return {
       bar = bar,
       files = files,
+      git_bar = git_bar,
+      settings_bar = settings_bar,
+      extensions_bar = extensions_bar,
+      icon_bar = icon_bar,
       chat_bar = chat_bar,
       vert = vert,
       winbar_ul = not not wb.underline,
@@ -298,10 +399,33 @@ local ok, err = xpcall(function()
       fill = hex(wb, 'bg'),
       sep_fill = hex(sep, 'bg'),
       active_fill = hex(active, 'bg'),
+      active_fg = hex(active, 'fg'),
       inactive_fill = hex(inactive, 'bg'),
       icon_fill = hex(icon_hl, 'bg'),
       icon_fg = hex(icon_hl, 'fg'),
       close_col = close_col,
+      chat_tab_col = chat_tab_col,
+      chat_right = not not chat_raw:find('%=', 1, true),
+      chat_overflow_join = not not chat_raw:find('%#PaneTabJoinSep#%#PaneTabInactive#%1@v:lua.PaneTabCycle@', 1, true),
+      chat_rev = not not (chat_bar:find('', 1, true) or chat_bar:find('', 1, true)),
+      plus_first = (chat_bar:find('+', 1, true) or 99) < (chat_bar:find('×', 1, true) or 0),
+      editor_left = not raw:find('%=', 1, true),
+      active_icon_uses_tab = not not raw:find('@ %#PaneTabActive#', 1, true),
+      padded_connected_tabs = raw:find('%T%#PaneTabActiveSep#', 1, true)
+        and chat_raw:find('%#PaneTabActiveSep#%#PaneTabActive#', 1, true)
+        and sidebar.winbar():find('%T%#SidebarTabActiveSep#', 1, true)
+        and bar:find('×  ', 1, true)
+        and files:find('Files  ', 1, true)
+        and two_chat_bar:find(' ', 1, true),
+      active_sep_fg = hex(vim.api.nvim_get_hl(0, { name = 'PaneTabActiveSep', link = false }), 'fg'),
+      join_fg = hex(vim.api.nvim_get_hl(0, { name = 'PaneTabJoinSep', link = false }), 'fg'),
+      join_bg = hex(vim.api.nvim_get_hl(0, { name = 'PaneTabJoinSep', link = false }), 'bg'),
+      chat_join = not not two_chat_raw:find('%#PaneTabJoinSep#', 1, true),
+      sidebar_join = not not git_raw:find('%#SidebarTabJoinSep#', 1, true),
+      editor_solid_count = count(bar, ''),
+      chat_solid_count = count(chat_bar, ''),
+      two_chat_solid_count = count(two_chat_raw, ''),
+      two_chat_hollow_count = count(two_chat_raw, ''),
       prev = prev,
       one = a,
       two = b,
@@ -310,42 +434,145 @@ local ok, err = xpcall(function()
   ]])
   assert(
     tabs.bar:find('L one.lua ×', 1, true) and tabs.bar:find('L two.lua ×', 1, true),
-    'tab bar should look like icon name × │ icon name × │ + │, got: ' .. tabs.bar
+    'tab bar should look like icon name ×  icon name ×  +, got: ' .. tabs.bar
   )
-  assert(tabs.bar:find(tabs.vert, 1, true), 'tab bar should use pane dividers, got: ' .. tabs.bar)
+  assert(tabs.bar:find('', 1, true), 'active editor tab should use solid , got: ' .. tabs.bar)
+  assert(tabs.bar:find('', 1, true), 'inactive editor tabs should use hollow , got: ' .. tabs.bar)
+  assert(not tabs.bar:find(tabs.vert, 1, true), 'tab bar should not use pane │ dividers: ' .. tabs.bar)
   local plus = tabs.bar:find('+', 1, true)
   assert(plus, 'tab bar should keep +: ' .. tabs.bar)
   assert(not tabs.bar:sub(plus):find('×', 1, true), '× should sit inside each tab, not after +: ' .. tabs.bar)
   assert(
-    tabs.files:find('Files', 1, true) and tabs.files:find('Git', 1, true) and tabs.files:find('Settings', 1, true),
-    'Files/Git/Settings winbar missing labels: ' .. tabs.files
+    tabs.icon_bar,
+    'sidebar winbar should be  Files       /    Git    , got files='
+      .. tabs.files
+      .. ' git='
+      .. tabs.git_bar
+      .. ' settings='
+      .. tabs.settings_bar
+      .. ' extensions='
+      .. tabs.extensions_bar
   )
-  assert(tabs.files:find(tabs.vert, 1, true), 'Files/Git winbar should use pane dividers, got: ' .. tabs.files)
+  assert(
+    eval([[
+      require('modules.sidebar')
+      local hl = vim.api.nvim_get_hl(0, { name = 'SidebarTabActive', link = false })
+      local inactive = vim.api.nvim_get_hl(0, { name = 'SidebarTabInactive', link = false })
+      local thin = vim.api.nvim_get_hl(0, { name = 'SidebarTabInactiveSep', link = false })
+      local active_sep = vim.api.nvim_get_hl(0, { name = 'SidebarTabActiveSep', link = false })
+      local function hex(n)
+        return n and string.format('#%06x', n) or nil
+      end
+      return not require('modules.appearance').keeps_fill('WinBar')
+        and require('modules.appearance').keeps_fill('SidebarTabActive')
+        and require('modules.appearance').keeps_fill('PaneTabActive')
+        and hex(hl.fg) == '#1d2021'
+        and hex(hl.bg) == '#fabd2f'
+        and hl.bold == true
+        and hex(active_sep.fg) == hex(hl.bg)
+        and not active_sep.bg
+        and hex(inactive.fg) == '#a89984'
+        and not inactive.bg
+        and hex(thin.fg) == '#665c54'
+        and not thin.bg
+    ]]),
+    'active sidebar tab should be yellow with black icon/text; inactive tabs stay transparent'
+  )
+  assert(tabs.files:find('', 1, true), 'active sidebar tab should use solid , got: ' .. tabs.files)
+  assert(tabs.files:find('', 1, true), 'inactive sidebar tabs should use hollow , got: ' .. tabs.files)
+  assert(not tabs.files:find('>', 1, true), 'sidebar tabs should not use >, got: ' .. tabs.files)
+  assert(
+    tabs.extensions_bar:find('', 1, true),
+    'inactive tabs before Extensions should use , got: ' .. tabs.extensions_bar
+  )
+  assert(not tabs.files:find(tabs.vert, 1, true), 'sidebar tabs should not use pane │ dividers: ' .. tabs.files)
   assert(not tabs.files:find('×', 1, true), 'Files/Git tabs should not have close: ' .. tabs.files)
   assert(
     tabs.chat_bar:find('+', 1, true) and tabs.chat_bar:find('×', 1, true),
     'chat tab bar should keep + and in-tab ×: ' .. tabs.chat_bar
   )
-  local chat_plus = tabs.chat_bar:find('+', 1, true)
+  assert(tabs.plus_first, 'agent + should sit before the chat tabs, got: ' .. tabs.chat_bar)
+  assert(tabs.chat_rev, 'agent tabs should use reversed /, got: ' .. tabs.chat_bar)
+  assert(tabs.padded_connected_tabs, 'tabs need internal padding and active points connected to their fills')
+  assert(tabs.editor_solid_count == 1 and tabs.chat_solid_count <= 1, 'only active tabs should have a solid point')
   assert(
-    not tabs.chat_bar:sub(chat_plus):find('×', 1, true),
-    'chat × should sit inside each tab, not after +: ' .. tabs.chat_bar
+    tabs.two_chat_solid_count == 1 and tabs.two_chat_hollow_count >= 1,
+    'an inactive agent beside the active agent must have a hollow point'
   )
+  assert(tabs.active_sep_fg == '#fabd2f', 'active tab point should match the yellow tab fill')
+  assert(
+    not tabs.join_bg and tabs.join_fg == tabs.active_fill,
+    'connector should taper the active fill into the background'
+  )
+  assert(tabs.chat_join and tabs.sidebar_join, 'agent and sidebar connectors should join active tabs')
   assert(not tabs.winbar_ul and not tabs.sep_ul, 'tab bar should not use a bright underline')
   assert(
-    not tabs.fill and not tabs.sep_fill and not tabs.active_fill and not tabs.inactive_fill,
-    'tab bar should stay transparent, got ' .. tostring(tabs.fill)
+    not tabs.fill
+      and not tabs.sep_fill
+      and tabs.active_fill == '#fabd2f'
+      and tabs.active_fg == '#1d2021'
+      and not tabs.inactive_fill,
+    'only the active editor tab should have a yellow background and black text'
   )
   assert(
     not tabs.icon_fill and tabs.icon_fg == '#83a598',
-    'tab Devicons should keep type color without a fill, got '
+    'inactive tab Devicons should keep type color on the transparent bar, got '
       .. tostring(tabs.icon_fg)
       .. ' / '
       .. tostring(tabs.icon_fill)
   )
+  assert(tabs.active_icon_uses_tab, 'active editor tab icon should use the black-on-yellow tab highlight')
+  assert(tabs.editor_left, 'editor tabs should stay on the left of the top bar')
+  assert(tabs.chat_right, 'agent tabs should sit on the right of the top bar')
+  assert(tabs.chat_overflow_join, 'active agent tab should connect to its overflow controls')
+  assert(
+    eval([[
+      local sep = vim.api.nvim_get_hl(0, { name = 'WinSeparator', link = false })
+      local fg = sep.fg and string.format('#%06x', sep.fg)
+      return not require('modules.appearance').keeps_fill('WinSeparator')
+        and not sep.bg and fg == '#504a45'
+    ]]),
+    'pane gutters should be thin, muted, and transparent'
+  )
   assert(tabs.close_col >= 0, 'tab bar should expose × on two.lua: ' .. tabs.bar)
 
   local tab_pos = request('nvim_win_get_position', tabs.win)
+  request('nvim_input_mouse', 'left', 'press', '', 0, tab_pos[1], tab_pos[2] + tabs.close_col - 3)
+  request('nvim_input_mouse', 'left', 'release', '', 0, tab_pos[1], tab_pos[2] + tabs.close_col - 3)
+  wait_for('clicking the second editor tab', function()
+    return request('nvim_win_get_buf', tabs.win) == tabs.two
+  end)
+  assert(
+    eval("return require('modules.tabs').render():find('%#PaneTabJoinSep#', 1, true) ~= nil"),
+    'clicking the second tab should connect its leading point to the yellow fill'
+  )
+  local overflow = eval([[
+    local win = require('modules.tabs').editor_win()
+    local width = vim.api.nvim_win_get_width(win)
+    vim.api.nvim_win_set_width(win, 35)
+    vim.cmd('redraw')
+    local raw = require('modules.tabs').render()
+    local bar = vim.api.nvim_eval_statusline(vim.wo[win].winbar, { use_winbar = true, winid = win }).str
+    local mark = assert(bar:find('‹', 1, true), 'overflow navigation missing: ' .. bar)
+    return { width = width, col = vim.fn.strdisplaywidth(bar:sub(1, mark - 1)), raw = raw }
+  ]])
+  local function assert_overflow(raw)
+    assert(
+      raw:find('%#PaneTabActiveSep#%#PaneTabInactive#%1@v:lua.PaneTabCycle@', 1, true)
+        and raw:find('PaneTabCycle@ › %T%#PaneTabSep#', 1, true),
+      'active point must touch its tab before the overflow controls: ' .. raw
+    )
+  end
+  assert_overflow(overflow.raw)
+  local overflow_pos = request('nvim_win_get_position', tabs.win)
+  request('nvim_input_mouse', 'left', 'press', '', 0, overflow_pos[1], overflow_pos[2] + overflow.col)
+  request('nvim_input_mouse', 'left', 'release', '', 0, overflow_pos[1], overflow_pos[2] + overflow.col)
+  wait_for('clicking overflow navigation', function()
+    return request('nvim_win_get_buf', tabs.win) ~= tabs.two
+  end)
+  assert_overflow(eval("return require('modules.tabs').render()"))
+  request('nvim_win_set_width', tabs.win, overflow.width)
+  request('nvim_win_set_buf', tabs.win, tabs.one)
   request('nvim_input_mouse', 'right', 'press', '', 0, tab_pos[1], tab_pos[2] + 4)
   request('nvim_input_mouse', 'right', 'release', '', 0, tab_pos[1], tab_pos[2] + 4)
   wait_for('right-clicking editor tab', function()
@@ -359,9 +586,13 @@ local ok, err = xpcall(function()
   wait_for('closing editor tab menu', function()
     return eval("return not require('modules.context_menu').visible()")
   end)
-  local chat_pos = request('nvim_win_get_position', chat)
-  request('nvim_input_mouse', 'right', 'press', '', 0, chat_pos[1], chat_pos[2] + 4)
-  request('nvim_input_mouse', 'right', 'release', '', 0, chat_pos[1], chat_pos[2] + 4)
+  eval([[
+    local agents = require('modules.agents')
+    local ids = vim.tbl_keys(agents.sessions)
+    table.sort(ids)
+    local pos = vim.api.nvim_win_get_position(agents.win)
+    require('modules.context_menu').chat_tab(ids[1], { row = pos[1] + 1, col = pos[2] + 2 })
+  ]])
   wait_for('right-clicking chat tab', function()
     return eval("return require('modules.context_menu').visible()")
   end)
@@ -406,7 +637,7 @@ local ok, err = xpcall(function()
     tabs.two,
     tabs.win
   ))
-  print('PASS: tab bar uses in-tab ×, pane dividers, and a horizontal rule')
+  print('PASS: tab bar uses one solid active point, hollow inactive points, transparent fills, and thin pane borders')
 
   local function click(win)
     local pos = request('nvim_win_get_position', win)
@@ -483,6 +714,25 @@ local ok, err = xpcall(function()
     ))
   end)
   print('PASS: agent process exit closes the chat tab')
+
+  eval("require('modules.agents').new('cursor')")
+  local close_test_id = eval("return require('modules.agents').active")
+  local close_test = eval([[
+    local win = require('modules.agents').win
+    local text = vim.api.nvim_eval_statusline(vim.api.nvim_get_option_value('winbar', { win = win }),
+      { use_winbar = true, winid = win }).str
+    local mark = assert(text:find('×', 1, true), 'agent close button missing')
+    local label = assert(text:find('Agent', mark + #'×', true), 'agent label must follow the close button')
+    local col = vim.fn.strdisplaywidth(text:sub(1, mark - 1))
+    if not text:find('^%s') then col = col + math.max(0, vim.api.nvim_win_get_width(win) - vim.fn.strdisplaywidth(text)) end
+    return { win = win, col = col, text = text, label = label }
+  ]])
+  local close_pos = request('nvim_win_get_position', close_test.win)
+  request('nvim_input_mouse', 'left', 'press', '', 0, close_pos[1], close_pos[2] + close_test.col)
+  request('nvim_input_mouse', 'left', 'release', '', 0, close_pos[1], close_pos[2] + close_test.col)
+  wait_for('left-side agent close button', function()
+    return eval(string.format('return require("modules.agents").sessions[%d] == nil', close_test_id))
+  end)
 
   eval("require('modules.agents').new('cursor')")
   wait_for('extra agent tab', function()
@@ -889,9 +1139,24 @@ local ok, err = xpcall(function()
     vim.api.nvim_buf_set_lines(buf, 0, -1, false, { 'app.ts' })
     vim.bo[buf].filetype = 'NvimTree'
     require('modules.sidebar').tree_setup().on_attach(buf)
+    vim.api.nvim_exec_autocmds('BufWinEnter', { buffer = buf })
     vim.g.e2e_tree_win = win
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, { 'app.ts' })
   ]])
+  wait_for('Files top spacing after tree redraw', function()
+    return eval([[
+      local buf = vim.api.nvim_win_get_buf(vim.g.e2e_tree_win)
+      local marks = vim.api.nvim_buf_get_extmarks(buf, vim.api.nvim_get_namespaces().SidebarTreeSpacing, 0, -1,
+        { details = true })
+      return #marks == 1 and marks[1][2] == 0 and marks[1][4].virt_lines_above == true
+    ]])
+  end)
   local tree_pos = eval([[return vim.fn.screenpos(vim.g.e2e_tree_win, 1, 1)]])
+  local tree_top = request('nvim_win_get_position', eval('return vim.g.e2e_tree_win'))[1]
+  assert(
+    tree_pos.row >= tree_top + 3,
+    'Files tree should show a blank row beneath its tab: row=' .. tree_pos.row .. ' top=' .. tree_top
+  )
   request('nvim_input_mouse', 'right', 'press', '', 0, tree_pos.row, tree_pos.col - 1)
   request('nvim_input_mouse', 'right', 'release', '', 0, tree_pos.row, tree_pos.col - 1)
   wait_for('file tree right-click menu', function()
@@ -937,6 +1202,10 @@ local ok, err = xpcall(function()
     return log_line('COMMITS') > 0 and text:find('initial', 1, true) ~= nil
   end)
   local shown = sidebar_text()
+  assert(
+    shown:sub(1, 1) == '\n' and not shown:find('SOURCE CONTROL', 1, true),
+    'Git list should not repeat the tab title'
+  )
   local function tree_icons_safe()
     return eval([[
       local function folder_ok(icons)
@@ -1037,11 +1306,23 @@ local ok, err = xpcall(function()
     eval([[
     local found = false
     for _, win in ipairs(vim.api.nvim_list_wins()) do
-      if vim.bo[vim.api.nvim_win_get_buf(win)].filetype == 'git-composer' then found = true end
+      if vim.bo[vim.api.nvim_win_get_buf(win)].filetype == 'git-composer' then
+        local buf = vim.api.nvim_win_get_buf(win)
+        local marks = vim.api.nvim_buf_get_extmarks(buf, vim.api.nvim_get_namespaces().GitComposer, 0, -1,
+          { details = true })
+        local spaced = false
+        for _, mark in ipairs(marks) do
+          if mark[2] == 0 and mark[4].virt_lines_above then spaced = true end
+        end
+        local pos = vim.fn.screenpos(win, 1, 1)
+        local top = vim.api.nvim_win_get_position(win)[1]
+        found = spaced and pos.row >= top + 3
+          and vim.api.nvim_win_call(win, function() return vim.opt_local.fillchars:get().eob == ' ' end)
+      end
     end
     return found
   ]]),
-    'commit message composer missing'
+    'commit message composer should have top spacing and hide end-of-buffer markers'
   )
   assert(
     eval([[
@@ -1382,6 +1663,10 @@ local ok, err = xpcall(function()
   end)
   local settings_text = eval("return table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), '\\n')")
   assert(
+    settings_text:sub(1, 1) == '\n' and not settings_text:find('SETTINGS', 1, true),
+    'Settings should begin with a blank line instead of a repeated heading'
+  )
+  assert(
     settings_text:find('File icons', 1, true) and settings_text:find('[Reload config]', 1, true),
     'Settings panel missing controls: ' .. settings_text
   )
@@ -1441,6 +1726,13 @@ local ok, err = xpcall(function()
   wait_for('Extensions sidebar', function()
     return eval('return vim.bo.filetype') == 'setup-extensions'
   end)
+  assert(
+    eval([[
+    local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+    return lines[1] == '' and not table.concat(lines, '\n'):find('EXTENSIONS', 1, true)
+  ]]),
+    'Extensions should begin with a blank line instead of a repeated heading'
+  )
   eval([[
     local installed = false
     local callbacks = {}
@@ -1599,6 +1891,73 @@ local ok, err = xpcall(function()
       return n
     ]]) == file_tabs, 'Ctrl-P should switch to an existing tab instead of duplicating it')
   print('PASS: Ctrl-P opens a new mid-editor tab')
+
+  eval([[
+    vim.api.nvim_set_current_win(require('modules.tabs').editor_win() or 0)
+    vim.g.e2e_image_open = nil
+    vim.cmd.edit(vim.fn.fnameescape(vim.env.E2E_DIR .. '/repo/photo.png'))
+  ]])
+  wait_for('system image opener from :edit', function()
+    return eval([[
+      local opened = vim.g.e2e_image_open or ''
+      local name = vim.api.nvim_buf_get_name(0)
+      return opened:find('photo.png', 1, true)
+        and not name:find('photo.png', 1, true)
+        and vim.bo.filetype ~= 'image-preview'
+        and require('modules.tabs').editor_win() ~= nil
+    ]])
+  end)
+  assert(
+    eval([[
+      local text = table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), '\n')
+      return not text:find('\137PNG', 1, true) and not text:find('\27', 1, true)
+    ]]),
+    'opening an image must not dump file bytes into the editor'
+  )
+  assert(
+    eval([[
+      local cmd = require('modules.images').command(vim.env.E2E_DIR .. '/repo/photo.png')
+      local bin = cmd and vim.fn.fnamemodify(cmd[1], ':t') or ''
+      return cmd
+        and cmd[#cmd]:find('photo.png', 1, true)
+        and (bin == 'open' or bin == 'xdg-open' or bin == 'gio')
+        and (bin ~= 'gio' or cmd[2] == 'open')
+    ]]),
+    'macOS should use open and Linux should use xdg-open'
+  )
+  assert(eval("return vim.fn.exists(':ImageOpen')") == 2, 'ImageOpen command missing')
+  assert(eval("return vim.fn.exists(':ImagePreview')") == 0, 'in-editor image preview commands must be gone')
+  eval([[
+    vim.g.e2e_image_open = nil
+    require('modules.tabs').open(vim.env.E2E_DIR .. '/repo/missing-tool.png')
+  ]])
+  wait_for('system image opener from tabs.open', function()
+    return eval([[
+      local opened = vim.g.e2e_image_open or ''
+      local name = vim.api.nvim_buf_get_name(0)
+      return opened:find('missing-tool.png', 1, true)
+        and not name:find('missing-tool.png', 1, true)
+    ]])
+  end)
+  eval([[
+    vim.cmd.edit(vim.fn.fnameescape(vim.env.E2E_DIR .. '/repo/new.txt'))
+  ]])
+  wait_for('text files stay ordinary buffers', function()
+    return eval([[
+      return vim.api.nvim_buf_get_name(0):find('new.txt', 1, true)
+        and vim.bo.filetype ~= 'image-preview'
+    ]])
+  end)
+  print('PASS: image files open in the system viewer')
+
+  eval([[
+    vim.api.nvim_set_current_win(require('modules.tabs').editor_win() or 0)
+    vim.cmd.stopinsert()
+  ]])
+  request('nvim_input', '<Esc>')
+  wait_for('editor back in normal mode', function()
+    return request('nvim_get_mode').mode == 'n'
+  end)
 
   eval([[
     local path = vim.env.E2E_DIR .. '/agy-cache.json'

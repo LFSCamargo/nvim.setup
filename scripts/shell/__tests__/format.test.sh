@@ -2,7 +2,7 @@
 # Drive scripts/format-staged.sh the way the pre-commit hook does.
 set -euo pipefail
 
-ROOT="$(cd -- "$(dirname -- "$0")/../.." && pwd -P)"
+ROOT="$(cd -- "$(dirname -- "$0")/../../.." && pwd -P)"
 PASS=0
 fail() {
   printf 'FAIL: %s\n' "$*" >&2
@@ -29,10 +29,10 @@ assert_file_has() {
 }
 
 assert_file_has "$ROOT/.husky/pre-commit" 'scripts/format-staged.sh'
-assert_file_has "$ROOT/scripts/format-staged.sh" 'node_modules/.bin/prettier'
-assert_file_has "$ROOT/scripts/format-staged.sh" 'node_modules/.bin/stylua'
-assert_file_has "$ROOT/scripts/format-staged.sh" '--write --ignore-unknown'
-assert_file_has "$ROOT/scripts/format-staged.sh" 'git add --'
+assert_file_has "$ROOT/scripts/shell/format-staged.sh" 'node_modules/.bin/prettier'
+assert_file_has "$ROOT/scripts/shell/format-staged.sh" 'node_modules/.bin/stylua'
+assert_file_has "$ROOT/scripts/shell/format-staged.sh" '--write --ignore-unknown'
+assert_file_has "$ROOT/scripts/shell/format-staged.sh" 'git add --'
 assert_file_has "$ROOT/prettier.config.mjs" 'prettier-plugin-packagejson'
 assert_file_has "$ROOT/prettier.config.mjs" 'prettier-plugin-sh'
 assert_file_has "$ROOT/prettier.config.mjs" 'prettier-plugin-tailwindcss'

@@ -73,6 +73,11 @@ require('modules.appearance')
 require('modules.statusline')
 require('modules.session')
 require('modules.keys')
+require('modules.images')
+require('modules.images')._open = function(path)
+  vim.g.e2e_image_open = path
+  return true
+end
 local editor = vim.api.nvim_get_current_win()
 local agents = require('modules.agents')
 agents.new('codex')

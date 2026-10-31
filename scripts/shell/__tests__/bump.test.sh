@@ -2,7 +2,7 @@
 # Drive scripts/bump.sh, including prerelease versions used for GitHub tags.
 set -euo pipefail
 
-ROOT="$(cd -- "$(dirname -- "$0")/../.." && pwd -P)"
+ROOT="$(cd -- "$(dirname -- "$0")/../../.." && pwd -P)"
 PASS=0
 fail() {
   printf 'FAIL: %s\n' "$*" >&2
@@ -22,7 +22,7 @@ assert_file_has() {
   grep -F -- "$needle" "$file" > /dev/null 2>&1 || fail "$file missing '$needle'"
 }
 
-assert_file_has "$ROOT/scripts/bump.sh" '1.2.3-beta'
+assert_file_has "$ROOT/scripts/shell/bump.sh" '1.2.3-beta'
 assert_file_has "$ROOT/scripts/changelog.mjs" '(-[0-9A-Za-z][0-9A-Za-z.-]*)?$'
 pass 'bump and changelog accept prerelease versions'
 

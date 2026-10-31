@@ -2,7 +2,7 @@
 # Drive scripts/fonts.sh the way install/bootstrap does, with stubbed downloads.
 set -euo pipefail
 
-ROOT="$(cd -- "$(dirname -- "$0")/../.." && pwd -P)"
+ROOT="$(cd -- "$(dirname -- "$0")/../../.." && pwd -P)"
 PASS=0
 fail() {
   printf 'FAIL: %s\n' "$*" >&2
@@ -29,17 +29,17 @@ assert_file_has() {
 }
 
 # 1. Install (and therefore bootstrap) must install icon fonts.
-assert_file_has "$ROOT/scripts/install.sh" 'scripts/fonts.sh'
-if grep -F 'termicons.mskelton.dev' "$ROOT/scripts/fonts.sh" > /dev/null; then
+assert_file_has "$ROOT/scripts/shell/install.sh" 'scripts/fonts.sh'
+if grep -F 'termicons.mskelton.dev' "$ROOT/scripts/shell/fonts.sh" > /dev/null; then
   fail 'fonts.sh should not download Termicons'
 fi
-assert_file_has "$ROOT/scripts/fonts.sh" 'https://github.com/ryanoasis/nerd-fonts/releases/download/v3.5.1/NerdFontsSymbolsOnly.zip'
-assert_file_has "$ROOT/scripts/fonts.sh" 'https://github.com/IdreesInc/Monocraft/releases/download/v4.2.1/Monocraft-nerd-fonts-patched.ttc'
-assert_file_has "$ROOT/scripts/fonts.sh" 'verify_sha256'
-assert_file_has "$ROOT/scripts/fonts.sh" 'configure_warp'
-assert_file_has "$ROOT/scripts/fonts.sh" 'curl -fsSL -o'
-assert_file_has "$ROOT/scripts/fonts.sh" 'overlay_fonts.py'
-assert_file_has "$ROOT/scripts/overlay_fonts.py" 'Monocraft Nerd Font'
+assert_file_has "$ROOT/scripts/shell/fonts.sh" 'https://github.com/ryanoasis/nerd-fonts/releases/download/v3.5.1/NerdFontsSymbolsOnly.zip'
+assert_file_has "$ROOT/scripts/shell/fonts.sh" 'https://github.com/IdreesInc/Monocraft/releases/download/v4.2.1/Monocraft-nerd-fonts-patched.ttc'
+assert_file_has "$ROOT/scripts/shell/fonts.sh" 'verify_sha256'
+assert_file_has "$ROOT/scripts/shell/fonts.sh" 'configure_warp'
+assert_file_has "$ROOT/scripts/shell/fonts.sh" 'curl -fsSL -o'
+assert_file_has "$ROOT/scripts/shell/fonts.sh" 'overlay_fonts.py'
+assert_file_has "$ROOT/scripts/python/overlay_fonts.py" 'Monocraft Nerd Font'
 assert_file_has "$ROOT/scripts/bootstrap.sh" 'scripts/install.sh'
 assert_file_has "$ROOT/scripts/bootstrap.sh" 'scripts/fonts.sh'
 pass 'install.sh and bootstrap.sh run fonts.sh with pinned Nerd Font and Monocraft URLs'
@@ -237,10 +237,10 @@ def write_ttf(path, mapping, upem, family):
     fb.save(path)
 
 root = Path(sys.argv[1])
-write_ttf(root / 'base.ttf', {0x41: 'A', 0xE000: 'old'}, 1000, 'Monocraft')
+write_ttf(root / 'base.ttf', {0x41: 'A', 0xE000: 'old', 0xE0B0: 'oldpowerline'}, 1000, 'Monocraft')
 write_ttf(root / 'symbols.ttf', {0xF07B: 'nfolder', 0xE000: 'nfile', 0xF0001: 'nextra'}, 2048, 'Symbols')
 PY
-  python3 "$ROOT/scripts/overlay_fonts.py" \
+  python3 "$ROOT/scripts/python/overlay_fonts.py" \
     "$overlay_dir/base.ttf" "$overlay_dir/symbols.ttf" \
     "$overlay_dir/out.ttf" || fail 'overlay_fonts.py failed on fixture fonts'
   python3 - "$overlay_dir/out.ttf" << 'PY' || fail 'overlay output missing Nerd Font cmap, family name, or one-cell metrics'
@@ -258,6 +258,8 @@ assert 0xF07B in cmap, 'Nerd Font folder glyph missing'
 assert 0xE000 in cmap, 'Nerd Font file glyph missing'
 assert 0xF0001 in cmap, 'Nerd Font supplementary-plane glyph missing'
 assert 0x41 in cmap, 'base ASCII missing'
+assert all(cp in cmap for cp in (0xE0B0, 0xE0B1, 0xE0B2, 0xE0B3)), 'pixel Powerline glyphs missing'
+assert cmap[0xE0B0] != 'oldpowerline', 'old solid Powerline outline was not replaced'
 assert 'Monocraft Nerd Font' in names, names
 gs = font.getGlyphSet()
 pen = BoundsPen(gs)
@@ -267,6 +269,12 @@ xmin, ymin, xmax, ymax = pen.bounds
 assert xmax - xmin >= 500, (pen.bounds, 'Nerd Font glyph was not scaled to the cell')
 assert font['hmtx'][cmap[0xF07B]][0] == font['hmtx'][cmap[0x41]][0], font['hmtx'][cmap[0xF07B]]
 assert font['hmtx'][cmap[0xE000]][0] == font['hmtx'][cmap[0x41]][0], font['hmtx'][cmap[0xE000]]
+for cp in (0xE0B0, 0xE0B1, 0xE0B2, 0xE0B3):
+    glyph = font['glyf'][cmap[cp]]
+    assert font['hmtx'][cmap[cp]][0] == 600, (cp, 'Powerline glyph is not one cell')
+    assert glyph.numberOfContours >= 8, (cp, 'Powerline glyph is not pixel-stepped')
+    assert glyph.yMax - glyph.yMin >= 800, (cp, 'Powerline glyph does not span the bar height')
+    assert glyph.xMax == 600 if cp in (0xE0B0, 0xE0B1) else glyph.xMin == 0, (cp, 'point does not reach the cell edge')
 PY
   pass 'overlay bakes one-cell Nerd Font glyphs into Monocraft Nerd Font'
 else

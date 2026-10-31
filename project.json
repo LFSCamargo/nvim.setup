@@ -19,11 +19,11 @@
         "commands": [
           "make test",
           "node --test scripts/tests/workspace.test.mjs",
-          "bash scripts/tests/bootstrap.test.sh",
-          "bash scripts/tests/fonts.test.sh",
-          "bash scripts/tests/scan.test.sh",
-          "bash scripts/tests/format.test.sh",
-          "bash scripts/tests/bump.test.sh"
+          "bash scripts/shell/__tests__/bootstrap.test.sh",
+          "bash scripts/shell/__tests__/fonts.test.sh",
+          "bash scripts/shell/__tests__/scan.test.sh",
+          "bash scripts/shell/__tests__/format.test.sh",
+          "bash scripts/shell/__tests__/bump.test.sh"
         ],
         "parallel": false
       },

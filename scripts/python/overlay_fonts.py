@@ -21,6 +21,8 @@ FULL_NAME = 'Monocraft Nerd Font Regular'
 PS_NAME = 'MonocraftNerdFont-Regular'
 FILL = 1.0
 ICON_CELLS = 1
+POWERLINE = {0xE0B0: (True, False), 0xE0B1: (True, True),
+             0xE0B2: (False, False), 0xE0B3: (False, True)}
 
 
 def unicode_cmap(font: TTFont) -> dict[int, str]:
@@ -145,6 +147,46 @@ def overlay(dst: TTFont, src: TTFont, *, prefix: str) -> int:
     return added
 
 
+def pixel_powerline(font: TTFont) -> None:
+    """Draw the four tab separators as one-cell, full-height pixel stairs."""
+    cell = cell_width(font)
+    ascent = font['hhea'].ascent
+    descent = font['hhea'].descent
+    height = ascent - descent
+    steps = 12
+    stroke = max(1, cell // steps)
+    order = list(font.getGlyphOrder())
+    ensure_format12(font)
+    for cp, (right, hollow) in POWERLINE.items():
+        name = f'pixelPowerline{cp:04X}'
+        pen = TTGlyphPen(None)
+        for index in range(steps):
+            y0 = descent + round(height * index / steps)
+            y1 = descent + round(height * (index + 1) / steps)
+            reach = min(index, steps - index - 1)
+            edge = round(cell * (2 * reach + 2) / steps)
+            if right:
+                x0, x1 = (max(0, edge - stroke), edge) if hollow else (0, edge)
+            else:
+                x0, x1 = (cell - edge, min(cell, cell - edge + stroke)) if hollow else (cell - edge, cell)
+            if x1 <= x0 or y1 <= y0:
+                continue
+            pen.moveTo((x0, y0))
+            pen.lineTo((x1, y0))
+            pen.lineTo((x1, y1))
+            pen.lineTo((x0, y1))
+            pen.closePath()
+        font['glyf'][name] = pen.glyph()
+        font['hmtx'][name] = (cell, 0)
+        if name not in order:
+            order.append(name)
+        for table in font['cmap'].tables:
+            if cmap_accepts(table, cp):
+                table.cmap[cp] = name
+    font.setGlyphOrder(order)
+    font['maxp'].numGlyphs = len(order)
+
+
 def load_regular(path: Path) -> TTFont:
     raw = path.read_bytes()[:4]
     if raw == b'ttcf':
@@ -161,6 +203,7 @@ def main(argv: list[str]) -> int:
     base_path, symbols_path, out_path = map(Path, argv[1:])
     font = load_regular(base_path)
     overlay(font, TTFont(symbols_path), prefix='nf')
+    pixel_powerline(font)
     set_family_name(font)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     font.save(out_path)

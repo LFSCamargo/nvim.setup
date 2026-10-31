@@ -2,7 +2,7 @@
 # Drive scripts/scan.sh the way CI does (sast + npm audit), with stubbed tools.
 set -euo pipefail
 
-ROOT="$(cd -- "$(dirname -- "$0")/../.." && pwd -P)"
+ROOT="$(cd -- "$(dirname -- "$0")/../../.." && pwd -P)"
 PASS=0
 fail() {
   printf 'FAIL: %s\n' "$*" >&2
@@ -29,7 +29,7 @@ assert_file_has() {
 }
 
 # 1. The committed scan keeps the OWASP / JS packs and fails on findings.
-scan="$ROOT/scripts/semgrep-scan.sh"
+scan="$ROOT/scripts/shell/semgrep-scan.sh"
 [[ -f "$scan" ]] || fail 'scripts/semgrep-scan.sh is required'
 assert_file_has "$scan" 'p/owasp-top-ten'
 assert_file_has "$scan" 'p/javascript'

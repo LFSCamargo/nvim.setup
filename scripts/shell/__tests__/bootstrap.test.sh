@@ -2,7 +2,7 @@
 # Drive scripts/bootstrap.sh the way a visitor would (pipe, --preview, checkout).
 set -euo pipefail
 
-ROOT="$(cd -- "$(dirname -- "$0")/../.." && pwd -P)"
+ROOT="$(cd -- "$(dirname -- "$0")/../../.." && pwd -P)"
 PASS=0
 fail() {
   printf 'FAIL: %s\n' "$*" >&2
@@ -194,11 +194,11 @@ grep -F 'raw.githubusercontent.com/LFSCamargo/nvim.setup/main/scripts/bootstrap.
   || fail 'bootstrap help should show the public curl URL'
 grep -F 'git clone --branch' "$ROOT/scripts/bootstrap.sh" > /dev/null \
   || fail 'clone should pass --branch'
-grep -F 'https://github.com/neovim/neovim/releases/latest/download/' "$ROOT/scripts/deps.sh" > /dev/null \
+grep -F 'https://github.com/neovim/neovim/releases/latest/download/' "$ROOT/scripts/shell/deps.sh" > /dev/null \
   || fail 'deps should install Neovim from GitHub releases when packages are too old'
-grep -F 'https://nodejs.org/dist/latest-v22.x/' "$ROOT/scripts/deps.sh" > /dev/null \
+grep -F 'https://nodejs.org/dist/latest-v22.x/' "$ROOT/scripts/shell/deps.sh" > /dev/null \
   || fail 'deps should install Node.js 22 when packages are too old'
-grep -F 'python3-pip' "$ROOT/scripts/deps.sh" > /dev/null \
+grep -F 'python3-pip' "$ROOT/scripts/shell/deps.sh" > /dev/null \
   || fail 'deps should install pip so fonts.sh can overlay icon glyphs'
 grep -F 'scripts/fonts.sh' "$ROOT/scripts/bootstrap.sh" > /dev/null \
   || fail 'bootstrap should install icon fonts'

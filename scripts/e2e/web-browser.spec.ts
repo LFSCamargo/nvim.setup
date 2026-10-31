@@ -1,7 +1,21 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
-async function overlapHeaderWith(page, selector) {
-  await page.evaluate((sel) => {
+function imageNaturalWidth(img: SVGElement | HTMLElement) {
+  return img instanceof HTMLImageElement ? img.naturalWidth : 0;
+}
+
+function stackedOpacity(node: SVGElement | HTMLElement) {
+  let opacity = 1;
+  let el: Element | null = node;
+  while (el) {
+    opacity *= Number(getComputedStyle(el).opacity);
+    el = el.parentElement;
+  }
+  return opacity;
+}
+
+async function overlapHeaderWith(page: Page, selector: string) {
+  await page.evaluate((sel: string) => {
     const target = document.querySelector(sel);
     const header = document.querySelector('header');
     if (!target || !header) return;
@@ -17,7 +31,7 @@ async function overlapHeaderWith(page, selector) {
   }, selector);
   await expect
     .poll(() =>
-      page.evaluate((sel) => {
+      page.evaluate((sel: string) => {
         const target = document.querySelector(sel);
         const header = document.querySelector('header');
         if (!target || !header) return false;
@@ -35,7 +49,7 @@ test('installation, screenshots, help and keyboard access work', async ({
   context,
 }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-  const errors = [];
+  const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('build');
@@ -61,7 +75,7 @@ test('installation, screenshots, help and keyboard access work', async ({
       page
         .getByRole('button', { name: 'Enlarge workspace screenshot' })
         .locator('img')
-        .evaluate((img) => img.naturalWidth),
+        .evaluate(imageNaturalWidth),
     )
     .toBeGreaterThan(0);
   await page
@@ -93,8 +107,9 @@ test('installation, screenshots, help and keyboard access work', async ({
   await expect(page.getByRole('banner')).toBeHidden();
   const dialogBox = await page.getByRole('dialog').boundingBox();
   const viewport = page.viewportSize();
-  expect(dialogBox).toBeTruthy();
-  expect(viewport).toBeTruthy();
+  if (!dialogBox || !viewport) {
+    throw new Error('screenshot dialog or viewport is missing');
+  }
   expect(dialogBox.height).toBeLessThan(viewport.height - 32);
   expect(dialogBox.width).toBeLessThanOrEqual(viewport.width);
   await page.screenshot({ path: 'test-results/screenshot-dialog.png' });
@@ -121,10 +136,7 @@ test('installation, screenshots, help and keyboard access work', async ({
   );
   await expect
     .poll(() =>
-      page
-        .getByRole('dialog')
-        .locator('img')
-        .evaluate((img) => img.naturalWidth),
+      page.getByRole('dialog').locator('img').evaluate(imageNaturalWidth),
     )
     .toBeGreaterThan(0);
   await page.getByRole('button', { name: 'Next screenshot' }).click();
@@ -177,7 +189,9 @@ test('light mode keeps hero chrome, cards, and docs readable', async ({
   const caret = page.locator('[data-hero-caret]');
   await expect(caret).toBeVisible();
   const caretBox = await caret.boundingBox();
-  expect(caretBox).toBeTruthy();
+  if (!caretBox) {
+    throw new Error('hero caret is missing');
+  }
   expect(caretBox.width).toBeLessThan(caretBox.height * 0.3);
   await expect(page.getByRole('link', { name: /Make it yours/ })).toHaveClass(
     /border-zinc-900/,
@@ -243,28 +257,12 @@ test('light and dark switchers change the page theme and invert the install band
   await page.evaluate(() => window.scrollTo(0, 0));
   await expect(page.locator('#install h2')).toBeVisible();
   expect(
-    await page.locator('#install h2').evaluate((node) => {
-      let opacity = 1;
-      let el = node;
-      while (el) {
-        opacity *= Number(getComputedStyle(el).opacity);
-        el = el.parentElement;
-      }
-      return opacity;
-    }),
+    await page.locator('#install h2').evaluate(stackedOpacity),
   ).toBeGreaterThan(0.9);
   expect(
     await page
       .getByRole('heading', { name: 'Files, in a real tree.' })
-      .evaluate((node) => {
-        let opacity = 1;
-        let el = node;
-        while (el) {
-          opacity *= Number(getComputedStyle(el).opacity);
-          el = el.parentElement;
-        }
-        return opacity;
-      }),
+      .evaluate(stackedOpacity),
   ).toBeGreaterThan(0.9);
   expect(
     await page.evaluate(() => document.documentElement.scrollHeight),
@@ -274,7 +272,7 @@ test('light and dark switchers change the page theme and invert the install band
       page
         .getByRole('button', { name: 'Enlarge workspace screenshot' })
         .locator('img')
-        .evaluate((img) => img.naturalWidth),
+        .evaluate(imageNaturalWidth),
     )
     .toBeGreaterThan(0);
   await page.screenshot({
