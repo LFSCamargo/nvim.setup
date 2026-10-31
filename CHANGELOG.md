@@ -11,6 +11,8 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Features
 
+- **editor:** restyle pane headers with powerline tabs ([0eefbec](https://github.com/LFSCamargo/nvim.setup/commit/0eefbeccc42335a3dcd3a5244fc0814bc85df9b8))
+- **images:** open image files in the system viewer ([747fe22](https://github.com/LFSCamargo/nvim.setup/commit/747fe22a21074ba0e4a0367a274e4d3f388b810a))
 - **web:** photograph the v1 workspace for the landing page ([2db2181](https://github.com/LFSCamargo/nvim.setup/commit/2db21816aac81f70b0574da303c829d3b2b6aabe))
 - organize modules and update the landing page for v1.0 ([791df95](https://github.com/LFSCamargo/nvim.setup/commit/791df95d83969b9651157c2caf1d7005b2e80d8f))
 - **editor:** add Git diff and context menus ([41b0fa2](https://github.com/LFSCamargo/nvim.setup/commit/41b0fa2f9cda200353d12788d8810026c080b4cf))
@@ -23,9 +25,15 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Documentation
 
+- record images, powerline chrome, and folder moves ([48d105f](https://github.com/LFSCamargo/nvim.setup/commit/48d105f97349573503eeacaedd1f3d3ca0d471c2))
 - **editor:** explain Git diff and context menu actions ([c96795b](https://github.com/LFSCamargo/nvim.setup/commit/c96795b0af3167bdc8908b6386a21c41ab8d1869))
 - add a contributing guide and the MIT license ([d43e0c0](https://github.com/LFSCamargo/nvim.setup/commit/d43e0c01d20025a253add11437f0a807817e57b5))
 - add a release skill for version bumps ([bdaf13d](https://github.com/LFSCamargo/nvim.setup/commit/bdaf13df8bf57626035acb39a49e5d5214bd0021))
+
+### Refactoring
+
+- **web:** sort shared and feature files by kind ([ab4e02c](https://github.com/LFSCamargo/nvim.setup/commit/ab4e02cbed13be11d0464816e60d5bcc41be4805))
+- **scripts:** house shell, python, and e2e by kind ([f303d22](https://github.com/LFSCamargo/nvim.setup/commit/f303d2213436a7a05afa69bb33aaa39cff79b61b))
 
 ### Chores
 
