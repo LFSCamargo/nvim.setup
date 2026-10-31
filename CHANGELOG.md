@@ -9,16 +9,13 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-31
+
 ### Features
 
 - **web:** photograph the v1.1 workspace at 16:10 ([964fd88](https://github.com/LFSCamargo/nvim.setup/commit/964fd88c08e1614c5200c5e6e85d72eabd730882))
 - **web:** let visitors pick a setup version to install ([7af60fb](https://github.com/LFSCamargo/nvim.setup/commit/7af60fb917846773a246018a55b2e29e74cb9d7e))
 - **sidebar:** show the project name on the first Files line ([c74955b](https://github.com/LFSCamargo/nvim.setup/commit/c74955b0394a5d90629fbc8376c669e86c25e5fe))
-
-## [1.1.0] - 2026-10-31
-
-### Features
-
 - **editor:** restyle pane headers with powerline tabs ([0eefbec](https://github.com/LFSCamargo/nvim.setup/commit/0eefbeccc42335a3dcd3a5244fc0814bc85df9b8))
 - **images:** open image files in the system viewer ([747fe22](https://github.com/LFSCamargo/nvim.setup/commit/747fe22a21074ba0e4a0367a274e4d3f388b810a))
 - **web:** photograph the v1 workspace for the landing page ([2db2181](https://github.com/LFSCamargo/nvim.setup/commit/2db21816aac81f70b0574da303c829d3b2b6aabe))
