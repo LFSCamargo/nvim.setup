@@ -3,8 +3,8 @@ export const screens = [
     id: 'workspace',
     label: 'The workspace',
     src: '/assets/editor.png',
-    width: 1600,
-    height: 1000,
+    width: 1920,
+    height: 1080,
     caption:
       'Files, code, and a place to think. Your terminal, thoughtfully arranged.',
     alt: 'Real Neovim setup screenshot showing Files, Git, Settings, and Extensions beside editor tabs and init.lua',
@@ -13,17 +13,37 @@ export const screens = [
     id: 'git',
     label: 'Source control',
     src: '/assets/git.png',
-    width: 1600,
-    height: 1000,
+    width: 1920,
+    height: 1080,
     caption: 'See what changed. Stage with a click. Keep your code in view.',
     alt: 'Real Neovim setup screenshot showing Git source control, Check Diff, the commit composer, and history',
+  },
+  {
+    id: 'settings',
+    label: 'Settings',
+    src: '/assets/settings.png',
+    width: 1920,
+    height: 1080,
+    caption:
+      'Icons, transparency, indent, search, and session restore. Click a row to change it.',
+    alt: 'Real Neovim setup screenshot showing the Settings sidebar with appearance, editing, search, and session preferences',
+  },
+  {
+    id: 'extensions',
+    label: 'Extensions',
+    src: '/assets/extensions.png',
+    width: 1920,
+    height: 1080,
+    caption:
+      'Search Mason packages, see what is installed, and add a GitHub plugin without leaving the sidebar.',
+    alt: 'Real Neovim setup screenshot showing the Extensions marketplace with installed Mason language servers and formatters',
   },
   {
     id: 'layout',
     label: 'The layout',
     src: '/assets/layout.png',
-    width: 1600,
-    height: 1000,
+    width: 1920,
+    height: 1080,
     caption:
       'Git on the left. Codex on the right. Your buffer stays in the middle.',
     alt: 'Real Neovim setup screenshot showing Git changes beside the editor and a Codex session',
@@ -32,11 +52,11 @@ export const screens = [
     id: 'agents',
     label: 'AI agents',
     src: '/assets/agents.png',
-    width: 1600,
-    height: 1000,
+    width: 1920,
+    height: 1080,
     caption:
       'Codex, Cursor Agent, Gemini, Claude, OpenCode, and Antigravity run as real CLI sessions in the right pane. Your login, your permissions.',
-    alt: 'Real Neovim setup screenshot showing a Codex session beside the landing-page feature list in the editor',
+    alt: 'Real Neovim setup screenshot showing Agent, Codex, and Antigravity tabs beside the editor',
   },
 ] as const;
 

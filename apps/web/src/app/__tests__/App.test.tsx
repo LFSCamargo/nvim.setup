@@ -106,6 +106,34 @@ describe('landing page visitor paths', () => {
     expect(within(dialog).getByText('Source control')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Close screenshot' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    expect(
+      screen
+        .getByRole('button', { name: 'Settings' })
+        .getAttribute('aria-pressed'),
+    ).toBe('true');
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Enlarge settings screenshot' }),
+    );
+    expect(
+      screen.getByRole('dialog').querySelector('img')?.getAttribute('src'),
+    ).toBe('/assets/settings.png');
+    fireEvent.click(screen.getByRole('button', { name: 'Close screenshot' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    fireEvent.click(screen.getByRole('button', { name: 'Extensions' }));
+    expect(
+      screen
+        .getByRole('button', { name: 'Extensions' })
+        .getAttribute('aria-pressed'),
+    ).toBe('true');
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Enlarge extensions screenshot' }),
+    );
+    expect(
+      screen.getByRole('dialog').querySelector('img')?.getAttribute('src'),
+    ).toBe('/assets/extensions.png');
+    fireEvent.click(screen.getByRole('button', { name: 'Close screenshot' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     fireEvent.click(screen.getByRole('button', { name: 'The layout' }));
     expect(
       screen

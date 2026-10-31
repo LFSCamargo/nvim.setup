@@ -119,6 +119,26 @@ test('installation, screenshots, help and keyboard access work', async ({
   await page.screenshot({ path: 'test-results/screenshot-dialog.png' });
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page
+    .getByRole('button', { name: 'Enlarge settings screenshot' })
+    .click();
+  await expect(page.getByRole('dialog').locator('img')).toHaveAttribute(
+    'src',
+    '/assets/settings.png',
+  );
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Extensions', exact: true }).click();
+  await page
+    .getByRole('button', { name: 'Enlarge extensions screenshot' })
+    .click();
+  await expect(page.getByRole('dialog').locator('img')).toHaveAttribute(
+    'src',
+    '/assets/extensions.png',
+  );
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.getByRole('button', { name: 'The layout', exact: true }).click();
   await page
     .getByRole('button', { name: 'Enlarge the layout screenshot' })
