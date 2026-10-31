@@ -9,6 +9,10 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ## [Unreleased]
 
+### Features
+
+- **web:** add Settings and Extensions landing screenshots ([6ef62b4](https://github.com/LFSCamargo/nvim.setup/commit/6ef62b41b6547476e8c5794e0c5907bb0e0a4bbc))
+
 ## [1.1.0] - 2026-10-31
 
 ### Features
