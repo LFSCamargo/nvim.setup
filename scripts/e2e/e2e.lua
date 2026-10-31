@@ -5,6 +5,10 @@ for _, rel in ipairs({ '/.luarc.json', '/nvim/.luarc.json' }) do
   local luarc = vim.json.decode(table.concat(vim.fn.readfile(vim.env.SETUP_ROOT .. rel), '\n'))
   assert(vim.tbl_contains(luarc.diagnostics.globals, 'vim'), rel .. ' must declare vim as a global')
 end
+assert(
+  not table.concat(vim.fn.readfile(vim.env.SETUP_ROOT .. '/nvim/init.lua'), '\n'):find('ttymouse', 1, true),
+  'ttymouse was removed; setting it crashes Neovim 0.12+'
+)
 
 local exit_status
 local child = vim.fn.jobstart({
@@ -53,6 +57,10 @@ local ok, err = xpcall(function()
   )
   assert(eval('return vim.o.more == false'), 'e2e-init must disable more so notify cannot hit-enter')
   assert(
+    eval('return vim.o.mousemoveevent and not vim.o.wrap and vim.o.sidescroll == 1 and vim.o.sidescrolloff == 0'),
+    'horizontal scrolling must configure its options on startup'
+  )
+  assert(
     eval([[
     local parsed
     require('modules.sidebar.status').parse('## main\0 M changed.txt\0R  new.txt\0old.txt\0?? added.txt\0',
@@ -74,7 +82,18 @@ local ok, err = xpcall(function()
     eval([[
     local plugins = require('modules.plugins')
     local first, second = plugins.specs(), plugins.specs()
-    return #first == #second and first[1][1] == 'ellisonleao/gruvbox.nvim'
+    local found
+    for _, spec in ipairs(first) do
+      if spec[1] == 'mihovilrak/scroll.nvim' then
+        found = spec
+      end
+    end
+    return #first == #second
+      and first[1][1] == 'ellisonleao/gruvbox.nvim'
+      and found
+      and found.opts.enabled == false
+      and found.opts.horizontal.enabled == true
+      and found.opts.explorer.horizontal == true
   ]]),
     'plugin module must return stable specs on repeated reads'
   )
@@ -82,12 +101,93 @@ local ok, err = xpcall(function()
   local normal = eval("return vim.api.nvim_get_hl(0, { name = 'Normal', link = false })")
   assert(visual.bg or visual.ctermbg or visual.reverse, 'Visual selection needs a background')
   assert(not normal.bg and not normal.ctermbg and not normal.reverse, 'Normal must stay transparent')
+  assert(
+    eval([[
+      require('modules.appearance').paint_scrollbars()
+      local appearance = require('modules.appearance')
+      local thumb = vim.api.nvim_get_hl(0, { name = 'ScrollThumb', link = false })
+      local track = vim.api.nvim_get_hl(0, { name = 'ScrollTrack', link = false })
+      local muted = tonumber(appearance.muted:sub(2), 16)
+      local sep = tonumber(appearance.sep:sub(2), 16)
+      return thumb.fg == muted and track.fg == sep and appearance.keeps_fill('ScrollThumb')
+    ]]),
+    'scrollbar thumb and track must use muted chrome, not bright text'
+  )
+  assert(
+    eval([[
+      local a = require('modules.appearance')
+      assert(a.default_ansi()[1] == '#cd0000' and a.default_ansi()[15] == '#ffffff')
+      local ansi = a.theme_ansi()
+      local stock = a.default_ansi()
+      assert(ansi[0] == stock[0] and ansi[7] == stock[7] and ansi[15] == stock[15])
+      assert(ansi[11] == a.tab_accent)
+      assert(a.apply_terminal_colors() == true)
+      assert(vim.g.terminal_color_0 == '#000000' and vim.g.terminal_color_7 == '#e5e5e5')
+      vim.env.TERM_PROGRAM = 'WarpTerminal'
+      vim.env.WARP_IS_LOCAL_SHELL_SESSION = '1'
+      local env = require('modules.agents').term_env()
+      return env.TERM == 'xterm-256color'
+        and env.TERM_PROGRAM == 'xterm'
+        and env.COLORTERM == '256color'
+        and env.FORCE_COLOR == '2'
+        and env.TERM_THEME == 'dark'
+        and env.COLORFGBG == '15;0'
+        and env.NO_COLOR == nil
+        and env.WARP_IS_LOCAL_SHELL_SESSION == nil
+        and not a.keeps_fill('Terminal')
+        and not a.keeps_fill('TerminalNormal')
+    ]]),
+    'every agent job must get an xterm-256 TTY so Cursor prompt spaces stay intact'
+  )
   wait_for('startup and chat sessions', function()
     return eval("local a = require('modules.agents'); return vim.tbl_count(a.sessions) == 2 and a.win ~= nil")
   end)
   local chat = eval("return require('modules.agents').win")
   local editor = request('nvim_get_current_win')
   assert(editor ~= chat, 'Startup should focus the editor')
+  local chat_term = eval([[
+      local win = require('modules.agents').win
+      vim.api.nvim_exec_autocmds('BufWinEnter', { buffer = vim.api.nvim_win_get_buf(win) })
+      local flushed = false
+      vim.schedule(function()
+        flushed = true
+      end)
+      vim.wait(500, function()
+        return flushed
+      end)
+      local appearance = require('modules.appearance')
+      local fg = tonumber(appearance.fg:sub(2), 16)
+      local term = vim.api.nvim_get_hl(0, { name = 'Terminal', link = false })
+      local term_normal = vim.api.nvim_get_hl(0, { name = 'TerminalNormal', link = false })
+      -- An opaque Terminal fill made the chat pane a slab; wrap broke the
+      -- Cursor Agent input box. Gutters still steal TTY cells.
+      return {
+        term_bg = term.bg,
+        term_fg = term.fg,
+        want_fg = fg,
+        term_normal_bg = term_normal.bg,
+        wrap = vim.wo[win].wrap,
+        fillchars = vim.wo[win].fillchars,
+        winhighlight = vim.wo[win].winhighlight,
+        signcolumn = vim.wo[win].signcolumn,
+        number = vim.wo[win].number,
+        relativenumber = vim.wo[win].relativenumber,
+        foldcolumn = vim.wo[win].foldcolumn,
+      }
+    ]])
+  assert(
+    not chat_term.term_bg
+      and chat_term.term_fg == chat_term.want_fg
+      and not chat_term.term_normal_bg
+      and chat_term.wrap == false
+      and (chat_term.fillchars or ''):find('eob: ', 1, true)
+      and chat_term.winhighlight == ''
+      and chat_term.signcolumn == 'no'
+      and chat_term.number == false
+      and chat_term.relativenumber == false
+      and chat_term.foldcolumn == '0',
+    'chat pane must stay transparent and nowrap: ' .. vim.inspect(chat_term)
+  )
   assert(
     eval([[
     local want = math.max(1, math.floor(vim.o.columns * 0.28))
@@ -295,6 +395,8 @@ local ok, err = xpcall(function()
     local git_bar = vim.api.nvim_eval_statusline(sidebar.winbar(), { use_winbar = true }).str
     sidebar.view = 'settings'
     local settings_bar = vim.api.nvim_eval_statusline(sidebar.winbar(), { use_winbar = true }).str
+    sidebar.view = 'themes'
+    local themes_bar = vim.api.nvim_eval_statusline(sidebar.winbar(), { use_winbar = true }).str
     sidebar.view = 'extensions'
     local extensions_bar = vim.api.nvim_eval_statusline(sidebar.winbar(), { use_winbar = true }).str
     sidebar.view = 'files'
@@ -326,22 +428,26 @@ local ok, err = xpcall(function()
       end
     end
     local thin = ''
-    local icon_bar = has(files, icons.files, icons.git, icons.settings, icons.extensions, 'Files', '', thin)
-      and lacks(files, 'Git', 'Settings', 'Extensions', '>')
+    local icon_bar = has(files, icons.files, icons.git, icons.settings, icons.themes, icons.extensions, 'Files', '', thin)
+      and lacks(files, 'Git', 'Settings', 'Themes', 'Extensions', '>')
       and count(files, '') == 1
-      and count(files, thin) == 2
+      and count(files, thin) == 3
       and has(git_bar, icons.files, icons.git, 'Git', '', thin)
-      and lacks(git_bar, 'Files', 'Settings', 'Extensions', '>')
+      and lacks(git_bar, 'Files', 'Settings', 'Themes', 'Extensions', '>')
       and count(git_bar, '') == 1
-      and count(git_bar, thin) == 1
+      and count(git_bar, thin) == 2
       and has(settings_bar, icons.files, icons.git, icons.settings, 'Settings', '', thin)
-      and lacks(settings_bar, 'Files', 'Git', 'Extensions', '>')
+      and lacks(settings_bar, 'Files', 'Git', 'Themes', 'Extensions', '>')
       and count(settings_bar, '') == 1
-      and count(settings_bar, thin) == 1
-      and has(extensions_bar, icons.files, icons.git, icons.settings, icons.extensions, 'Extensions', '', thin)
-      and lacks(extensions_bar, 'Files', 'Git', 'Settings', '>')
+      and count(settings_bar, thin) == 2
+      and has(themes_bar, icons.files, icons.git, icons.settings, icons.themes, 'Themes', '', thin)
+      and lacks(themes_bar, 'Files', 'Git', 'Settings', 'Extensions', '>')
+      and count(themes_bar, '') == 1
+      and count(themes_bar, thin) == 2
+      and has(extensions_bar, icons.files, icons.git, icons.settings, icons.themes, icons.extensions, 'Extensions', '', thin)
+      and lacks(extensions_bar, 'Files', 'Git', 'Settings', 'Themes', '>')
       and count(extensions_bar, '') == 1
-      and count(extensions_bar, thin) == 2
+      and count(extensions_bar, thin) == 3
     local chat = require('modules.agents').win
     local chat_bar = vim.api.nvim_eval_statusline(
       vim.api.nvim_get_option_value('winbar', { win = chat }),
@@ -530,7 +636,7 @@ local ok, err = xpcall(function()
       local sep = vim.api.nvim_get_hl(0, { name = 'WinSeparator', link = false })
       local fg = sep.fg and string.format('#%06x', sep.fg)
       return not require('modules.appearance').keeps_fill('WinSeparator')
-        and not sep.bg and fg == '#504a45'
+        and not sep.bg and fg == require('modules.appearance').sep
     ]]),
     'pane gutters should be thin, muted, and transparent'
   )
@@ -690,6 +796,233 @@ local ok, err = xpcall(function()
   end)
   escape_reaches('agent')
   print('PASS: local chat config, mouse focus, Escape delivery and terminal mode')
+
+  click(editor)
+  wait_for('editor focus before horizontal scroll', function()
+    return request('nvim_get_current_win') == editor
+  end)
+  eval([[
+    local win = require('modules.tabs').editor_win()
+    local buf = vim.api.nvim_win_get_buf(win)
+    vim.b[buf]._e2e_horiz = {
+      lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false),
+      modified = vim.bo[buf].modified,
+    }
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, { string.rep('W', 240) })
+    vim.api.nvim_win_set_cursor(win, { 1, 0 })
+    vim.api.nvim_win_call(win, function()
+      vim.fn.winrestview({ leftcol = 0, lnum = 1, col = 0 })
+    end)
+  ]])
+  assert(eval("return vim.o.mouse:find('a', 1, true)") ~= nil, 'mouse must accept wheel events')
+  assert(eval('return vim.o.wrap') == false, 'wrap must be off or the view cannot move sideways')
+  assert(eval('return vim.o.sidescroll') == 1, 'sidescroll should move one column at a time')
+  assert(
+    eval('return vim.o.sidescrolloff') == 0,
+    'sidescrolloff must be 0 or the wheel cannot move leftcol at column 0'
+  )
+  assert(
+    eval("return vim.wo[require('modules.tabs').editor_win()].sidescrolloff") == 0,
+    'mid editor sidescrolloff must be 0 so zl/wheel can move the view'
+  )
+  assert(
+    eval("return vim.wo[require('modules.tabs').editor_win()].wrap") == false,
+    'mid editor must disable wrap so the side wheel can move sideways'
+  )
+  assert(
+    eval("return type(vim.fn.maparg('<ScrollWheelRight>', 'n', false, true).callback)") == 'function',
+    'ScrollWheelRight must scroll leftcol, not type zh/zl'
+  )
+  assert(
+    eval("return type(vim.fn.maparg('<A-ScrollWheelDown>', 'n', false, true).callback)") == 'function',
+    'Option+vertical wheel must scroll sideways (Warp keeps Shift+wheel)'
+  )
+  assert(
+    eval([[
+      local h = require('modules.hscroll')
+      return type(h.scroll) == 'function'
+        and type(h.socket_dir()) == 'string'
+        and h.socket_dir():find('nvim-setup-hscroll', 1, true)
+        and h.interactive() == false
+        and h.listen() == nil
+        and h.ensure_worker() == false
+    ]]),
+    'hscroll RPC helper must exist and stay off in e2e'
+  )
+  local editor_pos = request('nvim_win_get_position', editor)
+  eval("require('modules.hscroll').scroll(1)")
+  wait_for('hscroll helper', function()
+    return eval([[
+      local win = require('modules.tabs').editor_win()
+      return vim.api.nvim_win_call(win, function()
+        return vim.fn.winsaveview().leftcol
+      end) > 0
+    ]])
+  end)
+  eval([[
+    local win = require('modules.tabs').editor_win()
+    vim.api.nvim_win_call(win, function()
+      vim.fn.winrestview({ leftcol = 0, lnum = 1, col = 0 })
+    end)
+  ]])
+  local sock = eval("return require('modules.hscroll').listen({ force = true })")
+  assert(type(sock) == 'string' and sock:match('/%d+%.sock$'), 'forced hscroll listen must publish a pid socket')
+  local rpc = vim
+    .system({
+      vim.v.progpath,
+      '--headless',
+      '--server',
+      sock,
+      '--remote-expr',
+      [[luaeval("require('modules.hscroll').scroll(1)")]],
+    }, { text = true, timeout = 4000 })
+    :wait()
+  assert(rpc.code == 0, 'worker-style --remote-expr must reach the child Neovim')
+  wait_for('hscroll worker RPC', function()
+    return eval([[
+      local win = require('modules.tabs').editor_win()
+      return vim.api.nvim_win_call(win, function()
+        return vim.fn.winsaveview().leftcol
+      end) > 0
+    ]])
+  end)
+  eval("require('modules.hscroll').stop()")
+  eval([[
+    local win = require('modules.tabs').editor_win()
+    vim.api.nvim_win_call(win, function()
+      vim.fn.winrestview({ leftcol = 0, lnum = 1, col = 0 })
+    end)
+  ]])
+  request('nvim_input_mouse', 'wheel', 'right', '', 0, editor_pos[1] + 2, editor_pos[2] + 2)
+  wait_for('horizontal wheel', function()
+    return eval([[
+      local win = require('modules.tabs').editor_win()
+      return vim.api.nvim_win_call(win, function()
+        return vim.fn.winsaveview().leftcol
+      end) > 0
+    ]])
+  end)
+  eval([[
+    local win = require('modules.tabs').editor_win()
+    vim.api.nvim_win_call(win, function()
+      vim.fn.winrestview({ leftcol = 0, lnum = 1, col = 0 })
+    end)
+  ]])
+  request('nvim_input_mouse', 'wheel', 'down', 'A', 0, editor_pos[1] + 2, editor_pos[2] + 2)
+  wait_for('option+wheel', function()
+    return eval([[
+      local win = require('modules.tabs').editor_win()
+      return vim.api.nvim_win_call(win, function()
+        return vim.fn.winsaveview().leftcol
+      end) > 0
+    ]])
+  end)
+  eval([[
+    local win = require('modules.tabs').editor_win()
+    vim.api.nvim_win_call(win, function()
+      vim.fn.winrestview({ leftcol = 0, lnum = 1, col = 0 })
+    end)
+  ]])
+  click(chat)
+  wait_for('chat pointer before editor wheel', function()
+    return request('nvim_get_current_win') == chat
+  end)
+  request('nvim_input', '<C-\\><C-n>')
+  wait_for('leave chat before editor wheel', function()
+    return request('nvim_get_mode').mode ~= 't'
+  end)
+  eval("vim.api.nvim_set_current_win(require('modules.tabs').editor_win())")
+  request('nvim_input', '<ScrollWheelRight>')
+  wait_for('wheel after chat pointer still scrolls editor', function()
+    return eval([[
+      local win = require('modules.tabs').editor_win()
+      return vim.api.nvim_win_call(win, function()
+        return vim.fn.winsaveview().leftcol
+      end) > 0
+    ]])
+  end)
+  eval([[
+    local win = require('modules.tabs').editor_win()
+    local buf = vim.api.nvim_win_get_buf(win)
+    local saved = vim.b[buf]._e2e_horiz
+    if saved then
+      vim.api.nvim_buf_set_lines(buf, 0, -1, false, saved.lines)
+      vim.bo[buf].modified = saved.modified
+      vim.b[buf]._e2e_horiz = nil
+    end
+    vim.api.nvim_win_call(win, function()
+      vim.fn.winrestview({ leftcol = 0, lnum = 1, col = 0 })
+    end)
+  ]])
+
+  eval("require('modules.sidebar').settings()")
+  wait_for('settings sidebar for horizontal scroll', function()
+    return eval('return vim.bo.filetype') == 'setup-settings'
+  end)
+  local side = eval([[
+    for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+      if vim.bo[vim.api.nvim_win_get_buf(win)].filetype == 'setup-settings' then
+        return win
+      end
+    end
+    return 0
+  ]])
+  assert(side ~= 0, 'left sidebar must be open for horizontal scroll')
+  eval(string.format(
+    [[
+      local win = %d
+      local buf = vim.api.nvim_win_get_buf(win)
+      vim.b[buf]._e2e_side_horiz = {
+        lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false),
+        modified = vim.bo[buf].modifiable,
+        wrap = vim.wo[win].wrap,
+      }
+      vim.bo[buf].modifiable = true
+      vim.api.nvim_buf_set_lines(buf, 0, -1, false, { string.rep('S', 240) })
+      vim.wo[win].wrap = false
+      vim.api.nvim_win_set_cursor(win, { 1, 0 })
+      vim.api.nvim_win_call(win, function()
+        vim.fn.winrestview({ leftcol = 0, lnum = 1, col = 0 })
+      end)
+    ]],
+    side
+  ))
+  local side_pos = request('nvim_win_get_position', side)
+  request('nvim_input_mouse', 'wheel', 'right', '', 0, side_pos[1] + 2, side_pos[2] + 2)
+  wait_for('sidebar horizontal wheel', function()
+    return eval(string.format(
+      [[
+        return vim.api.nvim_win_call(%d, function()
+          return vim.fn.winsaveview().leftcol
+        end) > 0
+      ]],
+      side
+    ))
+  end)
+  eval(string.format(
+    [[
+      local win = %d
+      local buf = vim.api.nvim_win_get_buf(win)
+      local saved = vim.b[buf]._e2e_side_horiz
+      if saved then
+        vim.bo[buf].modifiable = true
+        vim.api.nvim_buf_set_lines(buf, 0, -1, false, saved.lines)
+        vim.bo[buf].modifiable = saved.modified
+        vim.wo[win].wrap = saved.wrap
+        vim.b[buf]._e2e_side_horiz = nil
+      end
+      vim.api.nvim_win_call(win, function()
+        vim.fn.winrestview({ leftcol = 0, lnum = 1, col = 0 })
+      end)
+    ]],
+    side
+  ))
+  eval("require('modules.settings').close()")
+  click(editor)
+  wait_for('editor focus after sidebar scroll', function()
+    return request('nvim_get_current_win') == editor
+  end)
+  print('PASS: side wheel scrolls the mid editor and left sidebar horizontally')
 
   -- Process exit (Ctrl+C in the CLI) must close that chat tab, not leave "(exited)".
   local closed_id = eval("return require('modules.agents').active")
@@ -1529,7 +1862,7 @@ local ok, err = xpcall(function()
       local ft = vim.bo[vim.api.nvim_win_get_buf(win)].filetype
       return win == tabs.editor_win()
         and win ~= require('modules.agents').win
-        and ft ~= 'git-changes' and ft ~= 'git-log' and ft ~= 'git-composer' and ft ~= 'NvimTree' and ft ~= 'setup-settings'
+        and ft ~= 'git-changes' and ft ~= 'git-log' and ft ~= 'git-composer' and ft ~= 'NvimTree' and ft ~= 'setup-settings' and ft ~= 'setup-themes'
     ]])
   end
   local function has_editor_tab()
@@ -1676,13 +2009,32 @@ local ok, err = xpcall(function()
     'Settings panel missing controls: ' .. settings_text
   )
   assert(
-    not settings_text:find('Theme', 1, true)
-      and not settings_text:find('Dark', 1, true)
-      and not settings_text:find('Light', 1, true),
-    'Settings should not switch theme: ' .. settings_text
+    settings_text:find('Color theme: Gruvbox Dark', 1, true),
+    'Settings should show the current color theme: ' .. settings_text
   )
   assert(settings_text:find('Indent width', 1, true), 'Settings should expose editing defaults')
-  eval('vim.api.nvim_win_set_cursor(0, {5, 0})')
+  assert(
+    eval("return require('modules.settings').get().scrollbars") == false
+      and eval("return require('modules.appearance').scroll_plugin_opts().enabled") == false,
+    'scrollbars stay off until Settings enables them'
+  )
+  assert(settings_text:find('Scrollbars: Off', 1, true), 'Settings should list Scrollbars off: ' .. settings_text)
+  eval([[for i, line in ipairs(vim.api.nvim_buf_get_lines(0, 0, -1, false)) do
+    if line:find('Scrollbars', 1, true) then vim.api.nvim_win_set_cursor(0, {i, 0}); break end
+  end]])
+  request('nvim_input', '<CR>')
+  wait_for('scrollbars on from Settings', function()
+    return eval("return require('modules.settings').get().scrollbars") == true
+      and eval("return require('modules.appearance').scroll_plugin_opts().enabled") == true
+  end)
+  eval("require('modules.settings').reset('scrollbars')")
+  wait_for('scrollbars reset', function()
+    return eval("return require('modules.settings').get().scrollbars") == false
+      and eval("return require('modules.appearance').scroll_plugin_opts().enabled") == false
+  end)
+  eval([[for i, line in ipairs(vim.api.nvim_buf_get_lines(0, 0, -1, false)) do
+    if line:find('File icons', 1, true) then vim.api.nvim_win_set_cursor(0, {i, 0}); break end
+  end]])
   request('nvim_input', '<CR>')
   wait_for('icons off from Settings', function()
     return eval("return require('modules.settings').get().icons") == false
@@ -1692,12 +2044,15 @@ local ok, err = xpcall(function()
     eval("return require('modules.icons').tree_icons().web_devicons.file.enable") == false,
     'Files tree should hide Devicons when icons are off'
   )
-  assert(eval('return vim.o.background') == 'dark', 'Settings must not change the colorscheme')
+  assert(eval('return vim.o.background') == 'dark', 'Settings must keep a dark background')
   local saved = eval([[
     local path = require('modules.settings').file()
     return table.concat(vim.fn.readfile(path), '\n')
   ]])
-  assert(not saved:find('theme', 1, true), 'settings.json should not persist theme')
+  assert(
+    saved:find('"theme":"gruvbox"', 1, true) or saved:find('"theme": "gruvbox"', 1, true),
+    'settings.json should persist the catalog theme'
+  )
   assert(
     saved:find('"icons":false', 1, true) or saved:find('"icons": false', 1, true),
     'settings.json should persist icons'
@@ -1713,8 +2068,9 @@ local ok, err = xpcall(function()
   wait_for('reload settings from disk', function()
     return eval("return require('modules.settings').get().icons") == true
       and eval("return require('modules.icons').file_icon('app.ts')") == 'S'
+      and eval("return require('modules.settings').get().theme") == 'gruvbox'
   end)
-  assert(eval('return vim.o.background') == 'dark', 'Reload must ignore a leftover theme in settings.json')
+  assert(eval('return vim.o.background') == 'dark', 'Reload must ignore an unknown theme in settings.json')
   request('nvim_input', 'q')
   wait_for('return to Files from Settings', function()
     return eval("return require('modules.sidebar').view") == 'files'
@@ -1727,6 +2083,113 @@ local ok, err = xpcall(function()
   assert(eval('return vim.o.shiftwidth') == 4, 'Indent setting should apply immediately')
   assert(eval("return require('modules.settings').reset('indent')") == true, 'Indent setting should reset')
   assert(eval('return vim.o.shiftwidth') == 2, 'Indent default should be restored')
+  eval("require('modules.sidebar').settings()")
+  wait_for('Settings before Color theme', function()
+    return eval('return vim.bo.filetype') == 'setup-settings'
+  end)
+  eval([[for i, line in ipairs(vim.api.nvim_buf_get_lines(0, 0, -1, false)) do
+    if line:find('Color theme', 1, true) then vim.api.nvim_win_set_cursor(0, {i, 0}); break end
+  end]])
+  request('nvim_input', '<CR>')
+  wait_for('Themes sidebar from Settings', function()
+    return eval('return vim.bo.filetype') == 'setup-themes'
+      and eval("return require('modules.sidebar').view") == 'themes'
+  end)
+  local themes_text = eval("return table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), '\\n')")
+  assert(themes_text:sub(1, 1) == '\n', 'Themes should begin with a blank line')
+  assert(themes_text:find('Search themes', 1, true), 'Themes should show a search field: ' .. themes_text)
+  assert(
+    themes_text:find('Cursor Dark', 1, true) and themes_text:find('VS Code Dark+', 1, true),
+    'Familiar themes should be listed: ' .. themes_text
+  )
+  assert(eval('return #require("modules.themes").list()') == 20, 'Catalog must stay at 20 themes')
+  assert(
+    eval([[return require('modules.themes').search('cursor')[1].id == 'cursor-dark']]),
+    'Search cursor should hit Cursor Dark first'
+  )
+  assert(
+    eval([[return require('modules.themes').search('tokyo')[1].id == 'tokyonight']]),
+    'Search tokyo should hit Tokyo Night'
+  )
+  eval("require('modules.themes').search_query = nil")
+  eval([[for i, line in ipairs(vim.api.nvim_buf_get_lines(0, 0, -1, false)) do
+    if line:find('Tokyo Night', 1, true) and not line:find('Storm', 1, true) then
+      vim.api.nvim_win_set_cursor(0, {i, 0}); break
+    end
+  end]])
+  request('nvim_input', '<CR>')
+  wait_for('Tokyo Night applied', function()
+    return eval("return require('modules.settings').get().theme") == 'tokyonight'
+      and eval('return vim.g.colors_name') == 'tokyonight-night'
+  end)
+  local tokyo_tab = eval("return vim.api.nvim_get_hl(0, { name = 'PaneTabActive', link = false })")
+  local function hl_hex_theme(hl)
+    local bg = hl.bg or hl.ctermbg
+    assert(bg, 'active tab needs a fill after a theme change')
+    return string.format('#%06x', bg)
+  end
+  assert(
+    hl_hex_theme(tokyo_tab) == '#7aa2f7',
+    'Tokyo Night chrome should color the active tab, got ' .. hl_hex_theme(tokyo_tab)
+  )
+  assert(
+    eval([[
+    local a = require('modules.appearance')
+    local function color(hex) return tonumber(hex:sub(2), 16) end
+    local bar = vim.api.nvim_get_hl(0, { name = 'StatusLine', link = false })
+    local right = vim.api.nvim_get_hl(0, { name = 'SLRight', link = false })
+    local point = vim.api.nvim_get_hl(0, { name = 'SLRightSep', link = false })
+    local mode = vim.api.nvim_get_hl(0, { name = 'SLModeNormal', link = false })
+    local mode_point = vim.api.nvim_get_hl(0, { name = 'SLModeNormalSep', link = false })
+    return bar.bg == color(a.bar_fill) and right.fg == color(a.tab_accent)
+      and right.bg == color(a.powerline_fill) and point.fg == right.bg and point.bg == bar.bg
+      and mode.bg == color(a.modes.Normal) and mode_point.fg == mode.bg and mode_point.bg == bar.bg
+  ]]),
+    'switching themes must recolor both statusline segments and their connecting points'
+  )
+  assert(
+    eval([[
+      local a = require('modules.appearance')
+      local term = vim.api.nvim_get_hl(0, { name = 'Terminal', link = false })
+      return vim.g.terminal_color_0 == '#000000'
+        and vim.g.terminal_color_7 == '#e5e5e5'
+        and a.theme_ansi()[11] == '#7aa2f7'
+        and not term.bg
+        and term.fg == tonumber('c0caf5', 16)
+    ]]),
+    'switching theme must recolor agent ANSI without painting a Terminal fill'
+  )
+  assert(eval("return require('modules.themes').select('gruvbox')") == true)
+  wait_for('reset theme helper', function()
+    return eval("return require('modules.settings').get().theme") == 'gruvbox'
+  end)
+  eval("require('modules.sidebar').settings()")
+  wait_for('Settings to reset theme', function()
+    return eval('return vim.bo.filetype') == 'setup-settings'
+  end)
+  eval([[for i, line in ipairs(vim.api.nvim_buf_get_lines(0, 0, -1, false)) do
+    if line:find('Color theme', 1, true) then vim.api.nvim_win_set_cursor(0, {i, 0}); break end
+  end]])
+  request('nvim_input', 'x')
+  wait_for('Color theme reset', function()
+    return eval("return require('modules.settings').get().theme") == 'gruvbox'
+  end)
+  assert(eval("return vim.fn.exists(':SetupThemes')") == 2, ':SetupThemes should open the Themes tab')
+  eval("require('modules.sidebar').themes()")
+  wait_for('Themes command', function()
+    return eval('return vim.bo.filetype') == 'setup-themes'
+  end)
+  request('nvim_input', '/cursor<CR>')
+  wait_for('theme search filter', function()
+    return eval([[
+      local text = table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), '\n')
+      return text:find('Cursor Dark', 1, true) and not text:find('Gruvbox Dark', 1, true)
+    ]])
+  end)
+  request('nvim_input', 'q')
+  wait_for('return to Files from Themes', function()
+    return eval("return require('modules.sidebar').view") == 'files'
+  end)
   eval("require('modules.sidebar').extensions()")
   wait_for('Extensions sidebar', function()
     return eval('return vim.bo.filetype') == 'setup-extensions'

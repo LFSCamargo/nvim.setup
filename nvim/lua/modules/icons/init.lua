@@ -7,6 +7,7 @@ M.sidebar = {
   files = '',
   git = '',
   settings = '',
+  themes = '',
   extensions = '',
 }
 

@@ -1,7 +1,7 @@
 -- Headless packaging check: Neovim version, plugins, Mason tools, parsers, keys, transparency.
 local api = vim.api
 assert(vim.fn.has('nvim-0.12') == 1, 'Neovim 0.12+ required')
-assert(vim.g.colors_name == 'gruvbox', 'Gruvbox did not load')
+assert(require('modules.themes').schemes()[vim.g.colors_name] == true, 'A catalog colorscheme did not load')
 assert(vim.o.mouse:find('a'), 'Mouse support missing')
 assert(vim.o.showtabline == 0, 'Global tab bar must be hidden')
 for _, key in ipairs({ '<C-s>', '<C-t>', '<C-w>', '<C-]>', '<C-,>' }) do
@@ -15,6 +15,7 @@ for _, name in ipairs({
   'modules.statusline',
   'modules.format',
   'modules.settings',
+  'modules.themes',
   'modules.images',
   'cmp',
   'nvim-tree.api',
@@ -22,6 +23,7 @@ for _, name in ipairs({
   'conform',
   'fzf-lua',
   'nvim-web-devicons',
+  'scroll',
 }) do
   assert(pcall(require, name), 'Could not load module: ' .. name)
 end

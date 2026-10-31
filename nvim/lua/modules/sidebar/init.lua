@@ -847,12 +847,13 @@ function M.files()
   M.view = 'files'
   close_git()
   require('modules.settings').close()
+  require('modules.themes').close()
   require('modules.extensions').close()
   require('nvim-tree.api').tree.open({ focus = true })
 end
 
 function M.toggle_files()
-  if (M.view == 'git' and valid(git_win)) or M.view == 'settings' or M.view == 'extensions' then
+  if (M.view == 'git' and valid(git_win)) or M.view == 'settings' or M.view == 'themes' or M.view == 'extensions' then
     M.files()
   else
     require('nvim-tree.api').tree.toggle()
@@ -867,6 +868,7 @@ function M.settings()
   M.generation = M.generation + 1
   M.view = 'settings'
   close_git()
+  require('modules.themes').close()
   require('modules.extensions').close()
   require('nvim-tree.api').tree.close()
   require('modules.settings').open(math.max(36, M.width()))
@@ -881,8 +883,23 @@ function M.extensions()
   M.view = 'extensions'
   close_git()
   require('modules.settings').close()
+  require('modules.themes').close()
   require('nvim-tree.api').tree.close()
   require('modules.extensions').open(math.max(40, M.width()))
+end
+
+function M.themes()
+  if M.view == 'themes' and require('modules.themes').visible() then
+    require('modules.themes').focus()
+    return
+  end
+  M.generation = M.generation + 1
+  M.view = 'themes'
+  close_git()
+  require('modules.settings').close()
+  require('modules.extensions').close()
+  require('nvim-tree.api').tree.close()
+  require('modules.themes').open(math.max(36, M.width()))
 end
 
 local function map_buf(buf, mode, key, fn, desc)
@@ -1088,6 +1105,7 @@ function M.git()
   end
   M.view = 'git'
   require('modules.settings').close()
+  require('modules.themes').close()
   require('modules.extensions').close()
   require('nvim-tree.api').tree.close()
   vim.cmd('topleft vsplit')
@@ -1162,6 +1180,13 @@ _G.SidebarSettings = function(_, _, button)
     require('modules.context_menu').sidebar_tab('settings', require('modules.context_menu').mouse_position())
   end
 end
+_G.SidebarThemes = function(_, _, button)
+  if button == 'l' then
+    M.themes()
+  elseif button == 'r' then
+    require('modules.context_menu').sidebar_tab('themes', require('modules.context_menu').mouse_position())
+  end
+end
 _G.SidebarExtensions = function(_, _, button)
   if button == 'l' then
     M.extensions()
@@ -1174,8 +1199,8 @@ local function tab_highlights()
   vim.api.nvim_set_hl(0, 'SidebarTabActive', { fg = appearance.tab_ink, bg = appearance.tab_accent, bold = true })
   vim.api.nvim_set_hl(0, 'SidebarTabActiveSep', { fg = appearance.tab_accent })
   vim.api.nvim_set_hl(0, 'SidebarTabJoinSep', { fg = appearance.tab_accent })
-  vim.api.nvim_set_hl(0, 'SidebarTabInactive', { fg = '#a89984' })
-  vim.api.nvim_set_hl(0, 'SidebarTabInactiveSep', { fg = '#665c54' })
+  vim.api.nvim_set_hl(0, 'SidebarTabInactive', { fg = appearance.muted })
+  vim.api.nvim_set_hl(0, 'SidebarTabInactiveSep', { fg = appearance.sep })
 end
 tab_highlights()
 vim.api.nvim_create_autocmd('ColorScheme', { callback = tab_highlights })
@@ -1186,6 +1211,7 @@ function M.winbar()
     { view = 'files', click = 'SidebarFiles', icon = icons.files, label = 'Files' },
     { view = 'git', click = 'SidebarGit', icon = icons.git, label = 'Git' },
     { view = 'settings', click = 'SidebarSettings', icon = icons.settings, label = 'Settings' },
+    { view = 'themes', click = 'SidebarThemes', icon = icons.themes, label = 'Themes' },
     { view = 'extensions', click = 'SidebarExtensions', icon = icons.extensions, label = 'Extensions' },
   }
   local out = {}

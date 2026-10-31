@@ -5,9 +5,9 @@
 local M = {}
 local api = vim.api
 
-local bar_bg = require('modules.appearance').bar_fill
-local powerline_bg = require('modules.appearance').powerline_fill
-local ink = '#1d2021'
+local function chrome()
+  return require('modules.appearance')
+end
 local modes = {
   n = { 'NORMAL', 'Normal' },
   no = { 'NORMAL', 'Normal' },
@@ -42,22 +42,13 @@ local modes = {
   ntT = { 'TERMINAL', 'Terminal' },
 }
 
--- Faded Gruvbox yellow/red/orange so the bar is warm without the neon brights.
-local mode_colors = {
-  Normal = '#d79921',
-  Insert = '#cc241d',
-  Visual = '#d65d0e',
-  Replace = '#9d0006',
-  Command = '#b57614',
-  Terminal = '#d79921',
-}
-
 local side_ft = {
   NvimTree = 'Files',
   ['git-changes'] = 'Git',
   ['git-composer'] = 'Git',
   ['git-log'] = 'Git',
   ['setup-settings'] = 'Settings',
+  ['setup-themes'] = 'Themes',
   ['setup-extensions'] = 'Extensions',
   ['git-diff'] = 'Diff',
 }
@@ -90,32 +81,37 @@ local function escape(s)
 end
 
 local function apply_highlights()
-  api.nvim_set_hl(0, 'StatusLine', { fg = '#ebdbb2', bg = bar_bg })
-  api.nvim_set_hl(0, 'StatusLineNC', { fg = '#a89984', bg = bar_bg })
+  local appearance = chrome()
+  local bar_bg = appearance.bar_fill
+  local powerline_bg = appearance.powerline_fill
+  local ink = appearance.tab_ink
+  local mode_colors = appearance.modes
+  api.nvim_set_hl(0, 'StatusLine', { fg = appearance.fg, bg = bar_bg })
+  api.nvim_set_hl(0, 'StatusLineNC', { fg = appearance.muted, bg = bar_bg })
   for kind, bg in pairs(mode_colors) do
     api.nvim_set_hl(0, 'SLMode' .. kind, { fg = ink, bg = bg, bold = true })
     api.nvim_set_hl(0, 'SLMode' .. kind .. 'Sep', { fg = bg, bg = bar_bg })
   end
-  api.nvim_set_hl(0, 'SLGit', { fg = '#d79921', bg = bar_bg })
-  api.nvim_set_hl(0, 'SLGitAdd', { fg = '#98971a', bg = bar_bg })
-  api.nvim_set_hl(0, 'SLGitChange', { fg = '#d79921', bg = bar_bg })
-  api.nvim_set_hl(0, 'SLGitDelete', { fg = '#cc241d', bg = bar_bg })
-  api.nvim_set_hl(0, 'SLFile', { fg = '#ebdbb2', bg = bar_bg })
-  api.nvim_set_hl(0, 'SLModified', { fg = '#d65d0e', bg = bar_bg })
-  api.nvim_set_hl(0, 'SLDiagError', { fg = '#cc241d', bg = bar_bg })
-  api.nvim_set_hl(0, 'SLDiagWarn', { fg = '#d79921', bg = bar_bg })
-  api.nvim_set_hl(0, 'SLDiagInfo', { fg = '#689d6a', bg = bar_bg })
-  api.nvim_set_hl(0, 'SLDiagHint', { fg = '#d65d0e', bg = bar_bg })
-  api.nvim_set_hl(0, 'SLLsp', { fg = '#bdae93', bg = bar_bg })
-  api.nvim_set_hl(0, 'SLFt', { fg = '#d79921', bg = bar_bg })
-  api.nvim_set_hl(0, 'SLMeta', { fg = '#928374', bg = bar_bg })
-  api.nvim_set_hl(0, 'SLPos', { fg = '#d79921', bg = bar_bg })
-  api.nvim_set_hl(0, 'SLPct', { fg = '#cc241d', bg = bar_bg })
+  api.nvim_set_hl(0, 'SLGit', { fg = mode_colors.Normal, bg = bar_bg })
+  api.nvim_set_hl(0, 'SLGitAdd', { fg = mode_colors.Insert, bg = bar_bg })
+  api.nvim_set_hl(0, 'SLGitChange', { fg = mode_colors.Normal, bg = bar_bg })
+  api.nvim_set_hl(0, 'SLGitDelete', { fg = mode_colors.Replace, bg = bar_bg })
+  api.nvim_set_hl(0, 'SLFile', { fg = appearance.fg, bg = bar_bg })
+  api.nvim_set_hl(0, 'SLModified', { fg = mode_colors.Visual, bg = bar_bg })
+  api.nvim_set_hl(0, 'SLDiagError', { fg = mode_colors.Replace, bg = bar_bg })
+  api.nvim_set_hl(0, 'SLDiagWarn', { fg = mode_colors.Normal, bg = bar_bg })
+  api.nvim_set_hl(0, 'SLDiagInfo', { fg = mode_colors.Insert, bg = bar_bg })
+  api.nvim_set_hl(0, 'SLDiagHint', { fg = mode_colors.Visual, bg = bar_bg })
+  api.nvim_set_hl(0, 'SLLsp', { fg = appearance.muted, bg = bar_bg })
+  api.nvim_set_hl(0, 'SLFt', { fg = mode_colors.Normal, bg = bar_bg })
+  api.nvim_set_hl(0, 'SLMeta', { fg = appearance.muted, bg = bar_bg })
+  api.nvim_set_hl(0, 'SLPos', { fg = mode_colors.Normal, bg = bar_bg })
+  api.nvim_set_hl(0, 'SLPct', { fg = mode_colors.Replace, bg = bar_bg })
   api.nvim_set_hl(0, 'SLRightSep', { fg = powerline_bg, bg = bar_bg })
-  api.nvim_set_hl(0, 'SLRight', { fg = '#fabd2f', bg = powerline_bg, bold = true })
-  api.nvim_set_hl(0, 'SLSearch', { fg = '#d65d0e', bg = bar_bg })
-  api.nvim_set_hl(0, 'SLRec', { fg = ink, bg = '#cc241d', bold = true })
-  api.nvim_set_hl(0, 'SLDebug', { fg = ink, bg = '#d65d0e', bold = true })
+  api.nvim_set_hl(0, 'SLRight', { fg = appearance.tab_accent, bg = powerline_bg, bold = true })
+  api.nvim_set_hl(0, 'SLSearch', { fg = mode_colors.Visual, bg = bar_bg })
+  api.nvim_set_hl(0, 'SLRec', { fg = ink, bg = mode_colors.Replace, bold = true })
+  api.nvim_set_hl(0, 'SLDebug', { fg = ink, bg = mode_colors.Visual, bold = true })
 end
 
 local function git_head_fallback()
@@ -401,6 +397,7 @@ function M.draw()
   return ' %f %m%r%=%l:%c %p%% '
 end
 
+M.refresh_highlights = apply_highlights
 apply_highlights()
 vim.opt.laststatus = 3
 vim.opt.showmode = false

@@ -10,6 +10,7 @@ local side_ft = {
   ['git-composer'] = true,
   ['git-log'] = true,
   ['setup-settings'] = true,
+  ['setup-themes'] = true,
   ['setup-extensions'] = true,
 }
 local git_editor_ft = {
@@ -102,6 +103,47 @@ function M.editor_win()
   return fallback
 end
 
+function M.is_editor_win(win)
+  win = tonumber(win) or win
+  return win and win ~= 0 and api.nvim_win_is_valid(win) and not is_side(win) and editor_buf(api.nvim_win_get_buf(win))
+end
+
+function M.is_side_win(win)
+  win = tonumber(win) or win
+  return win and win ~= 0 and api.nvim_win_is_valid(win) and is_side(win)
+end
+
+function M.apply_scroll(win)
+  local function one(w)
+    if not api.nvim_win_is_valid(w) then
+      return
+    end
+    local agents = package.loaded['modules.agents']
+    local buf = api.nvim_win_get_buf(w)
+    if agents and (agents.win == w or agents.is_chat(buf)) then
+      vim.wo[w].wrap = false
+      return
+    end
+    if M.is_side_win(w) then
+      vim.wo[w].wrap = false
+      vim.wo[w].sidescrolloff = 0
+      return
+    end
+    if not M.is_editor_win(w) then
+      return
+    end
+    vim.wo[w].wrap = false
+    vim.wo[w].sidescrolloff = 0
+  end
+  if win then
+    one(win)
+    return
+  end
+  for _, w in ipairs(api.nvim_tabpage_list_wins(0)) do
+    one(w)
+  end
+end
+
 local function next_tab(except)
   for _, buf in ipairs(api.nvim_list_bufs()) do
     if buf ~= except and editor_buf(buf) then
@@ -129,7 +171,13 @@ local function recreate_editor()
   if sidebar then
     for _, w in ipairs(api.nvim_tabpage_list_wins(0)) do
       local ft = vim.bo[api.nvim_win_get_buf(w)].filetype
-      if ft == 'NvimTree' or ft == 'git-changes' or ft == 'setup-settings' or ft == 'setup-extensions' then
+      if
+        ft == 'NvimTree'
+        or ft == 'git-changes'
+        or ft == 'setup-settings'
+        or ft == 'setup-themes'
+        or ft == 'setup-extensions'
+      then
         pcall(api.nvim_win_set_width, w, sidebar.width())
         break
       end
@@ -612,15 +660,15 @@ end
 
 local function highlights()
   local appearance = require('modules.appearance')
-  api.nvim_set_hl(0, 'WinBar', { fg = '#a89984' })
-  api.nvim_set_hl(0, 'WinBarNC', { fg = '#7c6f64' })
+  api.nvim_set_hl(0, 'WinBar', { fg = appearance.muted })
+  api.nvim_set_hl(0, 'WinBarNC', { fg = appearance.sep })
   api.nvim_set_hl(0, 'PaneTabActive', { fg = appearance.tab_ink, bg = appearance.tab_accent, bold = true })
   api.nvim_set_hl(0, 'PaneTabActiveSep', { fg = appearance.tab_accent })
   api.nvim_set_hl(0, 'PaneTabJoinSep', { fg = appearance.tab_accent })
-  api.nvim_set_hl(0, 'PaneTabInactive', { fg = '#a89984' })
-  api.nvim_set_hl(0, 'PaneTabSep', { fg = '#665c54' })
-  api.nvim_set_hl(0, 'WinSeparator', { fg = '#504a45' })
-  api.nvim_set_hl(0, 'VertSplit', { fg = '#504a45' })
+  api.nvim_set_hl(0, 'PaneTabInactive', { fg = appearance.muted })
+  api.nvim_set_hl(0, 'PaneTabSep', { fg = appearance.sep })
+  api.nvim_set_hl(0, 'WinSeparator', { fg = appearance.sep })
+  api.nvim_set_hl(0, 'VertSplit', { fg = appearance.sep })
 end
 highlights()
 vim.opt.fillchars:append({ vert = '│' })
@@ -673,12 +721,14 @@ api.nvim_create_autocmd('WinClosed', {
 })
 
 local function refresh()
+  M.apply_scroll()
   for _, win in ipairs(api.nvim_tabpage_list_wins(0)) do
     local buf = api.nvim_win_get_buf(win)
     if
       vim.bo[buf].filetype == 'NvimTree'
       or vim.bo[buf].filetype == 'git-composer'
       or vim.bo[buf].filetype == 'setup-settings'
+      or vim.bo[buf].filetype == 'setup-themes'
       or vim.bo[buf].filetype == 'setup-extensions'
     then
       vim.wo[win].winbar = "%!v:lua.require'modules.sidebar'.winbar()"
@@ -693,7 +743,7 @@ local function refresh()
   vim.cmd('redrawstatus')
 end
 
-api.nvim_create_autocmd({ 'BufEnter', 'BufWinEnter', 'WinEnter', 'BufModifiedSet', 'VimEnter' }, {
+api.nvim_create_autocmd({ 'BufEnter', 'BufWinEnter', 'WinEnter', 'BufModifiedSet', 'VimEnter', 'FileType' }, {
   callback = refresh,
 })
 vim.schedule(refresh)

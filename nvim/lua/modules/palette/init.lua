@@ -66,6 +66,20 @@ local actions = {
     end,
   },
   {
+    'Open Themes',
+    'appearance colorscheme',
+    function()
+      require('modules.sidebar').themes()
+    end,
+  },
+  {
+    'Color Theme',
+    'appearance colorscheme',
+    function()
+      require('modules.sidebar').themes()
+    end,
+  },
+  {
     'Toggle file icons',
     'appearance',
     function()

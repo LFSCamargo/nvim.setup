@@ -278,6 +278,7 @@ function M.sidebar_tab(view, pos)
     files = sidebar.files,
     git = sidebar.git,
     settings = sidebar.settings,
+    themes = sidebar.themes,
     extensions = sidebar.extensions,
   }
   if not open[view] then

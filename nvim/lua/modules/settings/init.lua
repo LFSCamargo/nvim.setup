@@ -11,13 +11,17 @@ local defaults = {
   ignorecase = true,
   smartcase = true,
   transparent = true,
+  scrollbars = false,
   session_restore = true,
+  theme = 'gruvbox',
 }
 local current = vim.deepcopy(defaults)
 M.defaults = defaults
 M.options = {
+  { section = 'Appearance', key = 'theme', label = 'Color theme', kind = 'theme' },
   { section = 'Appearance', key = 'icons', label = 'File icons', kind = 'boolean' },
   { section = 'Appearance', key = 'transparent', label = 'Transparent background', kind = 'boolean' },
+  { section = 'Appearance', key = 'scrollbars', label = 'Scrollbars', kind = 'boolean' },
   { section = 'Appearance', key = 'number', label = 'Line numbers', kind = 'boolean' },
   { section = 'Appearance', key = 'relativenumber', label = 'Relative line numbers', kind = 'boolean' },
   { section = 'Editing', key = 'indent', label = 'Indent width', kind = 'choice', values = { 2, 4, 8 } },
@@ -57,6 +61,8 @@ local function sanitize(data)
   for _, option in ipairs(M.options) do
     local value = data[option.key]
     if option.kind == 'boolean' and type(value) == 'boolean' then
+      result[option.key] = value
+    elseif option.kind == 'theme' and require('modules.themes').has(value) then
       result[option.key] = value
     elseif option.values and vim.tbl_contains(option.values, value) then
       result[option.key] = value
@@ -105,9 +111,20 @@ function M.apply()
   vim.o.shiftwidth = current.indent
   vim.o.tabstop = current.indent
   vim.o.scrolloff = current.scrolloff
+  vim.o.wrap = false
+  vim.o.sidescroll = 1
+  vim.o.sidescrolloff = 0
+  vim.o.mousescroll = 'ver:3,hor:6'
   vim.o.ignorecase = current.ignorecase
   vim.o.smartcase = current.smartcase
+  local tabs = package.loaded['modules.tabs']
+  if tabs and tabs.apply_scroll then
+    tabs.apply_scroll()
+  end
   local appearance = package.loaded['modules.appearance']
+  if appearance and appearance.apply_scroll_plugin then
+    appearance.apply_scroll_plugin()
+  end
   if not booting and appearance and appearance.apply then
     appearance.apply()
   end
@@ -115,6 +132,10 @@ function M.apply()
   pcall(vim.cmd.redrawstatus)
   if M.visible() then
     M.render()
+  end
+  local themes = package.loaded['modules.themes']
+  if themes and themes.visible and themes.visible() then
+    themes.render()
   end
 end
 
@@ -129,6 +150,7 @@ function M.set(key, value)
   if
     not option
     or (option.kind == 'boolean' and type(value) ~= 'boolean')
+    or (option.kind == 'theme' and not require('modules.themes').has(value))
     or (option.values and not vim.tbl_contains(option.values, value))
   then
     return false
@@ -203,6 +225,9 @@ function M.render()
     end
     local value = s[option.key]
     local display = type(value) == 'boolean' and (value and 'On' or 'Off') or tostring(value)
+    if option.kind == 'theme' then
+      display = require('modules.themes').label(value)
+    end
     lines[#lines + 1] = '    ' .. option.label .. ': ' .. display .. (option.restart and ' (restart)' or '')
     rows[#lines] = { kind = 'setting', option = option }
   end
@@ -243,6 +268,10 @@ local function activate(entry)
   end
   local option = entry.option
   local value = current[option.key]
+  if option.kind == 'theme' then
+    require('modules.sidebar').themes()
+    return
+  end
   if option.kind == 'boolean' then
     M.set(option.key, not value)
   else
@@ -308,16 +337,20 @@ function M.open(width)
   M.render()
 end
 
-local function highlights()
-  api.nvim_set_hl(0, 'SetupTitle', { fg = '#ebdbb2', bold = true })
-  api.nvim_set_hl(0, 'SetupSection', { fg = '#a89984', bold = true })
-  api.nvim_set_hl(0, 'SetupChoiceOn', { fg = '#d79921', bold = true })
-  api.nvim_set_hl(0, 'SetupChoiceOff', { fg = '#a89984' })
-  api.nvim_set_hl(0, 'SetupButton', { fg = '#83a598', bold = true })
-  api.nvim_set_hl(0, 'SetupHelp', { fg = '#928374' })
+function M.highlights()
+  local appearance = package.loaded['modules.appearance']
+  local fg = appearance and appearance.fg or '#ebdbb2'
+  local muted = appearance and appearance.muted or '#a89984'
+  local accent = appearance and appearance.modes.Normal or '#d79921'
+  api.nvim_set_hl(0, 'SetupTitle', { fg = fg, bold = true })
+  api.nvim_set_hl(0, 'SetupSection', { fg = muted, bold = true })
+  api.nvim_set_hl(0, 'SetupChoiceOn', { fg = accent, bold = true })
+  api.nvim_set_hl(0, 'SetupChoiceOff', { fg = muted })
+  api.nvim_set_hl(0, 'SetupButton', { fg = accent, bold = true })
+  api.nvim_set_hl(0, 'SetupHelp', { fg = muted })
 end
-highlights()
-api.nvim_create_autocmd('ColorScheme', { callback = highlights })
+M.highlights()
+api.nvim_create_autocmd('ColorScheme', { callback = M.highlights })
 
 api.nvim_create_autocmd('VimResized', {
   callback = function()
