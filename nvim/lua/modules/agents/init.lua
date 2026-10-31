@@ -33,6 +33,34 @@ local function buf_for(id)
   end
 end
 
+-- Every agent job gets a color TTY. Warp's TERM_PROGRAM makes Cursor emit
+-- sequences libvterm cannot place (spaces in "Add a" / "Run Everything"
+-- collapse). Speak xterm-256 instead. Pin dark so OSC 11 does not pick light.
+function M.term_env()
+  local env = {}
+  for key, value in pairs(vim.fn.environ()) do
+    if
+      type(key) == 'string'
+      and key ~= ''
+      and type(value) == 'string'
+      and key ~= 'NO_COLOR'
+      and key ~= 'TERM_PROGRAM'
+      and key ~= 'TERM_PROGRAM_VERSION'
+      and not key:match('^WARP_')
+    then
+      env[key] = value
+    end
+  end
+  env.TERM = 'xterm-256color'
+  env.TERM_PROGRAM = 'xterm'
+  env.COLORTERM = '256color'
+  env.FORCE_COLOR = '2'
+  env.CLICOLOR_FORCE = '1'
+  env.TERM_THEME = 'dark'
+  env.COLORFGBG = '15;0'
+  return env
+end
+
 -- Chat session IDs are passed as argv elements, never through a shell.
 local function persist_id(value)
   return type(value) == 'string' and #value >= 6 and #value <= 80 and value:match('^[%w%-_]+$') ~= nil
@@ -318,6 +346,18 @@ function M.show(id)
   vim.api.nvim_win_set_buf(M.win, session.buf)
   vim.api.nvim_win_set_width(M.win, width())
   vim.wo[M.win].winfixwidth = true
+  -- TUIs (Cursor Agent input box) break when wrap reflows their cells.
+  vim.wo[M.win].wrap = false
+  vim.wo[M.win].linebreak = false
+  vim.wo[M.win].list = false
+  vim.wo[M.win].cursorline = false
+  vim.wo[M.win].number = false
+  vim.wo[M.win].relativenumber = false
+  vim.wo[M.win].signcolumn = 'no'
+  vim.wo[M.win].foldcolumn = '0'
+  vim.wo[M.win].statuscolumn = ''
+  vim.wo[M.win].winhighlight = ''
+  vim.wo[M.win].fillchars = 'eob: '
   M.active = id
   vim.cmd('redrawstatus')
   if vim.bo[session.buf].buftype == 'terminal' then
@@ -386,6 +426,8 @@ function M.new(name, opts)
   session.job = vim.fn.jobstart(resume_argv, {
     term = true,
     cwd = vim.fn.getcwd(),
+    env = M.term_env(),
+    clear_env = true,
     on_exit = on_exit,
   })
   if session.job <= 0 and persist_id(uuid) then
@@ -395,6 +437,8 @@ function M.new(name, opts)
     session.job = vim.fn.jobstart(fresh_argv, {
       term = true,
       cwd = vim.fn.getcwd(),
+      env = M.term_env(),
+      clear_env = true,
       on_exit = on_exit,
     })
   end
