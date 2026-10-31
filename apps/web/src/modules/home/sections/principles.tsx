@@ -1,4 +1,4 @@
-import { InfiniteMarquee } from '@/shared/ui/infinite-marquee';
+import { InfiniteMarquee } from '@/shared/components/infinite-marquee';
 
 const items = [
   'A LITTLE LESS FRICTION.',

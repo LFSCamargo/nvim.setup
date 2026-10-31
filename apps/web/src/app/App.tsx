@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { ThemeProvider } from '@/modules/theme/use-theme';
+import { ThemeProvider } from '@/modules/theme/hooks/use-theme';
 import { HomePage } from '@/modules/home/home-page';
 import { DocsPage } from '@/modules/docs/docs-page';
 

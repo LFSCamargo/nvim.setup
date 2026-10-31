@@ -1,6 +1,6 @@
-import { HoverBorderGradient } from '@/shared/ui/hover-border-gradient';
-import { Reveal } from '@/shared/ui/reveal';
-import { helpUrl, issuesUrl } from '@/shared/site';
+import { HoverBorderGradient } from '@/shared/components/hover-border-gradient';
+import { Reveal } from '@/shared/components/reveal';
+import { helpUrl, issuesUrl } from '@/shared/constants/site';
 
 export function Help() {
   return (

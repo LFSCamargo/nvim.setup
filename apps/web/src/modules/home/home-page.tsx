@@ -2,14 +2,14 @@ import { Docs } from '@/modules/home/sections/docs';
 import { Help } from '@/modules/home/sections/help';
 import { Hero } from '@/modules/home/sections/hero';
 import { Install } from '@/modules/home/sections/install';
-import { Nav } from '@/shared/layout/nav';
+import { Nav } from '@/shared/components/nav';
 import { Principles } from '@/modules/home/sections/principles';
-import { SiteFooter } from '@/shared/layout/site-footer';
+import { SiteFooter } from '@/shared/components/site-footer';
 import { Workspace } from '@/modules/home/sections/workspace';
-import { ScreenshotDialog } from '@/modules/home/screenshots/screenshot-dialog';
-import { useDocumentMeta } from '@/shared/seo/use-document-meta';
-import { useScreenshotLightbox } from '@/modules/home/screenshots/use-screenshot-lightbox';
-import { homeMeta } from '@/shared/seo/seo';
+import { ScreenshotDialog } from '@/modules/home/components/screenshots/screenshot-dialog';
+import { useDocumentMeta } from '@/shared/hooks/use-document-meta';
+import { useScreenshotLightbox } from '@/modules/home/components/screenshots/use-screenshot-lightbox';
+import { homeMeta } from '@/shared/utils/seo';
 
 export function HomePage() {
   const lightbox = useScreenshotLightbox();

@@ -1,9 +1,9 @@
-import { FlipWords } from '@/shared/ui/flip-words';
-import { HoverBorderGradient } from '@/shared/ui/hover-border-gradient';
-import { Spotlight } from '@/shared/ui/spotlight-new';
-import { TextGenerateEffect } from '@/shared/ui/text-generate-effect';
-import { Reveal } from '@/shared/ui/reveal';
-import { ScreenshotFrame } from '@/modules/home/screenshots/screenshot-frame';
+import { FlipWords } from '@/shared/components/flip-words';
+import { HoverBorderGradient } from '@/shared/components/hover-border-gradient';
+import { Spotlight } from '@/shared/components/spotlight-new';
+import { TextGenerateEffect } from '@/shared/components/text-generate-effect';
+import { Reveal } from '@/shared/components/reveal';
+import { ScreenshotFrame } from '@/modules/home/components/screenshots/screenshot-frame';
 import { heroWords, screens } from '@/modules/home/content';
 
 type HeroProps = {

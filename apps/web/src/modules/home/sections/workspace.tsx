@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { GlowingEffect } from '@/shared/ui/glowing-effect';
-import { LiquidGlass } from '@/shared/ui/liquid-glass';
-import { Reveal } from '@/shared/ui/reveal';
-import { ScreenshotFrame } from '@/modules/home/screenshots/screenshot-frame';
+import { GlowingEffect } from '@/shared/components/glowing-effect';
+import { LiquidGlass } from '@/shared/components/liquid-glass';
+import { Reveal } from '@/shared/components/reveal';
+import { ScreenshotFrame } from '@/modules/home/components/screenshots/screenshot-frame';
 import { features, screens } from '@/modules/home/content';
-import { cn } from '@/shared/utils';
+import { cn } from '@/shared/utils/cn';
 
 type WorkspaceProps = {
   onOpenScreenshot: (index: number) => void;

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
-import { LiquidGlass } from '@/shared/ui/liquid-glass';
-import { Reveal } from '@/shared/ui/reveal';
-import { repo } from '@/shared/site';
+import { LiquidGlass } from '@/shared/components/liquid-glass';
+import { Reveal } from '@/shared/components/reveal';
+import { repo } from '@/shared/constants/site';
 import { docLinks } from '@/modules/docs/content';
 
 export function Docs() {

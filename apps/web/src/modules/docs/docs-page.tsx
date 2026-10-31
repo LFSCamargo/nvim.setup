@@ -1,19 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { MarkdownView } from '@/modules/docs/markdown-view';
-import { Nav } from '@/shared/layout/nav';
-import { SiteFooter } from '@/shared/layout/site-footer';
-import { LiquidGlass } from '@/shared/ui/liquid-glass';
-import { useDocumentMeta } from '@/shared/seo/use-document-meta';
+import { MarkdownView } from '@/modules/docs/components/markdown-view';
+import { Nav } from '@/shared/components/nav';
+import { SiteFooter } from '@/shared/components/site-footer';
+import { LiquidGlass } from '@/shared/components/liquid-glass';
+import { useDocumentMeta } from '@/shared/hooks/use-document-meta';
 import {
   defaultDocSlug,
   docPages,
   getDocPage,
   githubDocUrl,
   isDocSlug,
-} from '@/modules/docs/docs';
-import { docMeta } from '@/shared/seo/seo';
-import { cn } from '@/shared/utils';
+} from '@/modules/docs/utils';
+import { docMeta } from '@/shared/utils/seo';
+import { cn } from '@/shared/utils/cn';
 
 const groups = ['Start', 'Reference'] as const;
 

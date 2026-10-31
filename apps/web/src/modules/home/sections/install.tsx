@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { docs } from '@/shared/site';
+import { docs } from '@/shared/constants/site';
 import {
   commands,
   installSteps,
   requirements,
   type InstallMode,
-} from '@/modules/home/install/content';
-import { CodeBlock } from '@/shared/ui/code-block';
-import { LiquidGlass } from '@/shared/ui/liquid-glass';
-import { Reveal } from '@/shared/ui/reveal';
-import { useTheme } from '@/modules/theme/use-theme';
-import { cn } from '@/shared/utils';
+} from '@/modules/home/constants/install-content';
+import { CodeBlock } from '@/shared/components/code-block';
+import { LiquidGlass } from '@/shared/components/liquid-glass';
+import { Reveal } from '@/shared/components/reveal';
+import { useTheme } from '@/modules/theme/hooks/use-theme';
+import { cn } from '@/shared/utils/cn';
 
 export function Install() {
   const { theme } = useTheme();

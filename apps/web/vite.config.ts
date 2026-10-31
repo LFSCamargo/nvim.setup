@@ -5,7 +5,7 @@ import { fileURLToPath, URL } from 'node:url';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig, type Plugin } from 'vite';
-import { writeSpaFallback } from './src/shared/seo/spa';
+import { writeSpaFallback } from './src/shared/utils/spa';
 
 function copyRepoGuides(): Plugin {
   const webRoot = fileURLToPath(new URL('.', import.meta.url));
