@@ -193,7 +193,7 @@ function M.render()
     return
   end
   local s = M.get()
-  local lines = { '  SETTINGS', '  Enter/click to change. x resets. q: Files.', '' }
+  local lines = { '', '  Enter/click to change. x resets. q: Files.', '' }
   rows = {}
   local section
   for _, option in ipairs(M.options) do
@@ -213,7 +213,6 @@ function M.render()
   rows[#lines] = { kind = 'palette' }
   paint(lines)
   api.nvim_buf_clear_namespace(buf, ns, 0, -1)
-  mark(0, 'SetupTitle')
   mark(1, 'SetupHelp')
   for i, line in ipairs(lines) do
     if line:match('^  %w') and not rows[i] and i > 3 then

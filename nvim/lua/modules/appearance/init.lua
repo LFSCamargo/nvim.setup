@@ -25,12 +25,21 @@ for _, name in ipairs(M.selection_highlights) do
   keep[name] = true
 end
 
--- Statusline pills keep a fill; SL* groups are defined in modules.statusline.
+-- The bottom statusline and active tabs keep fills; inactive tabs and pane borders are transparent.
+M.bar_fill = '#3c3836'
+M.powerline_fill = '#504a31'
+M.tab_accent = '#fabd2f'
+M.tab_ink = '#1d2021'
+
+-- Statusline pills and active tabs keep their fill through transparency passes.
 function M.keeps_fill(name)
   if keep[name] then
     return true
   end
   if name == 'StatusLine' or name == 'StatusLineNC' then
+    return true
+  end
+  if name == 'PaneTabActive' or name == 'SidebarTabActive' then
     return true
   end
   return name:sub(1, 2) == 'SL'

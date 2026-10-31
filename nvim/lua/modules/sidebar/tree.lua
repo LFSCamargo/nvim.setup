@@ -1,5 +1,29 @@
 local M = {}
 local api = vim.api
+local spacing_ns = api.nvim_create_namespace('SidebarTreeSpacing')
+
+local function keep_top_spacing(buf)
+  local function paint()
+    if api.nvim_buf_is_valid(buf) and vim.bo[buf].filetype == 'NvimTree' then
+      api.nvim_buf_set_extmark(buf, spacing_ns, 0, 0, {
+        id = 1,
+        virt_lines = { { { ' ', 'Normal' } } },
+        virt_lines_above = true,
+      })
+      require('modules.shared.buffer').show_top_spacing(buf)
+    end
+  end
+  paint()
+  if vim.b[buf].sidebar_spacing_attached then
+    return
+  end
+  vim.b[buf].sidebar_spacing_attached = true
+  api.nvim_buf_attach(buf, false, {
+    on_lines = function()
+      vim.schedule(paint)
+    end,
+  })
+end
 
 local function setup_highlights()
   api.nvim_set_hl(0, 'GitChangeDeleted', { fg = '#cc241d' })
@@ -64,6 +88,7 @@ api.nvim_create_autocmd('VimEnter', {
 function M.setup(width)
   return {
     on_attach = function(buf)
+      keep_top_spacing(buf)
       local tree = require('nvim-tree.api')
       if tree.config and tree.config.mappings then
         tree.config.mappings.default_on_attach(buf)

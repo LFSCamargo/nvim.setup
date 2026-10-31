@@ -15,6 +15,7 @@ for _, name in ipairs({
   'modules.statusline',
   'modules.format',
   'modules.settings',
+  'modules.images',
   'cmp',
   'nvim-tree.api',
   'dap',
@@ -58,6 +59,11 @@ vim.defer_fn(function()
     assert(vim.o.showmode == false, 'mode must live in the statusline')
     local winbar = api.nvim_get_hl(0, { name = 'WinBar', link = false })
     local sep = api.nvim_get_hl(0, { name = 'PaneTabSep', link = false })
+    for _, name in ipairs({ 'PaneTabActive', 'SidebarTabActive' }) do
+      local hl = api.nvim_get_hl(0, { name = name, link = false })
+      assert(hl.bg == tonumber(appearance.tab_accent:sub(2), 16), name .. ' needs a yellow background')
+      assert(hl.fg == tonumber(appearance.tab_ink:sub(2), 16), name .. ' needs black text and icons')
+    end
     assert(not winbar.bg and not winbar.ctermbg, 'WinBar must stay transparent')
     assert(not sep.bg and not sep.ctermbg, 'PaneTabSep must stay transparent')
     assert(not winbar.underline, 'WinBar must not use a bright underline')

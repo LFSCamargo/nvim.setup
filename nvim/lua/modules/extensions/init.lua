@@ -341,7 +341,7 @@ function M.render()
   end
   local width = math.max(20, api.nvim_win_get_width(win) - 4)
   local lines = {
-    '  EXTENSIONS',
+    '',
     '  Mason tools and Neovim plugins',
     '  > ' .. (mason_query == '' and 'Search Mason extensions...' or mason_query),
     '',
@@ -409,9 +409,7 @@ function M.render()
   require('modules.shared.buffer').replace(buf, lines)
   api.nvim_buf_clear_namespace(buf, ns, 0, -1)
   for i, line in ipairs(lines) do
-    if i == 1 then
-      mark(i, 'SetupTitle')
-    elseif i == 2 then
+    if i == 2 then
       mark(i, 'SetupHelp')
     elseif i == 3 then
       mark(i, 'SetupButton')

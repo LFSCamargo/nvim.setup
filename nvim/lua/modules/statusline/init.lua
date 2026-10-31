@@ -5,7 +5,8 @@
 local M = {}
 local api = vim.api
 
-local bar_bg = '#3c3836'
+local bar_bg = require('modules.appearance').bar_fill
+local powerline_bg = require('modules.appearance').powerline_fill
 local ink = '#1d2021'
 local modes = {
   n = { 'NORMAL', 'Normal' },
@@ -48,7 +49,7 @@ local mode_colors = {
   Visual = '#d65d0e',
   Replace = '#9d0006',
   Command = '#b57614',
-  Terminal = '#cc241d',
+  Terminal = '#d79921',
 }
 
 local side_ft = {
@@ -78,6 +79,8 @@ M.fill_highlights = {
   'SLModeReplaceSep',
   'SLModeCommandSep',
   'SLModeTerminalSep',
+  'SLRightSep',
+  'SLRight',
 }
 
 local git_cache = { cwd = '', at = 0, head = '' }
@@ -108,6 +111,8 @@ local function apply_highlights()
   api.nvim_set_hl(0, 'SLMeta', { fg = '#928374', bg = bar_bg })
   api.nvim_set_hl(0, 'SLPos', { fg = '#d79921', bg = bar_bg })
   api.nvim_set_hl(0, 'SLPct', { fg = '#cc241d', bg = bar_bg })
+  api.nvim_set_hl(0, 'SLRightSep', { fg = powerline_bg, bg = bar_bg })
+  api.nvim_set_hl(0, 'SLRight', { fg = '#fabd2f', bg = powerline_bg, bold = true })
   api.nvim_set_hl(0, 'SLSearch', { fg = '#d65d0e', bg = bar_bg })
   api.nvim_set_hl(0, 'SLRec', { fg = ink, bg = '#cc241d', bold = true })
   api.nvim_set_hl(0, 'SLDebug', { fg = ink, bg = '#d65d0e', bold = true })
@@ -383,8 +388,8 @@ local function render()
   end
 
   local pos, pct = location(win, buf)
-  add('SLPos', '  ' .. pos)
-  add('SLPct', '  ' .. pct .. ' ')
+  add('SLRightSep', '')
+  add('SLRight', ' ' .. pos .. '  ' .. pct .. ' ')
   return table.concat(parts)
 end
 

@@ -198,13 +198,15 @@ local function escape(s)
   return s:gsub('%%', '%%%%'):gsub('[\r\n]', ' ')
 end
 
--- Same glyph as the pane split (fillchars.vert).
-function M.divider()
-  local vert = vim.opt.fillchars:get().vert
-  if type(vert) ~= 'string' or vert == '' then
-    vert = '│'
+-- Left-to-right /; agents use the reversed / pair.
+function M.divider(solid, reverse, join)
+  if join then
+    return reverse and '%#PaneTabJoinSep#' or '%#PaneTabJoinSep#'
   end
-  return '%#PaneTabSep#' .. escape(vert)
+  if reverse then
+    return solid and '%#PaneTabActiveSep#' or '%#PaneTabSep#'
+  end
+  return solid and '%#PaneTabActiveSep#' or '%#PaneTabSep#'
 end
 
 -- Copy DevIcon fg onto a tab-local group so the glyph stays colorful.
@@ -223,28 +225,20 @@ local function tab_icon_hl(src)
   return name
 end
 
-local function tab(id, label, active, click_cb, close_cb, icon, icon_hl)
+local function tab(id, label, active, click_cb, close_cb, icon, icon_hl, close_first)
   local hl = active and 'PaneTabActive' or 'PaneTabInactive'
   local body = escape(label)
   if type(icon) == 'string' and icon ~= '' and icon ~= ' ' then
-    body = '%#' .. tab_icon_hl(icon_hl) .. '#' .. escape(icon) .. ' %#' .. hl .. '#' .. body
+    local glyph = active and hl or tab_icon_hl(icon_hl)
+    body = '%#' .. glyph .. '#' .. escape(icon) .. ' %#' .. hl .. '#' .. body
   end
-  return '%#'
-    .. hl
-    .. '#%'
-    .. id
-    .. '@v:lua.'
-    .. click_cb
-    .. '@ '
-    .. body
-    .. '%T'
-    .. '%#'
-    .. hl
-    .. '#%'
-    .. id
-    .. '@v:lua.'
-    .. close_cb
-    .. '@ × %T'
+  local function clickable(callback, text)
+    return '%#' .. hl .. '#%' .. id .. '@v:lua.' .. callback .. '@' .. text .. '%T'
+  end
+  if close_first then
+    return clickable(close_cb, ' × ') .. clickable(click_cb, body .. ' ')
+  end
+  return clickable(click_cb, ' ' .. body) .. clickable(close_cb, ' × ')
 end
 
 function M.render()
@@ -258,7 +252,8 @@ function M.render()
   local available = math.max(8, api.nvim_win_get_width(win) - 16)
 
   -- Show a window of tabs around the active one when they overflow the pane width.
-  local function append(items, callback, close_cb)
+  local last_active = false
+  local function append(items, callback, close_cb, reverse)
     local active = 1
     for i, item in ipairs(items) do
       if item.active then
@@ -271,7 +266,14 @@ function M.render()
     local label_width = math.max(4, math.floor(available / math.max(1, last - first + 1)) - 4)
     for i = first, last do
       if i > first then
-        out[#out + 1] = M.divider()
+        local solid
+        if reverse then
+          solid = items[i].active
+        else
+          solid = items[i - 1].active
+        end
+        local join = not solid and (reverse and items[i - 1].active or not reverse and items[i].active)
+        out[#out + 1] = M.divider(solid, reverse, join)
       end
       local item = items[i]
       local label = item.label
@@ -283,20 +285,25 @@ function M.render()
       if vim.fn.strdisplaywidth(label) > max_label then
         label = vim.fn.strcharpart(label, 0, math.max(1, max_label - 1)) .. '…'
       end
-      out[#out + 1] = tab(item.id, label, item.active, callback, close_cb, item.icon, item.icon_hl)
+      out[#out + 1] = tab(item.id, label, item.active, callback, close_cb, item.icon, item.icon_hl, reverse)
     end
+    last_active = items[last] and items[last].active or false
     if #items > slots then
-      out[#out + 1] = M.divider()
+      out[#out + 1] = M.divider(last_active and not reverse, reverse, last_active and reverse)
       out[#out + 1] = '%#PaneTabInactive#%1@v:lua.PaneTabCycle@ ‹ %T%2@v:lua.PaneTabCycle@ › %T'
+      last_active = false
     end
   end
 
-  local function add_actions(new_cb)
+  local function add_actions(new_cb, reverse)
+    if reverse then
+      out[#out + 1] = '%#PaneTabInactive#%0@v:lua.' .. new_cb .. '@ + %T'
+      return
+    end
     if #out > 0 then
-      out[#out + 1] = M.divider()
+      out[#out + 1] = M.divider(last_active, false)
     end
     out[#out + 1] = '%#PaneTabInactive#%0@v:lua.' .. new_cb .. '@ + %T'
-    out[#out + 1] = M.divider()
   end
 
   if agents.is_chat(buf) then
@@ -313,8 +320,12 @@ function M.render()
         }
       end
     end
-    append(items, 'ChatTabClick', 'ChatTabClose')
-    add_actions('ChatTabNew')
+    add_actions('ChatTabNew', true)
+    if #items > 0 then
+      out[#out + 1] = M.divider(items[1].active, true)
+    end
+    append(items, 'ChatTabClick', 'ChatTabClose', true)
+    return '%#WinBar#%=' .. table.concat(out) .. '%#WinBar#'
   elseif editor_buf(buf) then
     local items = {}
     for _, b in ipairs(api.nvim_list_bufs()) do
@@ -353,6 +364,10 @@ end
 -- Unlike :edit, this does not replace a blank [New] buffer.
 function M.open(path, loc)
   if type(path) ~= 'string' or path == '' or path:find('[\r\n]') then
+    return
+  end
+  local ok, images = pcall(require, 'modules.images')
+  if ok and images.consume(path) then
     return
   end
   local win = M.focus()
@@ -596,13 +611,19 @@ _G.ChatTabClose = function(id, _, button)
 end
 
 local function highlights()
+  local appearance = require('modules.appearance')
   api.nvim_set_hl(0, 'WinBar', { fg = '#a89984' })
   api.nvim_set_hl(0, 'WinBarNC', { fg = '#7c6f64' })
-  api.nvim_set_hl(0, 'PaneTabActive', { fg = '#d79921', bold = true })
+  api.nvim_set_hl(0, 'PaneTabActive', { fg = appearance.tab_ink, bg = appearance.tab_accent, bold = true })
+  api.nvim_set_hl(0, 'PaneTabActiveSep', { fg = appearance.tab_accent })
+  api.nvim_set_hl(0, 'PaneTabJoinSep', { fg = appearance.tab_accent })
   api.nvim_set_hl(0, 'PaneTabInactive', { fg = '#a89984' })
   api.nvim_set_hl(0, 'PaneTabSep', { fg = '#665c54' })
+  api.nvim_set_hl(0, 'WinSeparator', { fg = '#504a45' })
+  api.nvim_set_hl(0, 'VertSplit', { fg = '#504a45' })
 end
 highlights()
+vim.opt.fillchars:append({ vert = '│' })
 api.nvim_create_autocmd('ColorScheme', { callback = highlights })
 api.nvim_create_autocmd('User', {
   pattern = { 'LazyLoad', 'VeryLazy' },

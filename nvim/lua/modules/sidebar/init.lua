@@ -136,6 +136,11 @@ local function paint_composer_placeholder()
     return
   end
   api.nvim_buf_clear_namespace(composer_buf, composer_marks, 0, -1)
+  api.nvim_buf_set_extmark(composer_buf, composer_marks, 0, 0, {
+    virt_lines = { { { ' ', 'Normal' } } },
+    virt_lines_above = true,
+  })
+  require('modules.shared.buffer').show_top_spacing(composer_buf)
   local lines = api.nvim_buf_get_lines(composer_buf, 0, -1, false)
   if #lines == 1 and lines[1] == '' then
     local short = current_branch:match('^([^%s%.]+)') or 'HEAD'
@@ -652,7 +657,7 @@ function M.render(branch, generation)
   rows[3] = { kind = 'commit' }
   rows[4] = { kind = 'check_diff' }
   local header = {
-    '  SOURCE CONTROL',
+    '',
     '  ' .. branch:gsub('[%c]', ' '),
     '  [Commit]  Ctrl+Enter',
     '  [Check Diff]',
@@ -767,7 +772,7 @@ function M.refresh()
   -- Keep the existing rows clickable until the new status and log are ready.
   if not root then
     rows = {}
-    paint({ '  SOURCE CONTROL', '', '  Loading Git changes…' })
+    paint({ '', '', '  Loading Git changes…' })
     paint_log({ '  COMMITS', '', '  Loading…' })
   end
   run({ 'git', '-C', vim.fn.getcwd(), 'rev-parse', '--show-toplevel' }, function(result)
@@ -777,7 +782,7 @@ function M.refresh()
     if result.code ~= 0 then
       root, rows = nil, {}
       groups = { staged = {}, unstaged = {}, history = {} }
-      paint({ '  SOURCE CONTROL', '', '  Not a Git repository' })
+      paint({ '', '', '  Not a Git repository' })
       paint_log({ '  COMMITS', '', '  Not a Git repository' })
       return
     end
@@ -785,7 +790,7 @@ function M.refresh()
     if root and next_root ~= root then
       root, rows = nil, {}
       groups = { staged = {}, unstaged = {}, history = {} }
-      paint({ '  SOURCE CONTROL', '', '  Loading Git changes…' })
+      paint({ '', '', '  Loading Git changes…' })
       paint_log({ '  COMMITS', '', '  Loading…' })
     end
     local next_groups = { staged = {}, unstaged = {}, history = {} }
@@ -1021,6 +1026,9 @@ local function configure_side(win, buf, ft)
   vim.wo[win].number = false
   vim.wo[win].relativenumber = false
   vim.wo[win].signcolumn = 'no'
+  api.nvim_win_call(win, function()
+    vim.opt_local.fillchars:append({ eob = ' ' })
+  end)
 end
 
 local function apply_log_height()
@@ -1161,23 +1169,48 @@ _G.SidebarExtensions = function(_, _, button)
     require('modules.context_menu').sidebar_tab('extensions', require('modules.context_menu').mouse_position())
   end
 end
+local function tab_highlights()
+  local appearance = require('modules.appearance')
+  vim.api.nvim_set_hl(0, 'SidebarTabActive', { fg = appearance.tab_ink, bg = appearance.tab_accent, bold = true })
+  vim.api.nvim_set_hl(0, 'SidebarTabActiveSep', { fg = appearance.tab_accent })
+  vim.api.nvim_set_hl(0, 'SidebarTabJoinSep', { fg = appearance.tab_accent })
+  vim.api.nvim_set_hl(0, 'SidebarTabInactive', { fg = '#a89984' })
+  vim.api.nvim_set_hl(0, 'SidebarTabInactiveSep', { fg = '#665c54' })
+end
+tab_highlights()
+vim.api.nvim_create_autocmd('ColorScheme', { callback = tab_highlights })
+
 function M.winbar()
-  local divider = require('modules.tabs').divider()
-  return '%#PaneTab'
-    .. (M.view == 'files' and 'Active' or 'Inactive')
-    .. '#%0@v:lua.SidebarFiles@ Files %T'
-    .. divider
-    .. '%#PaneTab'
-    .. (M.view == 'git' and 'Active' or 'Inactive')
-    .. '#%0@v:lua.SidebarGit@ Git %T'
-    .. divider
-    .. '%#PaneTab'
-    .. (M.view == 'settings' and 'Active' or 'Inactive')
-    .. '#%0@v:lua.SidebarSettings@ Settings %T'
-    .. divider
-    .. '%#PaneTab'
-    .. (M.view == 'extensions' and 'Active' or 'Inactive')
-    .. '#%0@v:lua.SidebarExtensions@ Extensions %T%#WinBar#'
+  local icons = require('modules.icons').sidebar
+  local items = {
+    { view = 'files', click = 'SidebarFiles', icon = icons.files, label = 'Files' },
+    { view = 'git', click = 'SidebarGit', icon = icons.git, label = 'Git' },
+    { view = 'settings', click = 'SidebarSettings', icon = icons.settings, label = 'Settings' },
+    { view = 'extensions', click = 'SidebarExtensions', icon = icons.extensions, label = 'Extensions' },
+  }
+  local out = {}
+  for i, item in ipairs(items) do
+    local active = M.view == item.view
+    local last = i == #items
+    if active then
+      out[#out + 1] = '%#SidebarTabActive#%0@v:lua.' .. item.click .. '@ ' .. item.icon .. ' ' .. item.label .. ' %T'
+    else
+      out[#out + 1] = '%#SidebarTabInactive#%0@v:lua.' .. item.click .. '@ ' .. item.icon .. ' %T'
+    end
+    if not last then
+      if active then
+        out[#out + 1] = '%#SidebarTabActiveSep#'
+      elseif M.view == items[i + 1].view then
+        out[#out + 1] = '%#SidebarTabJoinSep#'
+      else
+        out[#out + 1] = '%#SidebarTabInactiveSep#'
+      end
+    elseif active then
+      out[#out + 1] = '%#SidebarTabActiveSep#'
+    end
+  end
+  out[#out + 1] = '%#WinBar#'
+  return table.concat(out)
 end
 
 return M

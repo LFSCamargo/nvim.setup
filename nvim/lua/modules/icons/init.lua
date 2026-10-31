@@ -1,6 +1,15 @@
 -- Devicons for the Files tree, Git sidebar, and editor tabs. Nerd Font glyphs occupy one cell.
 local M = {}
 
+-- Sidebar header tabs. Git/settings/extensions use heavier glyphs so they
+-- fill the cell the way the file icon already does.
+M.sidebar = {
+  files = '',
+  git = '',
+  settings = '',
+  extensions = '',
+}
+
 function M.enabled()
   local settings = package.loaded['modules.settings']
   return type(settings) ~= 'table' or settings.get().icons
@@ -37,9 +46,14 @@ function M.apply()
       cfg.g.renderer.icons = M.tree_icons()
     end
   end)
-  pcall(function()
-    require('nvim-tree.api').tree.reload()
-  end)
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].filetype == 'NvimTree' then
+      pcall(function()
+        require('nvim-tree.api').tree.reload()
+      end)
+      break
+    end
+  end
 end
 
 function M.tree_icons()
