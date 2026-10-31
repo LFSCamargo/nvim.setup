@@ -67,7 +67,7 @@ export const features = [
     number: '01',
     title: 'Files, in a real tree.',
     description:
-      'The left 20% is nvim-tree. Click a file to open it in the mid editor. Ctrl+B toggles the tree. Ctrl+P finds files, including hidden ones. Ctrl+F searches the project. Files, Git, Settings, and Extensions share that sidebar.',
+      'The left 20% is nvim-tree. Click a file to open it in the mid editor. Ctrl+B toggles the tree. Ctrl+P finds files, including hidden ones. Ctrl+F searches the project. Files, Git, Settings, Themes, and Extensions share that sidebar.',
     tag: 'File tree',
   },
   {
@@ -95,7 +95,7 @@ export const features = [
     number: '05',
     title: 'Settings that stay with you.',
     description:
-      'Ctrl+, opens Settings next to Files and Git. Icons, transparency, indent, search case, and session restore. Click a row to change it; x restores the default. Preferences persist on this machine.',
+      'Ctrl+, opens Settings next to Files and Git. Color theme, icons, transparency, indent, search case, and session restore. Click Color theme to open the Themes sidebar and pick from 20 dark schemes, including Cursor Dark and VS Code Dark+. x restores the default. Preferences persist on this machine.',
     tag: 'User preferences',
   },
   {

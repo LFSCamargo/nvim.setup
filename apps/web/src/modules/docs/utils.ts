@@ -23,7 +23,7 @@ export const docPages: DocPage[] = [
     slug: 'workspace',
     title: 'The workspace',
     description:
-      'Files, editor tabs, Git, Settings, Extensions, AI chats, and sessions.',
+      'Files, editor tabs, Git, Settings, Themes, Extensions, AI chats, and sessions.',
     group: 'Start',
     src: '/guides/workspace.md',
     githubPath: 'docs/EDITOR.md',

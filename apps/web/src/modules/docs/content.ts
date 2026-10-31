@@ -9,7 +9,8 @@ export const docLinks = [
   {
     number: '02',
     title: 'The workspace',
-    description: 'Files, Git, Settings, Extensions, AI chats, and sessions.',
+    description:
+      'Files, Git, Settings, Themes, Extensions, AI chats, and sessions.',
     slug: 'workspace',
     file: 'docs/EDITOR.md',
   },
