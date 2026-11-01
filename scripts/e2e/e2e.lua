@@ -220,6 +220,7 @@ local ok, err = xpcall(function()
   local right_sep_hl = eval("return vim.api.nvim_get_hl(0, { name = 'SLRightSep', link = false })")
   assert(right_hl.bg == right_sep_hl.fg, 'right powerline point must meet its segment without a seam')
   assert(right_sep_hl.bg == bar_hl.bg, 'right powerline point must blend into the statusline')
+  assert(hl_hex(right_hl) == '#fabd2f', 'cursor segment should use the active-tab accent, got ' .. hl_hex(right_hl))
   local tab_hl = eval("return vim.api.nvim_get_hl(0, { name = 'PaneTabActive', link = false })")
   local tab_fg = tab_hl.fg or tab_hl.ctermfg
   assert(tab_fg, 'active tab needs a foreground')
@@ -230,7 +231,14 @@ local ok, err = xpcall(function()
   assert(bar_hl.bg or bar_hl.ctermbg, 'statusline bar needs a fill')
   local stl = statusline()
   assert(stl:find('NORMAL', 1, true), 'statusline should show NORMAL, got: ' .. stl)
-  assert(stl:find('', 1, true), 'statusline should end in a raised cursor segment: ' .. stl)
+  assert(stl:find('NORMAL ', 1, true), 'mode segment should point right like an editor tab: ' .. stl)
+  local raise_at = stl:find('', 1, true)
+  assert(raise_at, 'cursor segment should point left like an agent tab: ' .. stl)
+  assert(not stl:find('', raise_at, true), 'cursor segment should sit flush on the right: ' .. stl)
+  assert(
+    not stl:find('', 1, true) and not stl:find('', 1, true),
+    'statusline should not stack thin chevrons: ' .. stl
+  )
   assert(not stl:find('utf%-8'), 'default utf-8 should stay off the statusline: ' .. stl)
   request('nvim_input', 'i')
   wait_for('insert mode for statusline', function()
@@ -268,8 +276,20 @@ local ok, err = xpcall(function()
     vim.b[buf].gitsigns_status_dict = { head = 'feature', added = 3, changed = 1, removed = 2 }
     local ns = vim.api.nvim_create_namespace('e2e-stl')
     vim.diagnostic.set(ns, buf, {
-      { lnum = 0, col = 0, severity = vim.diagnostic.severity.ERROR, message = 'boom' },
-      { lnum = 0, col = 1, severity = vim.diagnostic.severity.WARN, message = 'careful' },
+      {
+        lnum = 0,
+        col = 0,
+        severity = vim.diagnostic.severity.ERROR,
+        message = 'boom',
+        source = 'typescript',
+      },
+      {
+        lnum = 0,
+        col = 1,
+        severity = vim.diagnostic.severity.WARN,
+        message = 'careful',
+        source = 'eslint',
+      },
     })
     vim.cmd('redrawstatus')
     local text = vim.api.nvim_eval_statusline(vim.o.statusline, { highlights = true, winid = win }).str
@@ -290,8 +310,8 @@ local ok, err = xpcall(function()
     '+3',
     '~1',
     '-2',
-    'E:1',
-    'W:1',
+    'TS E:1',
+    'ESLint W:1',
     'latin1',
     'CRLF',
     'tabs:4',
@@ -301,6 +321,16 @@ local ok, err = xpcall(function()
   }) do
     assert(rich:find(needle, 1, true), 'statusline missing ' .. needle .. ': ' .. rich)
   end
+  local rich_raise = rich:find('', 1, true)
+  assert(
+    rich:find('', 1, true) and rich_raise and rich:find('', 1, true) < rich_raise,
+    'rich statusline points should face inward: ' .. rich
+  )
+  assert(not rich:find('', rich_raise, true), 'rich cursor segment should sit flush on the right: ' .. rich)
+  assert(
+    not rich:find('', 1, true) and not rich:find('', 1, true),
+    'rich statusline should not stack thin chevrons: ' .. rich
+  )
   local pct = eval([[
     local win = vim.api.nvim_get_current_win()
     local buf = vim.api.nvim_create_buf(false, true)
@@ -341,6 +371,39 @@ local ok, err = xpcall(function()
   assert(
     chat_stl:find('Codex', 1, true) or chat_stl:find('Agent', 1, true),
     'statusline should name the chat session: ' .. chat_stl
+  )
+  local chat_usage = eval([[
+    local agents = require('modules.agents')
+    local win = agents.win
+    local prev = vim.api.nvim_get_current_win()
+    vim.api.nvim_set_current_win(win)
+    vim.cmd.stopinsert()
+    local buf = vim.api.nvim_win_get_buf(win)
+    local id = vim.b[buf].chat_id
+    local name = id and agents.sessions[id] and agents.sessions[id].name or 'codex'
+    vim.g.statusline_agent_usage = { [name] = '62% 5h' }
+    vim.cmd('redrawstatus')
+    local text = vim.api.nvim_eval_statusline(vim.o.statusline, { highlights = true, winid = win }).str
+    vim.g.statusline_agent_usage = nil
+    vim.api.nvim_set_current_win(prev)
+    vim.cmd.stopinsert()
+    return text .. '|' .. name
+  ]])
+  local usage_name = chat_usage:match('|(%w+)$') or ''
+  local usage_stl = chat_usage:gsub('|%w+$', '')
+  assert(usage_name ~= '', 'expected a chat agent name for usage: ' .. chat_usage)
+  local usage_title = ({
+    codex = 'Codex Usage',
+    cursor = 'Cursor Usage',
+    claude = 'Claude Usage',
+    opencode = 'OpenCode Usage',
+    antigravity = 'Antigravity Usage',
+    gemini = 'Gemini Usage',
+  })[usage_name] or (usage_name .. ' Usage')
+  assert(usage_stl:find(usage_title, 1, true), 'focused chat should name usage: ' .. usage_stl)
+  assert(
+    usage_stl:find('62', 1, true) and usage_stl:find('5h', 1, true),
+    'focused chat should show usage detail: ' .. usage_stl
   )
   local search = eval([[
     local win = vim.api.nvim_get_current_win()
@@ -2141,8 +2204,8 @@ local ok, err = xpcall(function()
     local point = vim.api.nvim_get_hl(0, { name = 'SLRightSep', link = false })
     local mode = vim.api.nvim_get_hl(0, { name = 'SLModeNormal', link = false })
     local mode_point = vim.api.nvim_get_hl(0, { name = 'SLModeNormalSep', link = false })
-    return bar.bg == color(a.bar_fill) and right.fg == color(a.tab_accent)
-      and right.bg == color(a.powerline_fill) and point.fg == right.bg and point.bg == bar.bg
+    return bar.bg == color(a.bar_fill) and right.fg == color(a.tab_ink)
+      and right.bg == color(a.tab_accent) and point.fg == right.bg and point.bg == bar.bg
       and mode.bg == color(a.modes.Normal) and mode_point.fg == mode.bg and mode_point.bg == bar.bg
   ]]),
     'switching themes must recolor both statusline segments and their connecting points'
