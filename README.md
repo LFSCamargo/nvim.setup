@@ -1,5 +1,9 @@
 # nvim.setup
 
+![A quieter place to think. Your terminal, your rules. The speed of Neovim, with code, Git, and AI chats in one workspace.](apps/web/public/assets/readme-heading.jpg)
+
+<video src="apps/web/public/assets/nvim-setup-demo.mp4" poster="apps/web/public/assets/nvim-setup-demo-poster.jpg" width="1920" height="1080" controls playsinline></video>
+
 A portable Neovim config that puts your files, editor, and AI chats in one window.
 
 Codex, Cursor Agent, Gemini, Claude, OpenCode, and Antigravity run as real CLI sessions next to your code. Language servers, formatters, and debuggers come with the install. Gruvbox is the default colorscheme; the Themes sidebar switches among 20 supported dark schemes on a transparent UI, so your terminal keeps the background. Chat CLIs stay transparent like the editor. Cursor’s prompt uses stock ANSI white so spaces do not collapse.

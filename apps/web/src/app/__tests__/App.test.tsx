@@ -264,6 +264,22 @@ describe('landing page visitor paths', () => {
     expect(document.documentElement.classList.contains('dark')).toBe(true);
   });
 
+  it('shows the launch demo and keeps it paused when motion is reduced', () => {
+    renderApp();
+    const demo = screen.getByLabelText(
+      'Demo of nvim.setup',
+    ) as HTMLVideoElement;
+    expect(demo.tagName).toBe('VIDEO');
+    expect(demo.getAttribute('src')).toBe('/assets/nvim-setup-demo.mp4');
+    expect(demo.getAttribute('poster')).toBe(
+      '/assets/nvim-setup-demo-poster.jpg',
+    );
+    expect(demo.hasAttribute('controls')).toBe(true);
+    expect(demo.hasAttribute('autoplay')).toBe(false);
+    expect(demo.paused).toBe(true);
+    expect(demo.closest('[data-demo]')).toBeTruthy();
+  });
+
   it('keeps light-mode hero chrome, screenshot rims, and inverted install contrast', () => {
     renderApp();
     fireEvent.click(screen.getByRole('button', { name: 'Light' }));
@@ -272,8 +288,8 @@ describe('landing page visitor paths', () => {
     expect(caret?.textContent).toBe('');
     expect(
       screen
-        .getByRole('button', { name: 'Enlarge workspace screenshot' })
-        .closest('[data-rim]')
+        .getByLabelText('Demo of nvim.setup')
+        .closest('[data-demo]')
         ?.getAttribute('data-rim'),
     ).toBe('dark');
     expect(document.querySelector('[data-nav-shell]')).toBeTruthy();
@@ -450,6 +466,15 @@ describe('landing page visitor paths', () => {
     expect(
       screen.getByText(/Check Diff opens the change in the mid editor/),
     ).toBeTruthy();
+  });
+
+  it('credits the owner and creator of the original repo', () => {
+    renderApp();
+    const credit = screen.getByRole('link', { name: 'TheLittleLuiz ↗' });
+    expect(credit.getAttribute('href')).toBe('https://thelittleluiz.me');
+    expect(credit.closest('footer')?.textContent).toContain(
+      'Owner and creator of the original repo, LFSCamargo, aka',
+    );
   });
 
   it('sets the home document title and Open Graph description', () => {

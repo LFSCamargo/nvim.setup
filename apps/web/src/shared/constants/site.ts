@@ -1,4 +1,5 @@
 export const repo = 'https://github.com/LFSCamargo/nvim.setup';
+export const creatorUrl = 'https://thelittleluiz.me';
 export const site = 'https://lfscamargo.github.io/nvim.setup';
 export const siteName = 'nvim.setup';
 export const siteTitle = 'nvim.setup — A quieter place to build.';

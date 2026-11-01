@@ -27,7 +27,7 @@ export function HomePage() {
       </a>
       <Nav />
       <main id="main" className="overflow-x-hidden">
-        <Hero onOpenScreenshot={lightbox.open} />
+        <Hero />
         <Principles />
         <Workspace onOpenScreenshot={lightbox.open} />
         <Workflow />

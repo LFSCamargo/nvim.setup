@@ -3,6 +3,7 @@ import { Brand } from '@/shared/components/brand';
 import {
   aceternityLiquidGlass,
   aceternitySpotlight,
+  creatorUrl,
   repo,
 } from '@/shared/constants/site';
 import { useTheme } from '@/modules/theme/hooks/use-theme';
@@ -25,6 +26,12 @@ export function SiteFooter() {
           <a href={aceternityLiquidGlass}>Liquid glass ↗</a>
         </div>
       </div>
+      <p className="mt-4 text-[11px] leading-5 text-muted">
+        Owner and creator of the original repo, LFSCamargo, aka{' '}
+        <a className="hover:text-foreground" href={creatorUrl}>
+          TheLittleLuiz ↗
+        </a>
+      </p>
       <span
         className="mt-8 block text-[clamp(3.2rem,10vw,8rem)] leading-none font-medium tracking-[-0.06em] text-wash"
         aria-hidden="true"

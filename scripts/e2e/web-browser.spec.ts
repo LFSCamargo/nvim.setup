@@ -53,6 +53,12 @@ test('installation, screenshots, help and keyboard access work', async ({
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('build');
+  const credit = page.getByRole('link', { name: 'TheLittleLuiz ↗' });
+  await expect(credit).toBeVisible();
+  await expect(credit).toHaveAttribute('href', 'https://thelittleluiz.me');
+  await expect(page.locator('footer')).toContainText(
+    'Owner and creator of the original repo, LFSCamargo, aka',
+  );
   await expect(page.getByLabel('Setup version')).toHaveValue('v2.0.0');
   await expect(page.getByLabel('Standard installation commands')).toContainText(
     'scripts/bootstrap.sh',
@@ -86,13 +92,21 @@ test('installation, screenshots, help and keyboard access work', async ({
       name: 'Full requirements in the getting started guide ↗',
     }),
   ).toHaveAttribute('href', '/docs/getting-started');
+  const demo = page.getByLabel('Demo of nvim.setup');
+  await expect(demo).toBeVisible();
+  await expect(demo).toHaveAttribute('src', '/assets/nvim-setup-demo.mp4');
   await expect
-    .poll(() =>
-      page
-        .getByRole('button', { name: 'Enlarge workspace screenshot' })
-        .locator('img')
-        .evaluate(imageNaturalWidth),
-    )
+    .poll(() => demo.evaluate((el: HTMLVideoElement) => el.videoWidth))
+    .toBeGreaterThan(0);
+  await expect
+    .poll(() => demo.evaluate((el: HTMLVideoElement) => el.paused))
+    .toBe(false);
+  const workspaceShot = page.getByRole('button', {
+    name: 'Enlarge the workspace screenshot',
+  });
+  await workspaceShot.scrollIntoViewIfNeeded();
+  await expect
+    .poll(() => workspaceShot.locator('img').evaluate(imageNaturalWidth))
     .toBeGreaterThan(0);
   await page
     .getByRole('button', { name: 'Try alongside', exact: true })
@@ -269,11 +283,12 @@ test('light mode keeps hero chrome, cards, and docs readable', async ({
   await expect(shell).not.toHaveClass(/border-white/);
   await expect(shell).not.toHaveClass(/border-zinc-900/);
   await expect(shell).not.toHaveAttribute('data-rim');
-  await expect(
-    page
-      .getByRole('button', { name: 'Enlarge workspace screenshot' })
-      .locator('xpath=ancestor::*[@data-rim][1]'),
-  ).toHaveAttribute('data-rim', 'dark');
+  const demo = page.getByLabel('Demo of nvim.setup');
+  await expect(demo).toBeVisible();
+  await expect
+    .poll(() => demo.evaluate((el: HTMLVideoElement) => el.paused))
+    .toBe(true);
+  await expect(page.locator('[data-demo]')).toHaveAttribute('data-rim', 'dark');
   await expect(
     page.getByRole('heading', { name: 'Files, in a real tree.' }),
   ).toBeVisible();
@@ -328,19 +343,18 @@ test('light and dark switchers change the page theme and invert the install band
   expect(
     await page.evaluate(() => document.documentElement.scrollHeight),
   ).toBeLessThan(9000);
+  const workspaceShot = page.getByRole('button', {
+    name: 'Enlarge the workspace screenshot',
+  });
+  await workspaceShot.scrollIntoViewIfNeeded();
   await expect
-    .poll(() =>
-      page
-        .getByRole('button', { name: 'Enlarge workspace screenshot' })
-        .locator('img')
-        .evaluate(imageNaturalWidth),
-    )
+    .poll(() => workspaceShot.locator('img').evaluate(imageNaturalWidth))
     .toBeGreaterThan(0);
   await page.screenshot({
     path: 'test-results/landing-light.png',
     fullPage: true,
   });
-  await overlapHeaderWith(page, '[aria-label="Enlarge workspace screenshot"]');
+  await overlapHeaderWith(page, '[data-demo]');
   await expect(logo).toHaveClass(/text-white/);
   await expect(shell).not.toHaveClass(/border-white/);
   await overlapHeaderWith(page, '#install');

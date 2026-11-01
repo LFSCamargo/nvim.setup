@@ -1,17 +1,23 @@
+import { useEffect, useRef } from 'react';
+import { useReducedMotion } from 'motion/react';
 import { FlipWords } from '@/shared/components/flip-words';
 import { HoverBorderGradient } from '@/shared/components/hover-border-gradient';
 import { Spotlight } from '@/shared/components/spotlight-new';
 import { TextGenerateEffect } from '@/shared/components/text-generate-effect';
 import { Reveal } from '@/shared/components/reveal';
-import { ScreenshotFrame } from '@/modules/home/components/screenshots/screenshot-frame';
-import { heroWords, screens } from '@/modules/home/content';
+import { heroWords } from '@/modules/home/content';
 
-type HeroProps = {
-  onOpenScreenshot: (index: number) => void;
-};
+export function Hero() {
+  const reduced = useReducedMotion();
+  const videoRef = useRef<HTMLVideoElement>(null);
 
-export function Hero({ onOpenScreenshot }: HeroProps) {
-  const screen = screens[0];
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || reduced !== false) return;
+    video.muted = true;
+    const pending = video.play();
+    if (pending) void pending.catch(() => {});
+  }, [reduced]);
 
   return (
     <section className="relative overflow-x-hidden px-6 pt-28 pb-10 md:pt-32">
@@ -67,28 +73,29 @@ export function Hero({ onOpenScreenshot }: HeroProps) {
               <span className="text-muted"> More making.</span>
             </p>
           </div>
-          <ScreenshotFrame tilt>
-            <button
-              className="group relative block w-full overflow-hidden bg-zinc-950 text-left"
-              onClick={() => onOpenScreenshot(0)}
-              aria-label="Enlarge workspace screenshot"
-            >
-              <img
-                src={screen.src}
-                alt={screen.alt}
-                width={screen.width}
-                height={screen.height}
-                fetchPriority="high"
-                className="block h-auto w-full"
-              />
-              <span className="absolute right-4 bottom-4 rounded-md border border-white/20 bg-black/70 px-3 py-2 font-mono text-[10px] opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100">
-                View full screen ↗
-              </span>
-            </button>
-          </ScreenshotFrame>
+          <div
+            data-demo
+            data-rim="dark"
+            className="overflow-hidden rounded-[18px] border border-white/12 bg-zinc-950"
+          >
+            <video
+              ref={videoRef}
+              className="block aspect-video h-auto w-full bg-zinc-950"
+              src="/assets/nvim-setup-demo.mp4"
+              poster="/assets/nvim-setup-demo-poster.jpg"
+              width={1920}
+              height={1080}
+              controls
+              playsInline
+              muted
+              loop={reduced !== true}
+              preload="metadata"
+              aria-label="Demo of nvim.setup"
+            />
+          </div>
           <div className="mt-4 flex justify-between font-mono text-[10px] tracking-[0.12em] text-muted">
-            <span>01 / THE WORKSPACE</span>
-            <span>Actual setup. Real screenshots.</span>
+            <span>THE DEMO</span>
+            <span>A launch film of the real setup.</span>
           </div>
         </Reveal>
       </div>
