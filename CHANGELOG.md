@@ -11,7 +11,16 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Features
 
+- adds push button to git sidebar ([46ba7fc](https://github.com/LFSCamargo/nvim.setup/commit/46ba7fcfda64225f4fd79dd98038dda9d01fa2f6))
 - **changelog:** export release notes for tags and GitHub releases ([fbc1341](https://github.com/LFSCamargo/nvim.setup/commit/fbc134132e86dd0895548d33af2efdc565e3d42e))
+
+### Bug Fixes
+
+- **statusline:** adds statusline styling adjustments ([98185d7](https://github.com/LFSCamargo/nvim.setup/commit/98185d7596fbdcdb427ce46989b21c24a812ec52))
+
+### Chores
+
+- adjustments ([b49c4c1](https://github.com/LFSCamargo/nvim.setup/commit/b49c4c1af3502a8e232ae1ae8960391ed1b377e2))
 
 ## [2.0.0] - 2026-10-31
 
