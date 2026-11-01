@@ -1701,6 +1701,7 @@ local ok, err = xpcall(function()
   assert(not shown:find('Click', 1, true), 'mouse hint should not be shown')
   assert(shown:find('[Commit]', 1, true) and shown:find('Ctrl+Enter', 1, true), 'commit button missing')
   assert(shown:find('[Check Diff]', 1, true), 'Check Diff button missing')
+  assert(shown:find('[Push]', 1, true), 'Push button missing: ' .. shown)
   assert(shown:find('x revert', 1, true) and shown:find('i message', 1, true), 'keyboard helper text missing')
   assert(shown:find('[Stage All]', 1, true) and shown:find('[Revert All]', 1, true), 'bulk change actions missing')
   assert(

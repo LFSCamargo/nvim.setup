@@ -343,6 +343,49 @@ local function commit()
   end)
 end
 
+local function safe_branch_name(name)
+  if type(name) ~= 'string' then
+    return nil
+  end
+  local branch = name:gsub('[%c]', ''):match('^[%w%./_-]+$')
+  return branch
+end
+
+local function push_origin(branch_name)
+  if not root then
+    return
+  end
+  local branch = safe_branch_name(branch_name)
+  if not branch then
+    vim.notify('Cannot push: invalid branch name', vim.log.levels.WARN)
+    return
+  end
+  local generation = M.generation
+  local function finish(result, label)
+    if result.code ~= 0 then
+      git_notify(result, label)
+      return
+    end
+    vim.notify(('Pushed %s'):format(branch), vim.log.levels.INFO)
+    if generation == M.generation and M.view == 'git' then
+      M.refresh()
+    end
+  end
+  local function do_push(set_upstream)
+    local cmd = set_upstream and { 'git', '-C', root, 'push', '-u', 'origin', branch }
+      or { 'git', '-C', root, 'push', 'origin', branch }
+    run(cmd, function(result)
+      finish(result, 'push failed')
+    end)
+  end
+  run({ 'git', '-C', root, 'rev-parse', '--abbrev-ref', '@{u}' }, function(result)
+    if generation ~= M.generation or M.view ~= 'git' then
+      return
+    end
+    do_push(result.code ~= 0)
+  end)
+end
+
 local function open_file(entry)
   if entry.status == 'D' then
     vim.notify('This file was deleted; use Space g s to inspect its diff')
@@ -439,6 +482,12 @@ function M.context_menu(kind, line, pos)
         end,
       },
       { label = 'Commit staged changes', run = commit },
+      {
+        label = 'Push',
+        run = function()
+          push_origin(current_branch)
+        end,
+      },
     }
   elseif entry and entry.kind == 'log' and entry.hash then
     items = {
@@ -528,6 +577,12 @@ function M.context_menu(kind, line, pos)
         end,
       },
       { label = 'Commit staged changes', run = commit },
+      {
+        label = 'Push',
+        run = function()
+          push_origin(current_branch)
+        end,
+      },
     }
   end
   return menu.show(items, pos)
@@ -556,6 +611,10 @@ local function activate(entry, action)
     else
       M.check_diff(selected())
     end
+    return
+  end
+  if entry.kind == 'push' then
+    push_origin(current_branch)
     return
   end
   if entry.kind == 'bulk' then
@@ -602,7 +661,7 @@ local function click_action(entry, col)
     activate(entry)
     return
   end
-  if entry.kind == 'check_diff' or entry.kind == 'close_diff' then
+  if entry.kind == 'check_diff' or entry.kind == 'close_diff' or entry.kind == 'push' then
     activate(entry)
     return
   end
@@ -651,29 +710,36 @@ function M.render(branch, generation)
   if generation ~= M.generation or M.view ~= 'git' then
     return
   end
+  current_branch = branch
   render_id = render_id + 1
   local rendering = render_id
   rows = {}
   rows[3] = { kind = 'commit' }
   rows[4] = { kind = 'check_diff' }
+  local safe_branch = branch:gsub('[%c]', ' ')
   local header = {
     '',
-    '  ' .. branch:gsub('[%c]', ' '),
+    '  ' .. safe_branch,
     '  [Commit]  Ctrl+Enter',
     '  [Check Diff]',
+    '  [Push]',
   }
+  rows[5] = { kind = 'push' }
   if require('modules.diff').active() then
     header[#header + 1] = '  [Close Diff]'
     rows[#header] = { kind = 'close_diff' }
   end
-  header[#header + 1] = '  d diff  s/u  x revert  i message'
+  header[#header + 1] = '  d diff  P push  s/u  x revert  i message'
   header[#header + 1] = ''
   paint(header)
   api.nvim_buf_clear_namespace(git_buf, highlights, 0, -1)
-  api.nvim_buf_add_highlight(git_buf, highlights, 'GitButton', 2, 0, -1)
-  api.nvim_buf_add_highlight(git_buf, highlights, 'GitButton', 3, 0, -1)
-  if rows[5] then
-    api.nvim_buf_add_highlight(git_buf, highlights, 'GitButton', 4, 0, -1)
+  for line, entry in pairs(rows) do
+    if
+      line <= #header
+      and (entry.kind == 'commit' or entry.kind == 'check_diff' or entry.kind == 'push' or entry.kind == 'close_diff')
+    then
+      api.nvim_buf_add_highlight(git_buf, highlights, 'GitButton', line - 1, 0, -1)
+    end
   end
   api.nvim_buf_add_highlight(git_buf, highlights, 'GitHelp', #header - 2, 0, -1)
   paint_composer_placeholder()
@@ -962,6 +1028,9 @@ local function bind_list_keys()
   map_buf(git_buf, 'n', 'X', revert_all, 'Revert all')
   map_buf(git_buf, 'n', 'C', commit, 'Commit')
   map_buf(git_buf, 'n', '<C-CR>', commit, 'Commit')
+  map_buf(git_buf, 'n', 'P', function()
+    push_origin(current_branch)
+  end, 'Push')
   map_buf(git_buf, 'n', 'i', function()
     focus_composer(true)
   end, 'Edit commit message')
