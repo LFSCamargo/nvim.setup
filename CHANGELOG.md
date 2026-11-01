@@ -11,6 +11,7 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Features
 
+- **web:** credit the creator and add the launch demo ([a7bb1f4](https://github.com/LFSCamargo/nvim.setup/commit/a7bb1f4df06d6f15e4a4006967547ea00efd732c))
 - adds push button to git sidebar ([46ba7fc](https://github.com/LFSCamargo/nvim.setup/commit/46ba7fcfda64225f4fd79dd98038dda9d01fa2f6))
 - **changelog:** export release notes for tags and GitHub releases ([fbc1341](https://github.com/LFSCamargo/nvim.setup/commit/fbc134132e86dd0895548d33af2efdc565e3d42e))
 
