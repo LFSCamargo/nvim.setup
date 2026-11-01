@@ -4,7 +4,9 @@ local M = {}
 function M.parse(raw, current, done)
   local groups = { staged = {}, unstaged = {}, history = {} }
   local branch_end = raw:find('\0', 1, true)
-  local branch = branch_end and raw:sub(4, branch_end - 1) or 'Git'
+  local header = branch_end and raw:sub(4, branch_end - 1) or 'Git'
+  local branch = header:match('^No commits yet on (%S+)') or header:match('^(%S+)') or header
+  branch = branch:match('^([^%.]+)') or branch
   local pos = branch_end and branch_end + 1 or #raw + 1
 
   local function batch()

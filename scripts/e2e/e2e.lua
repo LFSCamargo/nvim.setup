@@ -67,6 +67,11 @@ local ok, err = xpcall(function()
       function() return true end,
       function(branch, groups) parsed = { branch = branch, groups = groups } end)
     assert(parsed and parsed.branch == 'main')
+    local ahead
+    require('modules.sidebar.status').parse('## main...origin/main [ahead 2]\0 M changed.txt\0',
+      function() return true end,
+      function(branch) ahead = branch end)
+    assert(ahead == 'main', 'ahead header must use the local branch, got ' .. tostring(ahead))
     assert(parsed.groups.staged[1].path == 'new.txt' and parsed.groups.staged[1].old == 'old.txt')
     assert(parsed.groups.unstaged[1].path == 'changed.txt' and parsed.groups.unstaged[2].path == 'added.txt')
     local buf = vim.api.nvim_create_buf(false, true)

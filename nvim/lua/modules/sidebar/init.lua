@@ -343,47 +343,41 @@ local function commit()
   end)
 end
 
-local function safe_branch_name(name)
-  if type(name) ~= 'string' then
-    return nil
-  end
-  local branch = name:gsub('[%c]', ''):match('^[%w%./_-]+$')
-  return branch
-end
-
-local function push_origin(branch_name)
+local function push_origin()
   if not root then
     return
   end
-  local branch = safe_branch_name(branch_name)
-  if not branch then
-    vim.notify('Cannot push: invalid branch name', vim.log.levels.WARN)
-    return
-  end
   local generation = M.generation
-  local function finish(result, label)
-    if result.code ~= 0 then
-      git_notify(result, label)
-      return
-    end
-    vim.notify(('Pushed %s'):format(branch), vim.log.levels.INFO)
-    if generation == M.generation and M.view == 'git' then
-      M.refresh()
-    end
-  end
-  local function do_push(set_upstream)
-    local cmd = set_upstream and { 'git', '-C', root, 'push', '-u', 'origin', branch }
-      or { 'git', '-C', root, 'push', 'origin', branch }
-    run(cmd, function(result)
-      finish(result, 'push failed')
-    end)
-  end
-  run({ 'git', '-C', root, 'rev-parse', '--abbrev-ref', '@{u}' }, function(result)
+  run({ 'git', '-C', root, 'rev-parse', '--abbrev-ref', 'HEAD' }, function(head)
     if generation ~= M.generation or M.view ~= 'git' then
       return
     end
-    do_push(result.code ~= 0)
-  end)
+    local branch = vim.trim(head.stdout or ''):gsub('[%c]', '')
+    if head.code ~= 0 or branch == '' or branch == 'HEAD' then
+      vim.notify('Cannot push: no branch', vim.log.levels.WARN)
+      return
+    end
+    local function finish(result, label)
+      if result.code ~= 0 then
+        git_notify(result, label)
+        return
+      end
+      vim.notify(('Pushed %s'):format(branch), vim.log.levels.INFO)
+      if generation == M.generation and M.view == 'git' then
+        M.refresh()
+      end
+    end
+    run({ 'git', '-C', root, 'rev-parse', '--abbrev-ref', '@{u}' }, function(upstream)
+      if generation ~= M.generation or M.view ~= 'git' then
+        return
+      end
+      local cmd = upstream.code ~= 0 and { 'git', '-C', root, 'push', '-u', 'origin', branch }
+        or { 'git', '-C', root, 'push', 'origin', branch }
+      run(cmd, function(result)
+        finish(result, 'push failed')
+      end)
+    end)
+  end, { text = true })
 end
 
 local function open_file(entry)
@@ -485,7 +479,7 @@ function M.context_menu(kind, line, pos)
       {
         label = 'Push',
         run = function()
-          push_origin(current_branch)
+          push_origin()
         end,
       },
     }
@@ -580,7 +574,7 @@ function M.context_menu(kind, line, pos)
       {
         label = 'Push',
         run = function()
-          push_origin(current_branch)
+          push_origin()
         end,
       },
     }
@@ -614,7 +608,7 @@ local function activate(entry, action)
     return
   end
   if entry.kind == 'push' then
-    push_origin(current_branch)
+    push_origin()
     return
   end
   if entry.kind == 'bulk' then
@@ -1029,7 +1023,7 @@ local function bind_list_keys()
   map_buf(git_buf, 'n', 'C', commit, 'Commit')
   map_buf(git_buf, 'n', '<C-CR>', commit, 'Commit')
   map_buf(git_buf, 'n', 'P', function()
-    push_origin(current_branch)
+    push_origin()
   end, 'Push')
   map_buf(git_buf, 'n', 'i', function()
     focus_composer(true)
