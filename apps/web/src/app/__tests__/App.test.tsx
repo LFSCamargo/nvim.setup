@@ -426,10 +426,16 @@ describe('landing page visitor paths', () => {
     expect(
       screen.getByRole('link', { name: /Ask for help/ }).getAttribute('href'),
     ).toBe('https://github.com/LFSCamargo/nvim.setup/issues/new/choose');
-    fireEvent.click(screen.getByRole('button', { name: 'Menu +' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+    const panel = document.getElementById('nav-links');
+    expect(panel).toBeTruthy();
+    expect(panel!.closest('[data-nav-shell]')).toBeNull();
+    expect(
+      within(panel!).getByRole('link', { name: 'Documentation' }),
+    ).toBeTruthy();
     expect(
       screen
-        .getByRole('button', { name: 'Close −' })
+        .getByRole('button', { name: 'Close menu' })
         .getAttribute('aria-expanded'),
     ).toBe('true');
   });

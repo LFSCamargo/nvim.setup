@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Brand } from '@/shared/components/brand';
 import { ThemeSwitch } from '@/modules/theme/components/theme-switch';
@@ -14,6 +14,52 @@ const links = [
   { href: '/#help', label: 'Get help' },
 ] as const;
 
+function NavLinks({
+  className,
+  itemClassName,
+  onNavigate,
+}: {
+  className?: string;
+  itemClassName: string;
+  onNavigate?: () => void;
+}) {
+  return (
+    <div className={className}>
+      {links.map((link) =>
+        'to' in link ? (
+          <Link
+            key={link.label}
+            className={itemClassName}
+            to={link.to}
+            onClick={onNavigate}
+          >
+            {link.label}
+          </Link>
+        ) : (
+          <a
+            key={link.label}
+            className={itemClassName}
+            href={link.href}
+            onClick={onNavigate}
+          >
+            {link.label}
+          </a>
+        ),
+      )}
+      <a
+        className={cn(
+          itemClassName,
+          'max-md:mt-1 max-md:border-t max-md:border-line md:border-l md:border-line md:pl-8',
+        )}
+        href={repo}
+        onClick={onNavigate}
+      >
+        GitHub ↗
+      </a>
+    </div>
+  );
+}
+
 export function Nav() {
   const [menu, setMenu] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
@@ -22,69 +68,77 @@ export function Nav() {
     ? 'text-black hover:text-black'
     : 'text-white hover:text-white';
 
+  useEffect(() => {
+    if (!menu) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMenu(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [menu]);
+
   return (
     <header
       ref={headerRef}
-      className="pointer-events-none fixed inset-x-0 top-0 z-30 px-4 pt-4 md:px-6"
+      className="pointer-events-none fixed inset-x-0 top-0 z-30 px-3 pt-3 md:px-6 md:pt-4"
     >
-      <LiquidGlass
-        radius={22}
-        bevelDepth={12}
-        scale={28}
-        aberration={2}
-        frost={0.8}
-        tint={0.06}
-        data-nav-shell
-        className="pointer-events-auto mx-auto max-w-6xl border border-line nav-glass"
-      >
-        <nav
-          className="flex h-16 items-center gap-3 px-5"
-          aria-label="Main navigation"
+      <div className="pointer-events-auto mx-auto max-w-6xl">
+        <LiquidGlass
+          radius={20}
+          bevelDepth={12}
+          scale={28}
+          aberration={2}
+          frost={0.8}
+          tint={0.06}
+          data-nav-shell
+          className="border border-line nav-glass"
         >
-          <Brand onLight={onLight} />
-          <div className="ml-auto flex items-center gap-3">
-            <div
-              id="nav-links"
-              className={cn(
-                'absolute top-[4.75rem] right-4 left-4 flex-col gap-5 rounded-2xl border border-line bg-glass p-5 text-sm backdrop-blur-xl md:static md:flex md:flex-row md:items-center md:gap-8 md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none',
-                onLight ? 'text-black' : 'text-white',
-                menu ? 'flex' : 'hidden md:flex',
-              )}
-              onClick={() => setMenu(false)}
-            >
-              {links.map((link) =>
-                'to' in link ? (
-                  <Link key={link.label} className={itemTone} to={link.to}>
-                    {link.label}
-                  </Link>
-                ) : (
-                  <a key={link.label} className={itemTone} href={link.href}>
-                    {link.label}
-                  </a>
-                ),
-              )}
-              <a
-                className={cn(itemTone, 'border-line md:border-l md:pl-8')}
-                href={repo}
+          <nav
+            className="flex h-14 items-center gap-2 px-3 md:h-16 md:gap-3 md:px-5"
+            aria-label="Main navigation"
+          >
+            <Brand onLight={onLight} className="min-w-0 text-base md:text-lg" />
+            <div className="ml-auto flex min-w-0 items-center gap-2 md:gap-3">
+              <NavLinks
+                className="hidden items-center gap-8 text-sm md:flex"
+                itemClassName={itemTone}
+              />
+              <ThemeSwitch onLight={onLight} />
+              <button
+                type="button"
+                className={cn(
+                  'inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-line text-lg leading-none md:hidden',
+                  itemTone,
+                )}
+                aria-expanded={menu}
+                aria-controls="nav-links"
+                aria-label={menu ? 'Close menu' : 'Open menu'}
+                onClick={() => setMenu((open) => !open)}
               >
-                GitHub ↗
-              </a>
+                <span aria-hidden="true">{menu ? '×' : '☰'}</span>
+              </button>
             </div>
-            <ThemeSwitch onLight={onLight} />
-            <button
-              className={cn(
-                'rounded-full border border-line px-3 py-1.5 text-xs md:hidden',
+          </nav>
+        </LiquidGlass>
+        {menu ? (
+          <div
+            id="nav-links"
+            className={cn(
+              'mt-2 rounded-[20px] border border-line bg-surface p-2 shadow-[0_18px_40px_rgb(0_0_0/0.28)] backdrop-blur-xl md:hidden',
+              onLight ? 'text-black' : 'text-white',
+            )}
+          >
+            <NavLinks
+              className="flex flex-col"
+              itemClassName={cn(
                 itemTone,
+                'rounded-xl px-4 py-3 text-base font-medium',
               )}
-              aria-expanded={menu}
-              aria-controls="nav-links"
-              onClick={() => setMenu((open) => !open)}
-            >
-              {menu ? 'Close −' : 'Menu +'}
-            </button>
+              onNavigate={() => setMenu(false)}
+            />
           </div>
-        </nav>
-      </LiquidGlass>
+        ) : null}
+      </div>
     </header>
   );
 }

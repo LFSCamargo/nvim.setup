@@ -368,11 +368,12 @@ test('mobile layout and reduced motion remain usable', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
-  await page.getByRole('button', { name: 'Menu +' }).click();
-  await page
-    .getByRole('navigation')
-    .getByRole('link', { name: 'Documentation' })
-    .click();
+  await page.getByRole('button', { name: 'Open menu' }).click();
+  const menu = page.locator('#nav-links');
+  await expect(menu).toBeVisible();
+  const menuBox = await menu.boundingBox();
+  expect(menuBox?.height ?? 0).toBeGreaterThan(80);
+  await menu.getByRole('link', { name: 'Documentation' }).click();
   await expect(page).toHaveURL(/\/docs\/getting-started$/);
   expect(
     await page.evaluate(
