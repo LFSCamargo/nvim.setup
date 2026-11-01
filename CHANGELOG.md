@@ -17,6 +17,7 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Bug Fixes
 
+- **mobile-lp:** landing page adjustments on mobile header ([defd300](https://github.com/LFSCamargo/nvim.setup/commit/defd30054c93d5a18e19cc33a8818b493cc25147))
 - **web:** play the README demo and drop the extra hero line ([ff0057d](https://github.com/LFSCamargo/nvim.setup/commit/ff0057d91c72f2017105617d4e7f94fe4f3b4ae2))
 - **statusline:** adds statusline styling adjustments ([98185d7](https://github.com/LFSCamargo/nvim.setup/commit/98185d7596fbdcdb427ce46989b21c24a812ec52))
 
