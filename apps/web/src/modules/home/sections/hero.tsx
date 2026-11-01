@@ -66,13 +66,6 @@ export function Hero() {
           </p>
         </Reveal>
         <Reveal className="mt-16">
-          <div className="mb-8 flex flex-col items-center gap-4">
-            <span className="h-px w-16 bg-line" aria-hidden="true" />
-            <p className="max-w-xl font-serif text-[1.7rem] leading-tight tracking-[-0.04em] text-balance italic md:text-[2.15rem]">
-              Less switching.
-              <span className="text-muted"> More making.</span>
-            </p>
-          </div>
           <div
             data-demo
             data-rim="dark"

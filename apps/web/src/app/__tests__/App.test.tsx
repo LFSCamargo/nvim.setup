@@ -306,18 +306,11 @@ describe('landing page visitor paths', () => {
     expect(glow?.style.getPropertyValue('--gradient')).toContain('#18181b');
   });
 
-  it('sets the workspace caption as a centered editorial line', () => {
+  it('leaves the film line out of the page because the demo already says it', () => {
     renderApp();
-    expect(
-      screen.getByText((_, node) => {
-        const text = node?.textContent ?? '';
-        return (
-          node?.tagName === 'P' &&
-          text.includes('Less switching.') &&
-          text.includes('More making.')
-        );
-      }),
-    ).toBeTruthy();
+    expect(screen.queryByText(/Less switching/)).toBeNull();
+    expect(screen.queryByText(/More making/)).toBeNull();
+    expect(screen.getByLabelText('Demo of nvim.setup')).toBeTruthy();
   });
 
   it('renders a light Neovim mark on the dark page and a dark mark over the install band', async () => {

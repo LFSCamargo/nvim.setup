@@ -2,7 +2,9 @@
 
 ![A quieter place to think. Your terminal, your rules. The speed of Neovim, with code, Git, and AI chats in one workspace.](apps/web/public/assets/readme-heading.jpg)
 
-<video src="apps/web/public/assets/nvim-setup-demo.mp4" poster="apps/web/public/assets/nvim-setup-demo-poster.jpg" width="1920" height="1080" controls playsinline></video>
+<video src="https://github.com/LFSCamargo/nvim.setup/raw/main/apps/web/public/assets/nvim-setup-demo.mp4" poster="https://github.com/LFSCamargo/nvim.setup/raw/main/apps/web/public/assets/nvim-setup-demo-poster.jpg" width="1920" height="1080" controls muted playsinline>
+  <source src="https://lfscamargo.github.io/nvim.setup/assets/nvim-setup-demo.mp4" type="video/mp4" />
+</video>
 
 A portable Neovim config that puts your files, editor, and AI chats in one window.
 

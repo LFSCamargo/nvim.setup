@@ -6,4 +6,4 @@ The six `*-2026-10-31.png` images are real 3420 × 2224 captures of this Neovim 
 
 These captures include the real chat CLIs. No credentials are in the frames.
 
-`nvim-setup-demo.mp4` is the launch film used in the landing-page hero and the README. `nvim-setup-demo-poster.jpg` is a still from that film. `readme-heading.jpg` is the README banner.
+`nvim-setup-demo.mp4` is the launch film used in the landing-page hero and the README. The README uses absolute GitHub/raw and site URLs so GitHub’s renderer can play the file; a relative repo path does not. `nvim-setup-demo-poster.jpg` is a still from that film. `readme-heading.jpg` is the README banner.
