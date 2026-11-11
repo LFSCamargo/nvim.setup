@@ -196,6 +196,12 @@ for key, binding in pairs(shortcuts) do
   map('t', key, '<C-\\><C-n><Cmd>' .. binding[1] .. '<CR>', binding[2])
 end
 map('n', '<leader>p', '<Cmd>CommandPalette<CR>', 'Command palette')
+map({ 'n', 'v' }, '<leader>as', function()
+  require('modules.agents').attach_selection()
+end, 'Add selection to chat')
+map({ 'n', 'i', 'v' }, '<D-v>', function()
+  require('modules.images').paste_key()
+end, 'Paste image or file into chat')
 map('n', '<S-F10>', '<Cmd>ContextMenu<CR>', 'Context menu')
 
 -- Ctrl+W is remapped above, so splits use leader instead of the window-command prefix.
@@ -203,4 +209,5 @@ map('n', '<leader>ws', '<Cmd>split<CR>', 'Split window below')
 map('n', '<leader>wv', '<Cmd>vsplit<CR>', 'Split window right')
 
 require('modules.tabs')
+require('modules.context_menu')
 require('modules.icons')

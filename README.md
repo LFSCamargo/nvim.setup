@@ -110,7 +110,8 @@ Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to i
 | Ctrl+G                                  | Open Git source control (commit, stage, unstage, revert, bottom commit log; keyboard or mouse) |
 | Ctrl+, / `:SetupSettings`               | Open Settings (color theme, appearance, editing, search, sessions)                             |
 | `:SetupThemes`                          | Open the Themes sidebar (20 supported dark schemes)                                            |
-| Right-click / Shift+F10                 | Open an action menu for a file, Git item, or tab                                               |
+| Right-click / Shift+F10                 | Open an action menu for a file, Git item, editor selection, or tab                             |
+| Space a s                               | Add the current line or visual selection to the active chat                                    |
 | Space p / `:CommandPalette`             | Search coding and configuration actions                                                        |
 | `:SetupExtensions`                      | Browse user plugins, tools, and parsers                                                        |
 | Ctrl+P / Ctrl+F                         | Find files / search project text (opens a new editor tab)                                      |
@@ -118,6 +119,7 @@ Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to i
 | Ctrl+\ Ctrl+N                           | Leave terminal-input mode (`Esc Esc` also works in other terminals)                            |
 | Ctrl+h/j/k/l                            | Move between windows in normal mode                                                            |
 | Space a c / a u / a g / a l / a o / a a | Toggle Codex / Cursor Agent / Gemini / Claude / OpenCode / Antigravity                         |
+| Cmd+V / `:PasteToChat`                  | Paste a clipboard image or file into the active chat                                           |
 | Space f                                 | Format the current file                                                                        |
 | gd / gr / K                             | Definition / references / documentation                                                        |
 | F5 / Space d b                          | Start or continue debugging / toggle a breakpoint                                              |

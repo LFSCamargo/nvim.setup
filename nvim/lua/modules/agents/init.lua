@@ -328,6 +328,143 @@ local function focus_input(win, buf)
   end)
 end
 
+local function readable_file(path)
+  if type(path) ~= 'string' or path == '' or path:find('\0', 1, true) or path:find('[\r\n]') then
+    return nil
+  end
+  local abs = vim.fn.fnamemodify(path, ':p')
+  if abs == '' or abs:find('\0', 1, true) then
+    return nil
+  end
+  if vim.fn.filereadable(abs) ~= 1 or vim.fn.isdirectory(abs) == 1 then
+    return nil
+  end
+  return abs
+end
+
+function M.file_ref(path, first, last)
+  local abs = readable_file(path)
+  if not abs then
+    return nil
+  end
+  local rel = vim.fs.relpath(vim.fn.getcwd(), abs)
+  local shown = (type(rel) == 'string' and rel ~= '' and not rel:match('^%.%.%/')) and rel or abs
+  local body = shown
+  if shown:find('[%s\'"]') then
+    body = '"' .. shown:gsub('"', '\\"') .. '"'
+  end
+  local ref = '@' .. body
+  local a = tonumber(first)
+  local b = tonumber(last)
+  if a and b and a > 0 and b > 0 then
+    if a > b then
+      a, b = b, a
+    end
+    ref = a == b and (ref .. ':' .. a) or (ref .. ':' .. a .. '-' .. b)
+  end
+  return ref
+end
+
+function M.live_session()
+  local session = M.sessions[M.active]
+  if session and not session.exited and session.job and session.job > 0 then
+    return session, M.active
+  end
+  local ids = vim.tbl_keys(M.sessions)
+  table.sort(ids)
+  for _, id in ipairs(ids) do
+    local candidate = M.sessions[id]
+    if candidate and not candidate.exited and candidate.job and candidate.job > 0 then
+      return candidate, id
+    end
+  end
+end
+
+function M.focus_active()
+  local session, id = M.live_session()
+  if not session then
+    vim.notify('No active chat to add to', vim.log.levels.WARN)
+    return nil
+  end
+  M.show(id)
+  return session
+end
+
+function M.send(text)
+  if type(text) ~= 'string' or text == '' or text:find('\0', 1, true) then
+    return false
+  end
+  text = text:gsub('\r', '')
+  M.last_sent = text
+  local session = M.focus_active()
+  if not session or not session.job or session.job <= 0 then
+    return false
+  end
+  vim.api.nvim_chan_send(session.job, text)
+  return true
+end
+
+function M.attach_files(paths)
+  local refs = {}
+  for _, path in ipairs(type(paths) == 'table' and paths or {}) do
+    local ref = M.file_ref(path)
+    if ref then
+      refs[#refs + 1] = ref
+    end
+  end
+  if #refs == 0 then
+    vim.notify('No file to add to chat', vim.log.levels.WARN)
+    return false
+  end
+  return M.send(table.concat(refs, ' ') .. ' ')
+end
+
+function M.current_range(buf)
+  buf = buf or vim.api.nvim_get_current_buf()
+  local mode = vim.fn.mode()
+  local first, last
+  if mode:find('[vV\22]') then
+    first = vim.fn.line('v')
+    last = vim.fn.line('.')
+  else
+    first = vim.fn.line('.')
+    last = first
+  end
+  if first > last then
+    first, last = last, first
+  end
+  return { buf = buf, first = first, last = last }
+end
+
+function M.attach_range(buf, range)
+  buf = buf or (range and range.buf) or vim.api.nvim_get_current_buf()
+  if not vim.api.nvim_buf_is_valid(buf) then
+    return false
+  end
+  local first = range and tonumber(range.first) or vim.fn.line('.')
+  local last = range and tonumber(range.last) or first
+  local path = vim.api.nvim_buf_get_name(buf)
+  local abs = readable_file(path)
+  if abs then
+    local ref = M.file_ref(abs, first, last)
+    return ref ~= nil and M.send(ref .. ' ')
+  end
+  local lines = vim.api.nvim_buf_get_lines(buf, math.max(0, first - 1), last, false)
+  if #lines == 0 then
+    vim.notify('No selection to add to chat', vim.log.levels.INFO)
+    return false
+  end
+  return M.send('```\n' .. table.concat(lines, '\n') .. '\n```\n')
+end
+
+function M.attach_selection()
+  return M.attach_range(vim.api.nvim_get_current_buf(), M.current_range())
+end
+
+function M.attach_current_file()
+  return M.attach_files({ vim.api.nvim_buf_get_name(0) })
+end
+
 -- Show an existing session, creating the sidebar split if needed.
 function M.show(id)
   local session = M.sessions[id]
@@ -543,11 +680,18 @@ vim.api.nvim_create_autocmd('VimResized', {
 })
 vim.api.nvim_create_autocmd({ 'WinEnter', 'BufEnter' }, {
   callback = function(ev)
+    local win = vim.api.nvim_get_current_win()
+    local ok, cfg = pcall(vim.api.nvim_win_get_config, win)
+    if ok and type(cfg) == 'table' and cfg.relative ~= '' then
+      return
+    end
     if M.is_chat(ev.buf) then
-      focus_input(vim.api.nvim_get_current_win(), ev.buf)
+      focus_input(win, ev.buf)
     end
   end,
 })
+vim.api.nvim_create_user_command('AddSelectionToChat', M.attach_selection, {})
+vim.api.nvim_create_user_command('AddFileToChat', M.attach_current_file, {})
 vim.api.nvim_create_user_command('AgentSelect', M.select, {})
 for _, name in ipairs(M.order) do
   vim.api.nvim_create_user_command(CLIS[name].command, function()

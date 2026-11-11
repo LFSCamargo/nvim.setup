@@ -1485,6 +1485,10 @@ local ok, err = xpcall(function()
     eval([[return vim.tbl_contains(require('modules.context_menu').labels(), 'Stage file')]]),
     'unstaged Git menu should offer Stage file'
   )
+  assert(
+    eval([[return vim.tbl_contains(require('modules.context_menu').labels(), 'Add file to chat')]]),
+    'Git file menu should offer Add file to chat'
+  )
   request('nvim_input', '<CR>')
   wait_for('Git menu Check Diff action', function()
     return eval("return require('modules.diff').active()")
@@ -1519,7 +1523,20 @@ local ok, err = xpcall(function()
     eval([[return vim.tbl_contains(require('modules.context_menu').labels(), 'Rename')]]),
     'file tree menu should offer Rename'
   )
-  eval([[require('modules.context_menu').select(4)]])
+  assert(
+    eval([[return vim.tbl_contains(require('modules.context_menu').labels(), 'Add file to chat')]]),
+    'file tree menu should offer Add file to chat'
+  )
+  eval([[
+    local labels = require('modules.context_menu').labels()
+    for i, label in ipairs(labels) do
+      if label == 'Rename' then
+        require('modules.context_menu').select(i)
+        return
+      end
+    end
+    error('Rename missing from file tree menu')
+  ]])
   wait_for('tree menu rename action', function()
     return eval('return vim.g.context_tree_action') == 'rename'
   end)
@@ -1581,6 +1598,10 @@ local ok, err = xpcall(function()
   assert(
     eval([[return vim.tbl_contains(require('modules.context_menu').labels(), 'Close other editor tabs')]]),
     'editor tab menu should offer tab actions'
+  )
+  assert(
+    eval([[return vim.tbl_contains(require('modules.context_menu').labels(), 'Add file to chat')]]),
+    'editor tab menu should offer Add file to chat'
   )
   eval("require('modules.context_menu').close(true)")
   eval([[
@@ -2486,6 +2507,190 @@ local ok, err = xpcall(function()
     ]])
   end)
   print('PASS: image files open in the system viewer')
+
+  eval([[
+    local agents = require('modules.agents')
+    agents.last_sent = nil
+    local editor = require('modules.tabs').editor_win()
+    vim.api.nvim_set_current_win(editor)
+    vim.cmd.stopinsert()
+    local path = vim.env.E2E_DIR .. '/repo/app.ts'
+    vim.cmd.edit(vim.fn.fnameescape(path))
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, { 'alpha', 'beta', 'gamma' })
+    vim.api.nvim_win_set_cursor(0, { 2, 0 })
+  ]])
+  assert(eval("return vim.fn.maparg('<leader>as', 'n')") ~= '', 'Add selection shortcut missing')
+  assert(eval("return vim.fn.exists(':AddSelectionToChat')") == 2, 'AddSelectionToChat command missing')
+  assert(eval("return vim.fn.exists(':PasteToChat')") == 2, 'PasteToChat command missing')
+  request('nvim_input', ' as')
+  wait_for('add selection to chat', function()
+    return eval([[
+      local sent = require('modules.agents').last_sent or ''
+      return sent:find('@', 1, true) and sent:find('app.ts:2', 1, true)
+        and vim.api.nvim_get_current_win() == require('modules.agents').win
+    ]])
+  end)
+  eval([[
+    local agents = require('modules.agents')
+    agents.last_sent = nil
+    local editor = require('modules.tabs').editor_win()
+    vim.api.nvim_set_current_win(editor)
+    vim.cmd.stopinsert()
+    vim.api.nvim_win_set_cursor(0, { 1, 0 })
+    vim.cmd('normal! V2j')
+    vim.cmd.AddSelectionToChat()
+  ]])
+  wait_for('add visual selection to chat', function()
+    return eval([[
+      local sent = require('modules.agents').last_sent or ''
+      return sent:find('app.ts:1-3', 1, true)
+    ]])
+  end)
+  eval([[
+    local agents = require('modules.agents')
+    agents.last_sent = nil
+    local editor = require('modules.tabs').editor_win()
+    vim.api.nvim_set_current_win(editor)
+    vim.cmd.stopinsert()
+    require('modules.context_menu').editor(vim.api.nvim_get_current_buf())
+  ]])
+  assert(
+    eval([[return vim.tbl_contains(require('modules.context_menu').labels(), 'Add selection to chat')]]),
+    'editor right-click menu should offer Add selection to chat'
+  )
+  assert(
+    eval([[return vim.tbl_contains(require('modules.context_menu').labels(), 'Add file to chat')]]),
+    'editor menu should offer Add file to chat'
+  )
+  assert(
+    eval([[return vim.tbl_contains(require('modules.context_menu').labels(), 'Paste')]]),
+    'editor menu should keep the default Paste action'
+  )
+  assert(
+    eval([[return vim.tbl_contains(require('modules.context_menu').labels(), 'Go to definition')]]),
+    'editor menu should keep the default Go to definition action'
+  )
+  assert(
+    eval([[
+      local labels = require('modules.context_menu').labels()
+      return labels[#labels] == 'Add selection to chat'
+        and labels[#labels - 1] == 'Add file to chat'
+    ]]),
+    'editor menu should append the chat actions after every default entry'
+  )
+  assert(
+    eval([[return vim.fn.maparg('<RightMouse>', 'n') == '']]),
+    'editor buffers must not override RightMouse so the native popup stays intact'
+  )
+  assert(
+    eval([[return vim.fn.maparg('<RightMouse>', 'v') == '']]),
+    'visual mode must not override RightMouse so the native popup stays intact'
+  )
+  assert(
+    eval([[return vim.fn.exists(':AddSelectionToChat')]]) == 2,
+    'AddSelectionToChat command missing for the native popup'
+  )
+  eval([[
+    local labels = require('modules.context_menu').labels()
+    for i, label in ipairs(labels) do
+      if label == 'Add selection to chat' then
+        require('modules.context_menu').select(i)
+        break
+      end
+    end
+  ]])
+  wait_for('editor menu add selection', function()
+    return eval([[
+      local sent = require('modules.agents').last_sent or ''
+      return sent:find('app.ts:', 1, true)
+    ]])
+  end)
+  eval([[
+    local agents = require('modules.agents')
+    agents.last_sent = nil
+    local editor = require('modules.tabs').editor_win()
+    vim.api.nvim_set_current_win(editor)
+    vim.cmd.stopinsert()
+    local before = table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), '\n')
+    vim.g.e2e_paste_before = before
+    require('modules.images').consume_paste({ vim.env.E2E_DIR .. '/repo/photo.png' })
+  ]])
+  wait_for('paste image path into chat', function()
+    return eval([[
+      local sent = require('modules.agents').last_sent or ''
+      local text = table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), '\n')
+      return sent:find('photo.png', 1, true) and text == vim.g.e2e_paste_before
+    ]])
+  end)
+  eval([[
+    local agents = require('modules.agents')
+    agents.last_sent = nil
+    require('modules.images')._save_clipboard = function()
+      return vim.env.E2E_DIR .. '/repo/photo.png'
+    end
+    vim.fn.setreg('+', '')
+    require('modules.images').paste()
+    require('modules.images')._save_clipboard = nil
+  ]])
+  wait_for('clipboard image paste into chat', function()
+    return eval([[
+      local sent = require('modules.agents').last_sent or ''
+      return sent:find('photo.png', 1, true)
+        and vim.api.nvim_get_current_win() == require('modules.agents').win
+    ]])
+  end)
+  eval([[
+    local agents = require('modules.agents')
+    agents.last_sent = nil
+    require('modules.images').handle_drop({ vim.env.E2E_DIR .. '/repo/app.ts' })
+  ]])
+  wait_for('drop file into chat', function()
+    return eval([[
+      local sent = require('modules.agents').last_sent or ''
+      return sent:find('app.ts', 1, true)
+        and vim.api.nvim_get_current_win() == require('modules.agents').win
+    ]])
+  end)
+  eval([[
+    local agents = require('modules.agents')
+    agents.last_sent = nil
+    require('modules.context_menu').tree({ type = 'file', absolute_path = vim.env.E2E_DIR .. '/repo/new.txt' })
+    local labels = require('modules.context_menu').labels()
+    for i, label in ipairs(labels) do
+      if label == 'Add file to chat' then
+        require('modules.context_menu').select(i)
+        return
+      end
+    end
+    error('Add file to chat missing from file tree menu')
+  ]])
+  wait_for('tree add file to chat', function()
+    return eval([[
+      local sent = require('modules.agents').last_sent or ''
+      return sent:find('new.txt', 1, true)
+    ]])
+  end)
+  eval([[
+    local agents = require('modules.agents')
+    agents.last_sent = nil
+    local buf = require('modules.tabs').editor_win() and vim.api.nvim_win_get_buf(require('modules.tabs').editor_win())
+    _G.EditorTabClick(buf, 0, 'r')
+    local labels = require('modules.context_menu').labels()
+    for i, label in ipairs(labels) do
+      if label == 'Add file to chat' then
+        require('modules.context_menu').select(i)
+        return
+      end
+    end
+    error('Add file to chat missing from editor tab menu')
+  ]])
+  wait_for('tab add file to chat', function()
+    return eval([[
+      local sent = require('modules.agents').last_sent or ''
+      return sent:find('@', 1, true)
+    ]])
+  end)
+  print('PASS: paste drop and add selection or file to chat')
 
   eval([[
     vim.api.nvim_set_current_win(require('modules.tabs').editor_win() or 0)

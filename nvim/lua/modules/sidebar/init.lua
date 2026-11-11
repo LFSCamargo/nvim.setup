@@ -513,6 +513,20 @@ function M.context_menu(kind, line, pos)
         end,
       },
       {
+        label = 'Add file to chat',
+        run = function()
+          if not root or type(entry.path) ~= 'string' or entry.path == '' or entry.path:find('[\r\n]') then
+            return
+          end
+          local path = vim.fs.normalize(root .. '/' .. entry.path)
+          local base = vim.fs.normalize(root)
+          if path ~= base and path:sub(1, #base + 1) ~= base .. '/' then
+            return
+          end
+          require('modules.agents').attach_files({ path })
+        end,
+      },
+      {
         label = 'Copy relative path',
         run = function()
           vim.fn.setreg('+', entry.path)
@@ -1190,10 +1204,15 @@ api.nvim_create_autocmd('WinLeave', {
 })
 api.nvim_create_autocmd('WinEnter', {
   callback = function()
+    local win = api.nvim_get_current_win()
+    local ok, cfg = pcall(api.nvim_win_get_config, win)
+    if ok and type(cfg) == 'table' and cfg.relative ~= '' then
+      return
+    end
     if
       M.view ~= 'git'
       or left_git
-      or not git_side(api.nvim_get_current_win())
+      or not git_side(win)
       or require('modules.diff').active()
       or require('modules.context_menu').restoring()
     then

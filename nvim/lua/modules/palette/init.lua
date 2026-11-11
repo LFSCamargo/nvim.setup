@@ -38,6 +38,27 @@ local actions = {
     end,
   },
   {
+    'Add selection to chat',
+    'agent',
+    function()
+      require('modules.agents').attach_selection()
+    end,
+  },
+  {
+    'Add file to chat',
+    'agent',
+    function()
+      require('modules.agents').attach_current_file()
+    end,
+  },
+  {
+    'Paste image or file into chat',
+    'image clipboard',
+    function()
+      vim.cmd.PasteToChat()
+    end,
+  },
+  {
     'Show diagnostics',
     'errors',
     function()

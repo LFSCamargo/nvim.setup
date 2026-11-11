@@ -11,7 +11,7 @@ nvim/
     extensions/init.lua       plugin and Mason browser
     themes/init.lua           color theme catalog and sidebar
     format/init.lua           formatter configuration
-    images/init.lua           open image files in the system viewer
+    images/init.lua           open image files in the system viewer; paste/drop into chat
     hscroll/init.lua          sidescroll RPC used by the macOS terminal worker
     sidebar/
       init.lua                public sidebar API and Git actions

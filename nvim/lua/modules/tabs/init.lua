@@ -723,21 +723,26 @@ api.nvim_create_autocmd('WinClosed', {
 local function refresh()
   M.apply_scroll()
   for _, win in ipairs(api.nvim_tabpage_list_wins(0)) do
-    local buf = api.nvim_win_get_buf(win)
-    if
-      vim.bo[buf].filetype == 'NvimTree'
-      or vim.bo[buf].filetype == 'git-composer'
-      or vim.bo[buf].filetype == 'setup-settings'
-      or vim.bo[buf].filetype == 'setup-themes'
-      or vim.bo[buf].filetype == 'setup-extensions'
-    then
-      vim.wo[win].winbar = "%!v:lua.require'modules.sidebar'.winbar()"
-    elseif vim.bo[buf].filetype == 'git-changes' or vim.bo[buf].filetype == 'git-log' then
-      vim.wo[win].winbar = ''
+    local ok, cfg = pcall(api.nvim_win_get_config, win)
+    if ok and type(cfg) == 'table' and cfg.relative ~= '' then
+      -- Floating windows (menus, hovers) must not gain a winbar.
     else
-      vim.wo[win].winbar = (editor_buf(buf) or require('modules.agents').is_chat(buf))
-          and "%!v:lua.require'modules.tabs'.render()"
-        or ''
+      local buf = api.nvim_win_get_buf(win)
+      if
+        vim.bo[buf].filetype == 'NvimTree'
+        or vim.bo[buf].filetype == 'git-composer'
+        or vim.bo[buf].filetype == 'setup-settings'
+        or vim.bo[buf].filetype == 'setup-themes'
+        or vim.bo[buf].filetype == 'setup-extensions'
+      then
+        vim.wo[win].winbar = "%!v:lua.require'modules.sidebar'.winbar()"
+      elseif vim.bo[buf].filetype == 'git-changes' or vim.bo[buf].filetype == 'git-log' then
+        vim.wo[win].winbar = ''
+      else
+        vim.wo[win].winbar = (editor_buf(buf) or require('modules.agents').is_chat(buf))
+            and "%!v:lua.require'modules.tabs'.render()"
+          or ''
+      end
     end
   end
   vim.cmd('redrawstatus')
