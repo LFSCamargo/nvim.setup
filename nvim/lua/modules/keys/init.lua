@@ -54,6 +54,12 @@ map('n', '<leader>f', function()
   require('conform').format({ async = true, lsp_format = 'fallback' })
 end, 'Format buffer')
 map('n', '<leader>w', '<cmd>write<cr>', 'Save')
+map('n', '<C-/>', 'gcc', 'Toggle comment line')
+map('n', '<C-_>', 'gcc', 'Toggle comment line')
+map('x', '<C-/>', 'gc', 'Toggle comment selection')
+map('x', '<C-_>', 'gc', 'Toggle comment selection')
+map('i', '<C-/>', '<C-o>gcc', 'Toggle comment line')
+map('i', '<C-_>', '<C-o>gcc', 'Toggle comment line')
 map('t', '<Esc><Esc>', '<C-\\><C-n>', 'Leave terminal input')
 
 require('modules.hscroll')
@@ -161,6 +167,23 @@ end, {})
 vim.api.nvim_create_user_command('SidebarFilesToggle', function()
   require('modules.sidebar').toggle_files()
 end, {})
+vim.api.nvim_create_user_command('SidebarHideLeft', function()
+  require('modules.sidebar').toggle_hide()
+end, {})
+vim.api.nvim_create_user_command('SidebarHideRight', function()
+  local agents = require('modules.agents')
+  if agents.win and vim.api.nvim_win_is_valid(agents.win) then
+    agents.hide()
+  else
+    local _, id = agents.live_session()
+    if id then
+      agents.show(id)
+    end
+  end
+end, {})
+vim.api.nvim_create_user_command('SidebarHideBoth', function()
+  require('modules.sidebar').hide_both()
+end, {})
 vim.api.nvim_create_user_command('SetupSettings', function()
   require('modules.sidebar').settings()
 end, {})
@@ -180,6 +203,8 @@ end, {})
 local shortcuts = {
   ['<C-s>'] = { 'PaneSave', 'Save editor file' },
   ['<C-b>'] = { 'SidebarFilesToggle', 'Toggle file tree' },
+  ['<C-S-b>'] = { 'SidebarHideLeft', 'Hide or show the left sidebar' },
+  ['<C-S-]>'] = { 'SidebarHideRight', 'Hide or show the right sidebar' },
   ['<C-g>'] = { 'GitChanges', 'Show Git changes' },
   ['<C-,>'] = { 'SetupSettings', 'Open Settings' },
   ['<C-S-p>'] = { 'CommandPalette', 'Command palette' },

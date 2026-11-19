@@ -610,11 +610,18 @@ function M.select()
   end)
 end
 
+-- Hide the chat pane without closing the underlying sessions.
+function M.hide()
+  if valid_win() then
+    pcall(vim.api.nvim_win_close, M.win, false)
+  end
+  M.win = nil
+end
+
 -- Toggle this CLI's pane: hide if it is already showing, else focus or start it.
 function M.toggle(name)
   if valid_win() and M.sessions[M.active] and M.sessions[M.active].name == name then
-    vim.api.nvim_win_close(M.win, false)
-    M.win = nil
+    M.hide()
     return
   end
   for _, id in ipairs(vim.tbl_keys(M.sessions)) do

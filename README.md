@@ -107,11 +107,15 @@ Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to i
 | Ctrl+T / Ctrl+W                         | Add / close a tab in the focused pane                                                          |
 | Ctrl+]                                  | Start a new Codex, Cursor Agent, Gemini, Claude, OpenCode, or Antigravity session              |
 | Ctrl+B                                  | Toggle the file tree                                                                           |
+| Ctrl+Shift+B / `:SidebarHideLeft`       | Hide or show the left sidebar                                                                  |
+| Ctrl+Shift+] / `:SidebarHideRight`      | Hide or show the right sidebar (keeps chat sessions running)                                   |
+| Click − on a sidebar winbar             | Hide both sidebars                                                                             |
 | Ctrl+G                                  | Open Git source control (commit, stage, unstage, revert, bottom commit log; keyboard or mouse) |
 | Ctrl+, / `:SetupSettings`               | Open Settings (color theme, appearance, editing, search, sessions)                             |
 | `:SetupThemes`                          | Open the Themes sidebar (20 supported dark schemes)                                            |
 | Right-click / Shift+F10                 | Open an action menu for a file, Git item, editor selection, or tab                             |
 | Space a s                               | Add the current line or visual selection to the active chat                                    |
+| Ctrl+/                                  | Toggle comment on the current line (also works in insert and visual modes)                     |
 | Space p / `:CommandPalette`             | Search coding and configuration actions                                                        |
 | `:SetupExtensions`                      | Browse user plugins, tools, and parsers                                                        |
 | Ctrl+P / Ctrl+F                         | Find files / search project text (opens a new editor tab)                                      |

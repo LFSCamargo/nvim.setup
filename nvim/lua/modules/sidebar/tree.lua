@@ -45,12 +45,13 @@ local function setup_highlights()
     'NvimTreeImageFile',
     'NvimTreeSymlink',
     'NvimTreeGitFileIgnoredHL',
-    'NvimTreeGitFolderIgnoredHL',
     'NvimTreeGitIgnoredIcon',
   }
   for _, name in ipairs(white) do
     api.nvim_set_hl(0, name, { link = 'Normal' })
   end
+  -- Ignored folders are visible but dimmed so they fade behind tracked files.
+  api.nvim_set_hl(0, 'NvimTreeGitFolderIgnoredHL', { fg = '#665c54' })
   api.nvim_set_hl(0, 'NvimTreeRootFolder', { fg = '#a89984', bold = true })
   api.nvim_set_hl(0, 'NvimTreeIndentMarker', { fg = '#665c54' })
   api.nvim_set_hl(0, 'NvimTreeFolderArrowClosed', { fg = '#665c54' })

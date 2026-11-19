@@ -22,6 +22,9 @@ Ctrl shortcuts in the first table work in **normal, insert, and terminal** modes
 | Ctrl+W | Close the focused editor or chat tab (refuses unsaved files) |
 | Ctrl+] / `:AgentSelect` | Choose a chat CLI (Codex, Cursor Agent, Gemini, Claude, OpenCode, Antigravity) |
 | Ctrl+B / Space e | Toggle the file tree |
+| Ctrl+Shift+B / `:SidebarHideLeft` | Hide or show the left sidebar |
+| Ctrl+Shift+] / `:SidebarHideRight` | Hide or show the right sidebar (keeps chat sessions running) |
+| Click − on a sidebar winbar | Hide both sidebars |
 | Ctrl+G | Open the Git source-control sidebar |
 | Ctrl+, / `:SetupSettings` | Open the Settings sidebar |
 | `:SetupThemes` | Open the Themes sidebar |
@@ -38,6 +41,7 @@ Ctrl shortcuts in the first table work in **normal, insert, and terminal** modes
 | Click a pane | Focus editor, tree, or chat; clicking a running chat starts typing |
 | Right-click / Shift+F10 / `:ContextMenu` | Open actions for the clicked or focused tree item, Git item, editor, or tab |
 | Space a s / `:AddSelectionToChat` | Add the current line or visual selection to the active chat |
+| Ctrl+/ | Toggle comment on the current line (also works in insert and visual modes) |
 | Cmd+V / `:PasteToChat` | Paste a clipboard image or file path into the active chat |
 
 The context menu uses the item under the pointer, even when another item was selected. File and folder menus offer open/create, add file to chat, path, rename, delete, and refresh actions as applicable. Git file menus offer Check Diff, open, add file to chat, stage or unstage, copy path, and revert where applicable; section and commit-log menus offer their existing actions. Right-click in the editor keeps every default popup entry (Open in web browser, Inspect, Go to definition, Show Diagnostics, Cut/Copy/Paste, Delete, Select All) and appends Add file to chat and Add selection to chat last. The Shift+F10 / `:ContextMenu` keyboard menu shows the same defaults-first order with the two chat actions appended. Editor tabs offer focus, add file to chat, copy path, close, and close other tabs; chat tabs offer focus and close; Sidebar tab labels offer open and refresh. Enter or click runs a menu action; Esc or clicking elsewhere dismisses it. Delete and revert keep their confirmation prompts, and modified editor tabs still refuse to close without saving.

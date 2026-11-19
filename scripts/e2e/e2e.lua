@@ -439,6 +439,92 @@ local ok, err = xpcall(function()
   assert(formatters.sh[1] == 'shfmt', 'shell should format with shfmt')
   print('PASS: Space f formatters cover Lua, web, markdown, and shell')
 
+  local comment = eval([[
+    local win = vim.api.nvim_get_current_win()
+    local prev = vim.api.nvim_win_get_buf(win)
+    local buf = vim.api.nvim_create_buf(true, false)
+    vim.api.nvim_buf_set_name(buf, vim.env.E2E_DIR .. '/comment.lua')
+    vim.bo[buf].filetype = 'lua'
+    vim.bo[buf].commentstring = '-- %s'
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, { 'hello world', 'second line' })
+    vim.api.nvim_win_set_buf(win, buf)
+    vim.cmd.stopinsert()
+    local normal = vim.fn.maparg('<C-/>', 'n', false, true)
+    local visual = vim.fn.maparg('<C-/>', 'x', false, true)
+    local insert = vim.fn.maparg('<C-/>', 'i', false, true)
+    vim.cmd.normal('gcc')
+    local line1 = vim.api.nvim_buf_get_lines(buf, 0, 1, false)[1]
+    vim.cmd.normal('gcc')
+    local line1_back = vim.api.nvim_buf_get_lines(buf, 0, 1, false)[1]
+    vim.api.nvim_win_set_cursor(win, { 1, 0 })
+    vim.cmd.normal('Vjgc')
+    local visual_lines = vim.api.nvim_buf_get_lines(buf, 0, 2, false)
+    return {
+      normal = normal.rhs,
+      visual = visual.rhs,
+      insert = insert.rhs,
+      line1 = line1,
+      line1_back = line1_back,
+      visual_lines = visual_lines,
+      prev = prev,
+      buf = buf,
+      win = win,
+    }
+  ]])
+  assert(comment.normal == 'gcc', 'Ctrl+/ normal mapping should run gcc, got: ' .. tostring(comment.normal))
+  assert(comment.visual == 'gc', 'Ctrl+/ visual mapping should run gc, got: ' .. tostring(comment.visual))
+  assert(comment.insert == '<C-o>gcc', 'Ctrl+/ insert mapping should run <C-o>gcc, got: ' .. tostring(comment.insert))
+  assert(comment.line1 == '-- hello world', 'gcc should comment the line, got: ' .. tostring(comment.line1))
+  assert(comment.line1_back == 'hello world', 'gcc should uncomment the line, got: ' .. tostring(comment.line1_back))
+  assert(
+    comment.visual_lines[1] == '-- hello world' and comment.visual_lines[2] == '-- second line',
+    'gc should comment the visual selection, got: ' .. vim.inspect(comment.visual_lines)
+  )
+  eval(string.format(
+    [[
+    local win, buf, prev = %d, %d, %d
+    if vim.api.nvim_win_is_valid(win) and vim.api.nvim_buf_is_valid(prev) then
+      vim.api.nvim_win_set_buf(win, prev)
+    end
+    if vim.api.nvim_buf_is_valid(buf) then
+      vim.bo[buf].modified = false
+      vim.api.nvim_buf_delete(buf, { force = true })
+    end
+  ]],
+    comment.win,
+    comment.buf,
+    comment.prev
+  ))
+  print('PASS: Ctrl+/ maps to built-in comment toggle')
+
+  local sidebar_hide = eval([[
+    local sidebar = require('modules.sidebar')
+    local agents = require('modules.agents')
+    local files_bar = sidebar.winbar()
+    local chat_win = agents.win
+    local here = vim.api.nvim_get_current_win()
+    if chat_win and vim.api.nvim_win_is_valid(chat_win) then
+      vim.api.nvim_set_current_win(chat_win)
+    end
+    local chat_raw = require('modules.tabs').render()
+    vim.api.nvim_set_current_win(here)
+    vim.cmd('SidebarHideLeft')
+    local left_hidden = sidebar.view == 'hidden'
+    vim.cmd('SidebarHideLeft')
+    local left_restored = sidebar.view == 'files'
+    return {
+      files_bar_has_hide = not not files_bar:find('SidebarHideBothClick', 1, true),
+      chat_bar_has_hide = not not chat_raw:find('ChatPaneHideClick', 1, true),
+      left_hidden = left_hidden,
+      left_restored = left_restored,
+    }
+  ]])
+  assert(sidebar_hide.files_bar_has_hide, 'left sidebar winbar should have a hide-both button')
+  assert(sidebar_hide.chat_bar_has_hide, 'right sidebar winbar should have a hide-both button')
+  assert(sidebar_hide.left_hidden, 'SidebarHideLeft should hide the left sidebar')
+  assert(sidebar_hide.left_restored, 'SidebarHideLeft again should restore the left sidebar')
+  print('PASS: left sidebar hide key and winbar button')
+
   local tabs = eval([[
     local win = vim.api.nvim_get_current_win()
     local prev = vim.api.nvim_win_get_buf(win)
@@ -1155,6 +1241,34 @@ local ok, err = xpcall(function()
   end)
   print('PASS: clicking an exited chat tab closes it')
 
+  local right_hide = eval([[
+    local agents = require('modules.agents')
+    local before = agents.win and vim.api.nvim_win_is_valid(agents.win)
+    local active = agents.active
+    vim.cmd('SidebarHideRight')
+    local hidden = not (agents.win and vim.api.nvim_win_is_valid(agents.win))
+    local active_while_hidden = agents.active
+    vim.cmd('SidebarHideRight')
+    local restored = agents.win and vim.api.nvim_win_is_valid(agents.win)
+    vim.api.nvim_set_current_win(require('modules.tabs').editor_win())
+    vim.cmd.stopinsert()
+    return {
+      before = before,
+      hidden = hidden,
+      restored = restored,
+      active = active,
+      active_while_hidden = active_while_hidden,
+    }
+  ]])
+  assert(right_hide.before, 'right sidebar should be visible before hide')
+  assert(right_hide.hidden, 'SidebarHideRight should hide the right sidebar')
+  assert(right_hide.restored, 'SidebarHideRight again should restore the right sidebar')
+  assert(
+    right_hide.active == right_hide.active_while_hidden,
+    'hiding the right sidebar should keep the active chat session alive'
+  )
+  print('PASS: right sidebar hide key keeps chat sessions running')
+
   eval("require('modules.agents').new('cursor')")
   wait_for('orphan agent tab', function()
     return eval('return vim.tbl_count(require("modules.agents").sessions) >= 2')
@@ -1679,13 +1793,15 @@ local ok, err = xpcall(function()
     local normal = vim.api.nvim_get_hl(0, { name = 'Normal', link = false })
     local special = vim.api.nvim_get_hl(0, { name = 'NvimTreeSpecialFile', link = false })
     local ignored = vim.api.nvim_get_hl(0, { name = 'NvimTreeGitFileIgnoredHL', link = false })
+    local ignored_folder = vim.api.nvim_get_hl(0, { name = 'NvimTreeGitFolderIgnoredHL', link = false })
     local dirty = vim.api.nvim_get_hl(0, { name = 'NvimTreeGitFileDirtyHL', link = false })
     return hex(special) == hex(normal)
       and hex(ignored) == hex(normal)
+      and hex(ignored_folder) == '#665c54'
       and not special.underline
       and hex(dirty) == '#d79921'
   ]]),
-    'unmodified Files entries should be Normal; git dirty should be faded yellow'
+    'unmodified Files entries should be Normal; git dirty should be faded yellow; ignored folders should be dim'
   )
   assert(
     eval([[

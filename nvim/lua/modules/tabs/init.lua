@@ -373,7 +373,7 @@ function M.render()
       out[#out + 1] = M.divider(items[1].active, true)
     end
     append(items, 'ChatTabClick', 'ChatTabClose', true)
-    return '%#WinBar#%=' .. table.concat(out) .. '%#WinBar#'
+    return '%#WinBar#%0@v:lua.ChatPaneHideClick@ − %T%#WinBar#%=' .. table.concat(out) .. '%#WinBar#'
   elseif editor_buf(buf) then
     local items = {}
     for _, b in ipairs(api.nvim_list_bufs()) do
@@ -632,6 +632,12 @@ _G.ChatTabNew = function(_, _, button)
     require('modules.context_menu').show({
       { label = 'New chat', run = require('modules.agents').select },
     }, require('modules.context_menu').mouse_position())
+  end
+end
+
+_G.ChatPaneHideClick = function(_, _, button)
+  if button == 'l' then
+    require('modules.sidebar').hide_both()
   end
 end
 

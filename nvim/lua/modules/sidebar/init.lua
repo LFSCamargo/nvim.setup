@@ -6,6 +6,7 @@ local groups = { staged = {}, unstaged = {}, history = {} }
 local expanded = { staged = true, unstaged = true }
 local render_id = 0
 local current_branch = 'Git'
+local hidden_view = nil
 local highlights = api.nvim_create_namespace('GitChanges')
 local composer_marks = api.nvim_create_namespace('GitComposer')
 
@@ -916,13 +917,54 @@ function M.refresh()
   end)
 end
 
-function M.files()
-  M.generation = M.generation + 1
-  M.view = 'files'
+local function close_sidebars()
   close_git()
   require('modules.settings').close()
   require('modules.themes').close()
   require('modules.extensions').close()
+  require('nvim-tree.api').tree.close()
+end
+
+function M.hide()
+  if M.view ~= 'hidden' then
+    hidden_view = M.view
+  end
+  M.view = 'hidden'
+  close_sidebars()
+end
+
+function M.show()
+  local view = hidden_view or 'files'
+  if view == 'git' then
+    M.git()
+  elseif view == 'settings' then
+    M.settings()
+  elseif view == 'themes' then
+    M.themes()
+  elseif view == 'extensions' then
+    M.extensions()
+  else
+    M.files()
+  end
+end
+
+function M.toggle_hide()
+  if M.view == 'hidden' then
+    M.show()
+  else
+    M.hide()
+  end
+end
+
+function M.hide_both()
+  M.hide()
+  require('modules.agents').hide()
+end
+
+function M.files()
+  M.generation = M.generation + 1
+  M.view = 'files'
+  close_sidebars()
   require('nvim-tree.api').tree.open({ focus = true })
 end
 
@@ -1276,6 +1318,11 @@ _G.SidebarExtensions = function(_, _, button)
     require('modules.context_menu').sidebar_tab('extensions', require('modules.context_menu').mouse_position())
   end
 end
+_G.SidebarHideBothClick = function(_, _, button)
+  if button == 'l' then
+    M.hide_both()
+  end
+end
 local function tab_highlights()
   local appearance = require('modules.appearance')
   vim.api.nvim_set_hl(0, 'SidebarTabActive', { fg = appearance.tab_ink, bg = appearance.tab_accent, bold = true })
@@ -1317,7 +1364,7 @@ function M.winbar()
       out[#out + 1] = '%#SidebarTabActiveSep#'
     end
   end
-  out[#out + 1] = '%#WinBar#'
+  out[#out + 1] = '%=%#WinBar#%0@v:lua.SidebarHideBothClick@ − %T%#WinBar#'
   return table.concat(out)
 end
 
