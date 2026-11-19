@@ -22,7 +22,7 @@ Ctrl shortcuts in the first table work in **normal, insert, and terminal** modes
 | Ctrl+W | Close the focused editor or chat tab (refuses unsaved files) |
 | Ctrl+] / `:AgentSelect` | Choose a chat CLI (Codex, Cursor Agent, Gemini, Claude, OpenCode, Antigravity) |
 | Ctrl+B / Space e | Toggle the file tree |
-| Ctrl+Shift+B / `:SidebarHideLeft` | Hide or show the left sidebar |
+| Ctrl+Shift+[ / `:SidebarHideLeft` | Hide or show the left sidebar |
 | Ctrl+Shift+] / `:SidebarHideRight` | Hide or show the right sidebar (keeps chat sessions running) |
 | Click − on a sidebar winbar | Hide both sidebars |
 | Ctrl+G | Open the Git source-control sidebar |

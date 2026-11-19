@@ -107,7 +107,7 @@ Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to i
 | Ctrl+T / Ctrl+W                         | Add / close a tab in the focused pane                                                          |
 | Ctrl+]                                  | Start a new Codex, Cursor Agent, Gemini, Claude, OpenCode, or Antigravity session              |
 | Ctrl+B                                  | Toggle the file tree                                                                           |
-| Ctrl+Shift+B / `:SidebarHideLeft`       | Hide or show the left sidebar                                                                  |
+| Ctrl+Shift+[ / `:SidebarHideLeft`       | Hide or show the left sidebar                                                                  |
 | Ctrl+Shift+] / `:SidebarHideRight`      | Hide or show the right sidebar (keeps chat sessions running)                                   |
 | Click − on a sidebar winbar             | Hide both sidebars                                                                             |
 | Ctrl+G                                  | Open Git source control (commit, stage, unstage, revert, bottom commit log; keyboard or mouse) |

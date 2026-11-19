@@ -203,7 +203,7 @@ end, {})
 local shortcuts = {
   ['<C-s>'] = { 'PaneSave', 'Save editor file' },
   ['<C-b>'] = { 'SidebarFilesToggle', 'Toggle file tree' },
-  ['<C-S-b>'] = { 'SidebarHideLeft', 'Hide or show the left sidebar' },
+  ['<C-S-[>'] = { 'SidebarHideLeft', 'Hide or show the left sidebar' },
   ['<C-S-]>'] = { 'SidebarHideRight', 'Hide or show the right sidebar' },
   ['<C-g>'] = { 'GitChanges', 'Show Git changes' },
   ['<C-,>'] = { 'SetupSettings', 'Open Settings' },
