@@ -13,6 +13,10 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 - **keys,sidebar:** comment toggle, sidebar hide keys, dim ignored folders ([c4ff9c1](https://github.com/LFSCamargo/nvim.setup/commit/c4ff9c1d337fdc23c88d4653a983ecf27317c264))
 
+### Bug Fixes
+
+- **keys:** use Ctrl+Shift+[ for left sidebar toggle ([b780d03](https://github.com/LFSCamargo/nvim.setup/commit/b780d03f96b20128d3bb6ce742fe8d3c8a461c8f))
+
 ## [2.1.0] - 2026-11-11
 
 ### Features
