@@ -39,7 +39,9 @@ assert_file_has "$ROOT/scripts/shell/fonts.sh" 'verify_sha256'
 assert_file_has "$ROOT/scripts/shell/fonts.sh" 'configure_warp'
 assert_file_has "$ROOT/scripts/shell/fonts.sh" 'curl -fsSL -o'
 assert_file_has "$ROOT/scripts/shell/fonts.sh" 'overlay_fonts.py'
+assert_file_has "$ROOT/scripts/shell/fonts.sh" '--patch-agents'
 assert_file_has "$ROOT/scripts/python/overlay_fonts.py" 'Monocraft Nerd Font'
+assert_file_has "$ROOT/scripts/python/overlay_fonts.py" 'AGENT_GLYPHS'
 assert_file_has "$ROOT/scripts/bootstrap.sh" 'scripts/install.sh'
 assert_file_has "$ROOT/scripts/bootstrap.sh" 'scripts/fonts.sh'
 pass 'install.sh and bootstrap.sh run fonts.sh with pinned Nerd Font and Monocraft URLs'
@@ -275,8 +277,32 @@ for cp in (0xE0B0, 0xE0B1, 0xE0B2, 0xE0B3):
     assert glyph.numberOfContours >= 8, (cp, 'Powerline glyph is not pixel-stepped')
     assert glyph.yMax - glyph.yMin >= 800, (cp, 'Powerline glyph does not span the bar height')
     assert glyph.xMax == 600 if cp in (0xE0B0, 0xE0B1) else glyph.xMin == 0, (cp, 'point does not reach the cell edge')
+for cp in (0xE100, 0xE101, 0xE102, 0xE103, 0xE104):
+    assert cp in cmap, (hex(cp), 'AI agent brand glyph missing')
+    glyph = font['glyf'][cmap[cp]]
+    assert font['hmtx'][cmap[cp]][0] == 600, (hex(cp), 'AI agent glyph is not one cell')
+    assert glyph.numberOfContours >= 4, (hex(cp), 'AI agent glyph lacks pixel contours')
+    assert 400 <= glyph.xMax - glyph.xMin <= 600, (hex(cp), glyph.xMin, glyph.xMax)
+    assert 400 <= glyph.yMax - glyph.yMin <= 600, (hex(cp), glyph.yMin, glyph.yMax)
 PY
-  pass 'overlay bakes one-cell Nerd Font glyphs into Monocraft Nerd Font'
+  python3 "$ROOT/scripts/python/overlay_fonts.py" \
+    --patch-agents "$overlay_dir/symbols.ttf" || fail 'overlay_fonts.py --patch-agents failed on fixture symbols font'
+  python3 - "$overlay_dir/symbols.ttf" << 'PY' || fail 'patched symbols font missing AI agent glyphs or broke Nerd Font cmap'
+import sys
+from fontTools.ttLib import TTFont
+font = TTFont(sys.argv[1])
+cmap = {}
+for table in font['cmap'].tables:
+    if table.isUnicode():
+        cmap.update(table.cmap)
+assert 0xF07B in cmap and 0xE000 in cmap and 0xF0001 in cmap, 'existing Nerd Font glyphs lost'
+for cp in (0xE100, 0xE101, 0xE102, 0xE103, 0xE104):
+    assert cp in cmap, (hex(cp), 'patched symbols font missing agent glyph')
+    glyph = font['glyf'][cmap[cp]]
+    assert font['hmtx'][cmap[cp]][0] == 600, (hex(cp), 'patched symbols agent glyph is not one cell')
+    assert glyph.numberOfContours >= 4, (hex(cp), 'patched symbols agent glyph lacks pixel contours')
+PY
+  pass 'overlay bakes one-cell Nerd Font, Powerline, and AI agent glyphs into Monocraft and Symbols fonts'
 else
   fail 'fonttools is required to test baking Nerd Font glyphs into Monocraft Nerd Font'
 fi

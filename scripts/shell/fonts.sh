@@ -52,6 +52,17 @@ if found != want:
 PY
   [[ -f "$dir/SymbolsNerdFont-Regular.ttf" && -f "$dir/SymbolsNerdFontMono-Regular.ttf" ]] \
     || die 'Nerd Fonts Symbols Only zip did not contain the expected TTF files'
+  local ttf
+  for ttf in "$dir/SymbolsNerdFont-Regular.ttf" "$dir/SymbolsNerdFontMono-Regular.ttf"; do
+    if is_sfnt "$ttf"; then
+      ensure_fonttools
+      if ! python3 "$SETUP_ROOT/scripts/python/overlay_fonts.py" --patch-agents "$ttf" \
+        2> "$cache/agents.err"; then
+        cat -- "$cache/agents.err" >&2
+        die "Failed to bake AI agent glyphs into $(basename -- "$ttf")"
+      fi
+    fi
+  done
 }
 
 is_sfnt() {

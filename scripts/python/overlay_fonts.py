@@ -23,6 +23,96 @@ FILL = 1.0
 ICON_CELLS = 1
 POWERLINE = {0xE0B0: (True, False), 0xE0B1: (True, True),
              0xE0B2: (False, False), 0xE0B3: (False, True)}
+AGENT_FILL = 0.94
+# One-cell 12x12 pixel brand glyphs in an unused BMP Private Use Area block
+# (Nerd Fonts v3 leaves U+E0D8..U+E1FF unallocated).
+AGENT_GLYPHS: dict[int, tuple[str, tuple[str, ...]]] = {
+    0xE100: (
+        'agentCodex',
+        (
+            '...#####....',
+            '..##...##...',
+            '.##.###.###.',
+            '###.#..#..##',
+            '##.##..##.##',
+            '#..#....#..#',
+            '#..#....#..#',
+            '##.##..##.##',
+            '##..#..#.###',
+            '.###.###.##.',
+            '...##...##..',
+            '....#####...',
+        ),
+    ),
+    0xE101: (
+        'agentCursor',
+        (
+            '.....##.....',
+            '...######...',
+            '.##########.',
+            '##...#######',
+            '##....######',
+            '##.....#####',
+            '##.....#####',
+            '##....###.##',
+            '##...##...##',
+            '.###....###.',
+            '...######...',
+            '.....##.....',
+        ),
+    ),
+    0xE102: (
+        'agentClaude',
+        (
+            '.....##.....',
+            '.#...##...#.',
+            '..#..##..#..',
+            '..##.##.##..',
+            '...######...',
+            '############',
+            '############',
+            '...######...',
+            '..##.##.##..',
+            '..#..##..#..',
+            '.#...##...#.',
+            '.....##.....',
+        ),
+    ),
+    0xE103: (
+        'agentOpenCode',
+        (
+            '.##########.',
+            '.##########.',
+            '.##......##.',
+            '.##......##.',
+            '.##.####.##.',
+            '.##.####.##.',
+            '.##.####.##.',
+            '.##.####.##.',
+            '.##......##.',
+            '.##......##.',
+            '.##########.',
+            '.##########.',
+        ),
+    ),
+    0xE104: (
+        'agentAntigravity',
+        (
+            '.....##.....',
+            '....####....',
+            '...######...',
+            '..###..###..',
+            '..##....##..',
+            '.##..##..##.',
+            '.##.####.##.',
+            '###..##..###',
+            '###......###',
+            '##........##',
+            '##........##',
+            '##........##',
+        ),
+    ),
+}
 
 
 def unicode_cmap(font: TTFont) -> dict[int, str]:
@@ -34,7 +124,7 @@ def unicode_cmap(font: TTFont) -> dict[int, str]:
 
 
 def is_icon_cp(cp: int) -> bool:
-    if 0xE0A0 <= cp <= 0xE0D0:
+    if 0xE0A0 <= cp <= 0xE0D0 or cp in AGENT_GLYPHS:
         return False
     return 0xE000 <= cp <= 0xF8FF or 0xF0000 <= cp <= 0xF1FFF
 
@@ -187,6 +277,69 @@ def pixel_powerline(font: TTFont) -> None:
     font['maxp'].numGlyphs = len(order)
 
 
+def icon_cell_width(font: TTFont) -> int:
+    cmap = unicode_cmap(font)
+    for cp in (0x41, 0x6D, 0xF07B, 0xE725, 0xE0B0, 0x20):
+        name = cmap.get(cp)
+        if name:
+            width = font['hmtx'][name][0]
+            if width > 0:
+                return width
+    return font['head'].unitsPerEm
+
+
+def pixel_agents(font: TTFont) -> None:
+    """Draw one-cell 12x12 pixel brand glyphs for the AI agents at U+E100..U+E104."""
+    cell = icon_cell_width(font)
+    hhea = font['hhea']
+    ascent = hhea.ascent
+    descent = hhea.descent
+    height = max(1, ascent - descent)
+    side = max(1, round(min(cell, height) * AGENT_FILL))
+    ox = (cell - side) / 2
+    oy = descent + (height - side) / 2
+    order = list(font.getGlyphOrder())
+    ensure_format12(font)
+    for cp, (name, rows) in AGENT_GLYPHS.items():
+        nrows = len(rows)
+        ncols = len(rows[0])
+        pen = TTGlyphPen(None)
+        min_x = cell
+        for r, row in enumerate(rows):
+            y0 = round(oy + (nrows - 1 - r) * side / nrows)
+            y1 = round(oy + (nrows - r) * side / nrows)
+            if y1 <= y0:
+                continue
+            c = 0
+            while c < ncols:
+                if row[c] != '#':
+                    c += 1
+                    continue
+                end = c + 1
+                while end < ncols and row[end] == '#':
+                    end += 1
+                x0 = round(ox + c * side / ncols)
+                x1 = round(ox + end * side / ncols)
+                if x1 > x0:
+                    min_x = min(min_x, x0)
+                    pen.moveTo((x0, y0))
+                    pen.lineTo((x0, y1))
+                    pen.lineTo((x1, y1))
+                    pen.lineTo((x1, y0))
+                    pen.closePath()
+                c = end
+        font['glyf'][name] = pen.glyph()
+        lsb = min_x if min_x < cell else max(0, round(ox))
+        font['hmtx'][name] = (cell, max(0, lsb))
+        if name not in order:
+            order.append(name)
+        for table in font['cmap'].tables:
+            if cmap_accepts(table, cp):
+                table.cmap[cp] = name
+    font.setGlyphOrder(order)
+    font['maxp'].numGlyphs = len(order)
+
+
 def load_regular(path: Path) -> TTFont:
     raw = path.read_bytes()[:4]
     if raw == b'ttcf':
@@ -197,13 +350,23 @@ def load_regular(path: Path) -> TTFont:
 
 
 def main(argv: list[str]) -> int:
+    if len(argv) == 3 and argv[1] == '--patch-agents':
+        font_path = Path(argv[2])
+        font = load_regular(font_path)
+        pixel_agents(font)
+        tmp = font_path.with_suffix(font_path.suffix + '.tmp')
+        font.save(tmp)
+        tmp.replace(font_path)
+        return 0
     if len(argv) != 4:
         print('usage: overlay_fonts.py BASE.ttc SYMBOLS.ttf OUT.ttf', file=sys.stderr)
+        print('   or: overlay_fonts.py --patch-agents FONT.ttf', file=sys.stderr)
         return 2
     base_path, symbols_path, out_path = map(Path, argv[1:])
     font = load_regular(base_path)
     overlay(font, TTFont(symbols_path), prefix='nf')
     pixel_powerline(font)
+    pixel_agents(font)
     set_family_name(font)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     font.save(out_path)
