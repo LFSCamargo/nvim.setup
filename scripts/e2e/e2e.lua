@@ -104,29 +104,14 @@ local ok, err = xpcall(function()
     end
     return #first == #second
       and first[1][1] == 'ellisonleao/gruvbox.nvim'
-      and found
-      and found.opts.enabled == false
-      and found.opts.horizontal.enabled == true
-      and found.opts.explorer.horizontal == true
+      and found == nil
   ]]),
-    'plugin module must return stable specs on repeated reads'
+    'plugin module must return stable specs without scroll.nvim'
   )
   local visual = eval("return vim.api.nvim_get_hl(0, { name = 'Visual', link = false })")
   local normal = eval("return vim.api.nvim_get_hl(0, { name = 'Normal', link = false })")
   assert(visual.bg or visual.ctermbg or visual.reverse, 'Visual selection needs a background')
   assert(not normal.bg and not normal.ctermbg and not normal.reverse, 'Normal must stay transparent')
-  assert(
-    eval([[
-      require('modules.appearance').paint_scrollbars()
-      local appearance = require('modules.appearance')
-      local thumb = vim.api.nvim_get_hl(0, { name = 'ScrollThumb', link = false })
-      local track = vim.api.nvim_get_hl(0, { name = 'ScrollTrack', link = false })
-      local muted = tonumber(appearance.muted:sub(2), 16)
-      local sep = tonumber(appearance.sep:sub(2), 16)
-      return thumb.fg == muted and track.fg == sep and appearance.keeps_fill('ScrollThumb')
-    ]]),
-    'scrollbar thumb and track must use muted chrome, not bright text'
-  )
   assert(
     eval([[
       local a = require('modules.appearance')
@@ -2498,24 +2483,9 @@ local ok, err = xpcall(function()
   )
   assert(settings_text:find('Indent width', 1, true), 'Settings should expose editing defaults')
   assert(
-    eval("return require('modules.settings').get().scrollbars") == false
-      and eval("return require('modules.appearance').scroll_plugin_opts().enabled") == false,
-    'scrollbars stay off until Settings enables them'
+    eval("return require('modules.settings').get().scrollbars") == nil and not settings_text:find('Scrollbars', 1, true),
+    'Settings should not expose removed Scrollbars option'
   )
-  assert(settings_text:find('Scrollbars: Off', 1, true), 'Settings should list Scrollbars off: ' .. settings_text)
-  eval([[for i, line in ipairs(vim.api.nvim_buf_get_lines(0, 0, -1, false)) do
-    if line:find('Scrollbars', 1, true) then vim.api.nvim_win_set_cursor(0, {i, 0}); break end
-  end]])
-  request('nvim_input', '<CR>')
-  wait_for('scrollbars on from Settings', function()
-    return eval("return require('modules.settings').get().scrollbars") == true
-      and eval("return require('modules.appearance').scroll_plugin_opts().enabled") == true
-  end)
-  eval("require('modules.settings').reset('scrollbars')")
-  wait_for('scrollbars reset', function()
-    return eval("return require('modules.settings').get().scrollbars") == false
-      and eval("return require('modules.appearance').scroll_plugin_opts().enabled") == false
-  end)
   eval([[for i, line in ipairs(vim.api.nvim_buf_get_lines(0, 0, -1, false)) do
     if line:find('File icons', 1, true) then vim.api.nvim_win_set_cursor(0, {i, 0}); break end
   end]])

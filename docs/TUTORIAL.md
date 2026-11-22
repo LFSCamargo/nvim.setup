@@ -113,8 +113,7 @@ To install without the background helper, run
 `./scripts/bootstrap.sh --no-hscroll`, or use `NVIM_SETUP_HSCROLL=0 make install`
 from a checkout. A standard install unloads an existing helper and removes its
 LaunchAgent plist; preview leaves the existing helper alone. The editor still
-scrolls sideways with Option or Ctrl plus the mouse wheel, or by dragging
-Settings → Scrollbars.
+scrolls sideways with Option or Ctrl plus the mouse wheel.
 
 The install needs the Xcode Command Line Tools (`swiftc`) and a logged-in
 graphical session. Allow **nvim-setup-hscroll** under System Settings → Privacy

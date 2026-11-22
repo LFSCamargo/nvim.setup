@@ -38,33 +38,4 @@ return {
   { 'tpope/vim-fugitive' },
   { 'folke/trouble.nvim', opts = { icons = false } },
   { 'folke/which-key.nvim', event = 'VeryLazy', opts = { icons = { mappings = false } } },
-  {
-    'mihovilrak/scroll.nvim',
-    lazy = false,
-    opts = {
-      enabled = false,
-      visibility = 'always',
-      winblend = 55,
-      mouse = true,
-      minimap = false,
-      vertical = { enabled = true },
-      horizontal = { enabled = true },
-      explorer = {
-        enabled = true,
-        filetypes = { 'NvimTree', 'git-changes', 'setup-settings', 'setup-themes', 'setup-extensions' },
-        horizontal = true,
-      },
-      excluded_filetypes = {
-        'help',
-        'qf',
-        'TelescopePrompt',
-        'lazy',
-        'mason',
-        'git-composer',
-        'setup-agent-picker',
-        'setup-home',
-      },
-      excluded_buftypes = { 'terminal', 'prompt', 'quickfix' },
-    },
-  },
 }

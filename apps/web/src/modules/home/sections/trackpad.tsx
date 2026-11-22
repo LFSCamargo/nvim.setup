@@ -47,8 +47,8 @@ export function Trackpad() {
               Turn off the helper in the installer below. A standard install
               stops an existing LaunchAgent; an isolated preview leaves your
               current one alone. Use Option or Ctrl plus the mouse wheel to move
-              sideways, or turn on Settings → Scrollbars and drag. Terminals
-              that already pass side-wheel events need no helper.
+              sideways. Terminals that already pass side-wheel events need no
+              helper.
             </p>
           </div>
         </Reveal>

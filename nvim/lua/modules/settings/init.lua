@@ -11,7 +11,6 @@ local defaults = {
   ignorecase = true,
   smartcase = true,
   transparent = true,
-  scrollbars = false,
   session_restore = true,
   theme = 'gruvbox',
 }
@@ -21,7 +20,6 @@ M.options = {
   { section = 'Appearance', key = 'theme', label = 'Color theme', kind = 'theme' },
   { section = 'Appearance', key = 'icons', label = 'File icons', kind = 'boolean' },
   { section = 'Appearance', key = 'transparent', label = 'Transparent background', kind = 'boolean' },
-  { section = 'Appearance', key = 'scrollbars', label = 'Scrollbars', kind = 'boolean' },
   { section = 'Appearance', key = 'number', label = 'Line numbers', kind = 'boolean' },
   { section = 'Appearance', key = 'relativenumber', label = 'Relative line numbers', kind = 'boolean' },
   { section = 'Editing', key = 'indent', label = 'Indent width', kind = 'choice', values = { 2, 4, 8 } },
@@ -122,9 +120,6 @@ function M.apply()
     tabs.apply_scroll()
   end
   local appearance = package.loaded['modules.appearance']
-  if appearance and appearance.apply_scroll_plugin then
-    appearance.apply_scroll_plugin()
-  end
   if not booting and appearance and appearance.apply then
     appearance.apply()
   end

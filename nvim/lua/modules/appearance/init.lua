@@ -66,7 +66,6 @@ function M.set_chrome(chrome)
   if type(statusline) == 'table' and statusline.refresh_highlights then
     statusline.refresh_highlights()
   end
-  M.paint_scrollbars()
   M.paint_terminal()
   local settings = package.loaded['modules.settings']
   if type(settings) == 'table' and settings.highlights then
@@ -97,41 +96,6 @@ function M.chrome()
     sep = M.sep,
     modes = M.modes,
   }
-end
-
-function M.scroll_plugin_opts()
-  local opts = { enabled = false }
-  for _, spec in ipairs(require('modules.plugins.ui')) do
-    if spec[1] == 'mihovilrak/scroll.nvim' and type(spec.opts) == 'table' then
-      opts = vim.deepcopy(spec.opts)
-      break
-    end
-  end
-  local settings = package.loaded['modules.settings']
-  opts.enabled = settings and settings.get and settings.get().scrollbars == true
-  return opts
-end
-
--- scroll.nvim is off until Settings → Scrollbars. setup() enables or tears down.
-function M.apply_scroll_plugin()
-  local opts = M.scroll_plugin_opts()
-  pcall(function()
-    require('scroll').setup(opts)
-  end)
-  if opts.enabled then
-    M.paint_scrollbars()
-  end
-end
-
--- scroll.nvim links to Pmenu by default, which reads as a bright block after
--- we strip popup backgrounds. Paint muted chrome instead.
-function M.paint_scrollbars()
-  vim.api.nvim_set_hl(0, 'ScrollTrack', { fg = M.sep, bg = M.bar_fill })
-  vim.api.nvim_set_hl(0, 'ScrollThumb', { fg = M.muted, bg = M.sep })
-  vim.api.nvim_set_hl(0, 'ScrollThumbHover', { fg = M.fg, bg = M.sep })
-  pcall(function()
-    require('scroll.highlight').setup()
-  end)
 end
 
 -- Stock xterm / libvterm ANSI (same values Neovim uses when the globals are unset).
@@ -240,9 +204,6 @@ function M.keeps_fill(name)
   if name == 'BreadcrumbDir' or name == 'BreadcrumbSep' or name == 'BreadcrumbIcon' or name == 'BreadcrumbFile' then
     return true
   end
-  if name:sub(1, 6) == 'Scroll' then
-    return true
-  end
   return name:sub(1, 2) == 'SL'
 end
 
@@ -330,7 +291,6 @@ local function clear_backgrounds()
   vim.api.nvim_set_hl(0, 'NormalFloat', { link = 'Normal' })
   vim.api.nvim_set_hl(0, 'NormalNC', { link = 'Normal' })
   restore_selection()
-  M.paint_scrollbars()
   M.paint_terminal()
 end
 

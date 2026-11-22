@@ -23,7 +23,6 @@ for _, name in ipairs({
   'conform',
   'fzf-lua',
   'nvim-web-devicons',
-  'scroll',
 }) do
   assert(pcall(require, name), 'Could not load module: ' .. name)
 end
