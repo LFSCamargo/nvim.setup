@@ -6,7 +6,10 @@ The editor and website both use feature folders. A module owns its UI, state, an
 nvim/
   init.lua                    options, Lazy bootstrap, module startup
   lua/modules/
-    agents/init.lua           chat sessions
+    agents/
+      init.lua                chat sessions
+      picker.lua              floating AI chat picker and ASCII brand emblems
+      antigravity.lua         workspace conversation ID lookup
     diff/init.lua             editor diff view
     extensions/init.lua       plugin and Mason browser
     themes/init.lua           color theme catalog and sidebar

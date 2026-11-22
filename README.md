@@ -8,7 +8,7 @@
 
 A portable Neovim config that puts your files, editor, and AI chats in one window.
 
-Codex, Cursor Agent, Gemini, Claude, OpenCode, and Antigravity run as real CLI sessions next to your code. Language servers, formatters, and debuggers come with the install. Gruvbox is the default colorscheme; the Themes sidebar switches among 20 supported dark schemes on a transparent UI, so your terminal keeps the background. Chat CLIs stay transparent like the editor. Cursor’s prompt uses stock ANSI white so spaces do not collapse.
+Codex, Cursor Agent, Claude, OpenCode, and Antigravity run as real CLI sessions next to your code. Language servers, formatters, and debuggers come with the install. Gruvbox is the default colorscheme; the Themes sidebar switches among 20 supported dark schemes on a transparent UI, so your terminal keeps the background. Chat CLIs stay transparent like the editor. Cursor’s prompt uses stock ANSI white so spaces do not collapse.
 
 ```text
 ┌──────────────┬────────────────────────────────┬─────────────────┐
@@ -32,11 +32,11 @@ Want to change it? [Contributing](CONTRIBUTING.md) is the contract;
 ## Features
 
 - Clickable file tree, Settings, Themes, and Extensions tabs, searchable command palette, editor tabs, and chat tabs
-- File-type Devicons in the Files tree and Git sidebar. Install puts Nerd Font files on the system and, in Warp, uses a Monocraft face with those glyphs at one cell.
+- File-type Devicons in the Files tree, Git sidebar, and editor tabs, plus custom one-cell pixel AI agent brand glyphs in chat tabs, the statusline, and the floating AI chat picker (with ASCII brand logos). Install puts Nerd Font files on the system and, in Warp, uses a Monocraft face with those glyphs at one cell.
 - Git source control with Check Diff in the mid editor, plus right-click menus on files, changes, and tabs
 - Per-project session restore for editor tabs, unsaved buffers, and AI chats (UUID resume)
 - `nvim --clean` for a blank editor that does not restore or overwrite the last session
-- Independent Codex, Cursor Agent, Gemini, Claude, OpenCode, and Antigravity sessions (your login, your permissions)
+- Independent Codex, Cursor Agent, Claude, OpenCode, and Antigravity sessions (your login, your permissions)
 - TypeScript, JavaScript, React, Vue, Svelte, Rust, Go, Solidity, Lua, HTML, CSS, JSON, YAML, TOML
 - Completion, diagnostics, go-to-definition, format-on-demand, Git, debugging, and opening images in the system viewer
 - Pinned plugins, a lockfile, and Makefile commands for install, capture, update, and validation
@@ -78,55 +78,55 @@ nvim .
 
 ### Requirements
 
-| Dependency                                              | Purpose                                    |
-| ------------------------------------------------------- | ------------------------------------------ |
-| Neovim 0.12+                                            | Editor and current Tree-sitter APIs        |
-| Tree-sitter CLI 0.26.1+                                 | Parser builds (Homebrew or Cargo, not npm) |
-| Node.js 22+ and npm                                     | Web language servers and the debug adapter |
-| Git, curl, tar, unzip, Python 3                         | Downloads, installation, and checks        |
-| C/C++ toolchain and Make                                | Native builds                              |
-| Go and Rust/Cargo                                       | Go tools and the parser CLI                |
-| ripgrep, fd, fzf                                        | Search and file picking                    |
-| `codex`, `agent`, `gemini`, `claude`, `opencode`, `agy` | Optional chat CLIs                         |
+| Dependency                                    | Purpose                                    |
+| --------------------------------------------- | ------------------------------------------ |
+| Neovim 0.12+                                  | Editor and current Tree-sitter APIs        |
+| Tree-sitter CLI 0.26.1+                       | Parser builds (Homebrew or Cargo, not npm) |
+| Node.js 22+ and npm                           | Web language servers and the debug adapter |
+| Git, curl, tar, unzip, Python 3               | Downloads, installation, and checks        |
+| C/C++ toolchain and Make                      | Native builds                              |
+| Go and Rust/Cargo                             | Go tools and the parser CLI                |
+| ripgrep, fd, fzf                              | Search and file picking                    |
+| `codex`, `agent`, `claude`, `opencode`, `agy` | Optional chat CLIs                         |
 
 Keep `~/.local/bin` on your PATH, and `~/.cargo/bin` if you use Cargo. Install places an `nvim` wrapper there so `nvim --clean` opens this setup without restored tabs. The terminal needs true color and mouse support. On Debian/Ubuntu, the scripts add an `fd` wrapper for `fdfind`. If Ctrl+S freezes the terminal, add `stty -ixon` to your shell startup file.
 
-Install and authenticate the chat CLIs separately: [Codex](https://github.com/openai/codex), [Cursor CLI](https://cursor.com/docs/cli/overview), [Gemini CLI](https://geminicli.com/docs/get-started/installation/), [Claude Code](https://code.claude.com/docs/en/setup), [OpenCode](https://opencode.ai/docs/cli/), and [Antigravity CLI](https://antigravity.google/docs/cli/commands/resume/). Missing CLIs print a notice; the editor still works. Credentials and CLI permissions stay outside this repository.
+Install and authenticate the chat CLIs separately: [Codex](https://github.com/openai/codex), [Cursor CLI](https://cursor.com/docs/cli/overview), [Claude Code](https://code.claude.com/docs/en/setup), [OpenCode](https://opencode.ai/docs/cli/), and [Antigravity CLI](https://antigravity.google/docs/cli/commands/resume/). Missing CLIs print a notice; the editor still works. Credentials and CLI permissions stay outside this repository.
 
 ## Using the editor
 
 Open a project with `nvim .`, or a file with `nvim path/to/file`. Press `i` to insert, `Esc` for normal mode, and Ctrl+Q to quit (unsaved tabs come back next time). Swap files are off; the project session is what restores unsaved tabs. `nvim --clean` skips restored tabs and chats. The leader key is **Space**; press leader shortcuts as a sequence in normal mode. The bottom bar is one muted strip for the whole UI: colored mode, git branch and hunks, the focused file or chat, diagnostics, and cursor position. Gruvbox Dark is the default; the Themes sidebar switches among 20 supported dark schemes.
 
-| Shortcut or click                       | Action                                                                                         |
-| --------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Click a pane                            | Focus the editor, file tree, or chat                                                           |
-| Click a tab, its `×`, or `+`            | Switch, close that tab, or add a file or chat tab                                              |
-| `‹` / `›`                               | Scroll overflowing tabs                                                                        |
-| Ctrl+S                                  | Save (asks for a name if the buffer is unnamed)                                                |
-| Ctrl+Q                                  | Quit and persist this project's tabs and chats                                                 |
-| Ctrl+T / Ctrl+W                         | Add / close a tab in the focused pane                                                          |
-| Ctrl+]                                  | Start a new Codex, Cursor Agent, Gemini, Claude, OpenCode, or Antigravity session              |
-| Ctrl+B                                  | Toggle the file tree                                                                           |
-| Ctrl+Shift+[ / `:SidebarHideLeft`       | Hide or show the left sidebar                                                                  |
-| Ctrl+Shift+] / `:SidebarHideRight`      | Hide or show the right sidebar (keeps chat sessions running)                                   |
-| Click − on a sidebar winbar             | Hide both sidebars                                                                             |
-| Ctrl+G                                  | Open Git source control (commit, stage, unstage, revert, bottom commit log; keyboard or mouse) |
-| Ctrl+, / `:SetupSettings`               | Open Settings (color theme, appearance, editing, search, sessions)                             |
-| `:SetupThemes`                          | Open the Themes sidebar (20 supported dark schemes)                                            |
-| Right-click / Shift+F10                 | Open an action menu for a file, Git item, editor selection, or tab                             |
-| Space a s                               | Add the current line or visual selection to the active chat                                    |
-| Ctrl+/                                  | Toggle comment on the current line (also works in insert and visual modes)                     |
-| Space p / `:CommandPalette`             | Search coding and configuration actions                                                        |
-| `:SetupExtensions`                      | Browse user plugins, tools, and parsers                                                        |
-| Ctrl+P / Ctrl+F                         | Find files / search project text (opens a new editor tab)                                      |
-| Esc                                     | Send Escape to the focused agent (stop generation, for example)                                |
-| Ctrl+\ Ctrl+N                           | Leave terminal-input mode (`Esc Esc` also works in other terminals)                            |
-| Ctrl+h/j/k/l                            | Move between windows in normal mode                                                            |
-| Space a c / a u / a g / a l / a o / a a | Toggle Codex / Cursor Agent / Gemini / Claude / OpenCode / Antigravity                         |
-| Cmd+V / `:PasteToChat`                  | Paste a clipboard image or file into the active chat                                           |
-| Space f                                 | Format the current file                                                                        |
-| gd / gr / K                             | Definition / references / documentation                                                        |
-| F5 / Space d b                          | Start or continue debugging / toggle a breakpoint                                              |
+| Shortcut or click                  | Action                                                                                         |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Click a pane                       | Focus the editor, file tree, or chat                                                           |
+| Click a tab, its `×`, or `+`       | Switch, close that tab, or add a file or chat tab                                              |
+| `‹` / `›`                          | Scroll overflowing tabs                                                                        |
+| Ctrl+S                             | Save (asks for a name if the buffer is unnamed)                                                |
+| Ctrl+Q                             | Quit and persist this project's tabs and chats                                                 |
+| Ctrl+T / Ctrl+W                    | Add / close a tab in the focused pane                                                          |
+| Ctrl+]                             | Open the floating AI chat picker (Codex, Cursor Agent, Claude, OpenCode, or Antigravity)       |
+| Ctrl+B                             | Toggle the file tree                                                                           |
+| Ctrl+Shift+[ / `:SidebarHideLeft`  | Hide or show the left sidebar                                                                  |
+| Ctrl+Shift+] / `:SidebarHideRight` | Hide or show the right sidebar (keeps chat sessions running)                                   |
+| Click − on a sidebar winbar        | Hide both sidebars                                                                             |
+| Ctrl+G                             | Open Git source control (commit, stage, unstage, revert, bottom commit log; keyboard or mouse) |
+| Ctrl+, / `:SetupSettings`          | Open Settings (color theme, appearance, editing, search, sessions)                             |
+| `:SetupThemes`                     | Open the Themes sidebar (20 supported dark schemes)                                            |
+| Right-click / Shift+F10            | Open an action menu for a file, Git item, editor selection, or tab                             |
+| Space a s                          | Add the current line or visual selection to the active chat                                    |
+| Ctrl+/                             | Toggle comment on the current line (also works in insert and visual modes)                     |
+| Space p / `:CommandPalette`        | Search coding and configuration actions                                                        |
+| `:SetupExtensions`                 | Browse user plugins, tools, and parsers                                                        |
+| Ctrl+P / Ctrl+F                    | Find files / search project text (opens a new editor tab)                                      |
+| Esc                                | Send Escape to the focused agent (stop generation, for example)                                |
+| Ctrl+\ Ctrl+N                      | Leave terminal-input mode (`Esc Esc` also works in other terminals)                            |
+| Ctrl+h/j/k/l                       | Move between windows in normal mode                                                            |
+| Space a c / a u / a l / a o / a a  | Toggle Codex / Cursor Agent / Claude / OpenCode / Antigravity                                  |
+| Cmd+V / `:PasteToChat`             | Paste a clipboard image or file into the active chat                                           |
+| Space f                            | Format the current file                                                                        |
+| gd / gr / K                        | Definition / references / documentation                                                        |
+| F5 / Space d b                     | Start or continue debugging / toggle a breakpoint                                              |
 
 Closing a chat tab stops that CLI. The tab also closes if the CLI process exits. Switching tabs leaves it running. Unsaved files are protected when you close a tab. Git files, commits, and Fugitive views open in the mid editor; `:q` there keeps that pane and a tab. Long lines stay on one row in the editor and left sidebar; use Option (or Ctrl) plus the mouse wheel to scroll them sideways, or turn on Settings → Scrollbars and drag the bar. On macOS, `make hscroll` installs a trackpad helper for Warp, Terminal.app, and iTerm (allow Accessibility for `nvim-setup-hscroll`). Quitting with Ctrl+Q snapshots unsaved buffers and resumes chat CLIs by ID on the next launch in that directory. `make install` puts a wrapper at `~/.local/bin/nvim` so `nvim --clean` still loads this config. Maintenance scripts set `NVIM_WRAPPER=0` when they need Neovim's factory `--clean`.
 
