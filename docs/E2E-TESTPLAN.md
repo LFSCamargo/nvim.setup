@@ -157,3 +157,15 @@ Keep this file aligned with the tests. If you delete a case from `e2e.lua`, dele
 # Settings, extensions, and command palette
 
 The UI suite toggles icons from the Settings sidebar, checks persistence and reload, changes and resets indent width, checks the command palette mappings, opens and closes the Extensions sidebar, checks its marketplace heading and search field, installs a mocked Mason package from a result card, and verifies plugin ID validation and manifest add/remove.
+
+### Home and breadcrumb
+
+The simulated UI suite (`scripts/e2e/e2e.lua`) starts on Home, selects New File with `jjj` and Enter, closes it with Ctrl+W, asserts Home returns in the editor pane, and presses `n` again. It opens `app.ts`, checks the nested `nvim  lua  modules  keys >` breadcrumb, full `init.lua` filename and solid `` cap, yellow fill on every path chunk including the icon and padding, a yellow cap with no background, and one leading space without the number gutter in the rendered virtual line, and verifies Home has no breadcrumb.
+
+Breadcrumb assertions also inspect rendered screen cells below the winbar, check narrow-path shortening, and retain the header after scrolling. The existing Ctrl+O chat scenario also verifies that `2Ctrl+O` consumes the count without leaving Neovim waiting for another key, and covers hiding/reopening the chat pane after `stopinsert`, switching chats, and restoring terminal input before navigation checks. The workspace test verifies the website fallback matches VERSION.
+
+The UI test driver treats Neovim 0.12 terminal-normal (`nt`) as normal mode for key assertions and exits terminal input before preparing the Ctrl+O scenario.
+
+Session snapshot restoration also runs after deleting all file buffers, when Home can occupy the editor pane; restored named and unnamed snapshots must retain their text and modified state.
+
+The UI driver normalizes RPC nil values so waits cannot treat `vim.NIL` as success. Git mouse cases restore the sidebar width, scroll the target into view, and disable automatic double-click detection for individual-click scenarios. Fake Files-tree opens reuse their existing window. Mode setup waits for normal mode before visual-selection attachment to chat.

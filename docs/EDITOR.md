@@ -209,3 +209,7 @@ Configuration: `~/.config/nvim/init.lua`, with language/agent/debug/key settings
 To reinstall configured tools: `make tools` from the setup repository.
 
 See [validation history](VALIDATION-HISTORY.md) for installation checks and their scope.
+
+### Project home and breadcrumbs
+
+An empty startup and closing the final file tab show Home. Explicit new tabs remain editable blank buffers. Home displays the colored Futurama spaceship behind the Neovim banner. Use `j`/`k` or arrows and Enter, click a menu row, or press `f` (find file), `r` (recent files), `w` (find word), `n` (new file), `t` (themes), or `s` (settings). Global shortcuts `Space f r` and `Space t h` open recent files and themes. Named editor files show a path breadcrumb below the tab bar, relative to the working directory where possible. The breadcrumb starts one space from the editor’s left edge, uses a yellow fill with dark text and icons, separates folders with `` and the filename with `>`, and ends in a solid `` point. Home, chats, and sidebars omit it.

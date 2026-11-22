@@ -275,3 +275,5 @@ This repository is licensed under the [MIT License](LICENSE). Third-party
 plugins, Mason tools, and the landing-page UI adaptations keep their own
 terms; see [docs/PLUGINS.md](docs/PLUGINS.md) and
 [apps/web/THIRD-PARTY-NOTICES.md](apps/web/THIRD-PARTY-NOTICES.md).
+
+The editor shows a Futurama spaceship home screen at empty startup and after closing the last file tab. `Space f r` opens recent files; `Space t h` opens themes. Named file tabs show a directory breadcrumb. See [the editor guide](docs/EDITOR.md#project-home-and-breadcrumbs) for home actions.
