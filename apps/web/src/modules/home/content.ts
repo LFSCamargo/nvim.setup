@@ -73,7 +73,7 @@ export const screens = [
     width: 1920,
     height: 1080,
     caption:
-      'Codex, Cursor Agent, Gemini, Claude, OpenCode, and Antigravity run as real CLI sessions in the right pane. Your login, your permissions.',
+      'Codex, Cursor Agent, Claude, OpenCode, and Antigravity run as real CLI sessions in the right pane. Your login, your permissions.',
     alt: 'Real Neovim setup screenshot showing Agent, Codex, and Antigravity tabs beside the editor',
   },
 ] as const;
@@ -106,7 +106,7 @@ export const features = [
     number: '04',
     title: 'Chats with your own agents.',
     description:
-      'The right 28% runs the real Codex, Cursor Agent, Gemini, Claude, OpenCode, and Antigravity CLIs. Your login, your permissions. Multiple sessions, ID resume, Esc to stop generation. Closing a tab stops that CLI; switching leaves it running.',
+      'The right 28% runs the real Codex, Cursor Agent, Claude, OpenCode, and Antigravity CLIs. Your login, your permissions. Multiple sessions, ID resume, Esc to stop generation. Closing a tab stops that CLI; switching leaves it running.',
     tag: 'Optional AI tools',
   },
   {

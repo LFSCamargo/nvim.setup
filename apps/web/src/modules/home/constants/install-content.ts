@@ -76,12 +76,6 @@ export const requirements = [
     optional: true,
   },
   {
-    name: 'Gemini CLI',
-    purpose: 'Optional chat in the right pane',
-    href: 'https://geminicli.com/docs/get-started/installation/',
-    optional: true,
-  },
-  {
     name: 'Claude Code CLI',
     purpose: 'Optional chat in the right pane',
     href: 'https://code.claude.com/docs/en/setup',

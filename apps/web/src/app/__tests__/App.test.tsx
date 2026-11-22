@@ -409,6 +409,9 @@ describe('landing page visitor paths', () => {
         .getAttribute('href'),
     ).toBe('https://antigravity.google/docs/cli/commands/resume/');
     expect(
+      screen.queryByRole('link', { name: 'Install Gemini CLI' }),
+    ).toBeNull();
+    expect(
       screen
         .getByRole('link', {
           name: 'Full requirements in the getting started guide ↗',
