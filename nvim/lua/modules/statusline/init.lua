@@ -91,7 +91,6 @@ local AGENT_USAGE_TITLES = {
   claude = 'Claude',
   opencode = 'OpenCode',
   antigravity = 'Antigravity',
-  gemini = 'Gemini',
 }
 
 local function escape(s)
@@ -121,6 +120,12 @@ local function apply_highlights()
   api.nvim_set_hl(0, 'SLFile', { fg = appearance.fg, bg = bar_bg })
   api.nvim_set_hl(0, 'SLModified', { fg = mode_colors.Visual, bg = bar_bg })
   api.nvim_set_hl(0, 'SLAgent', { fg = mode_colors.Insert, bg = bar_bg })
+  local ok_icons, icons = pcall(require, 'modules.icons')
+  if ok_icons and type(icons.agents) == 'table' then
+    for _, spec in pairs(icons.agents) do
+      api.nvim_set_hl(0, 'SL' .. spec.hl, { fg = spec.color, bg = bar_bg })
+    end
+  end
   api.nvim_set_hl(0, 'SLDiagError', { fg = mode_colors.Replace, bg = bar_bg })
   api.nvim_set_hl(0, 'SLDiagWarn', { fg = mode_colors.Normal, bg = bar_bg })
   api.nvim_set_hl(0, 'SLDiagInfo', { fg = mode_colors.Insert, bg = bar_bg })
@@ -190,7 +195,14 @@ local function file_label(buf)
   if agents and agents.is_chat(buf) then
     local id = vim.b[buf].chat_id
     local session = id and agents.sessions[id]
-    return session and session.label or 'Chat', nil
+    local icon, icon_hl
+    if session then
+      icon, icon_hl = require('modules.icons').agent_icon(session.name)
+      if icon == ' ' then
+        icon, icon_hl = nil, nil
+      end
+    end
+    return session and session.label or 'Chat', icon, icon_hl and ('SL' .. icon_hl) or nil
   end
   local name = api.nvim_buf_get_name(buf)
   if name == '' then
@@ -530,9 +542,14 @@ local function render()
     end
   end
 
-  local label, icon = file_label(buf)
+  local label, icon, icon_hl = file_label(buf)
   left_item()
-  add('SLFile', (icon and (icon .. ' ') or '') .. escape(label))
+  if icon and icon_hl then
+    add(icon_hl, icon .. ' ')
+    add('SLFile', escape(label))
+  else
+    add('SLFile', (icon and (icon .. ' ') or '') .. escape(label))
+  end
   if vim.bo[buf].modified then
     add('SLModified', ' ●')
   end

@@ -159,8 +159,11 @@ local function recreate_editor()
     pcall(api.nvim_win_close, agents.win, false)
     agents.win = nil
   end
-  vim.cmd('botright vnew')
+  vim.cmd('keepjumps botright vnew')
   local win = api.nvim_get_current_win()
+  api.nvim_win_call(win, function()
+    vim.cmd('clearjumps')
+  end)
   if chat_id then
     agents.show(chat_id)
   end
@@ -357,13 +360,20 @@ function M.render()
   if agents.is_chat(buf) then
     local ids = vim.tbl_keys(agents.sessions)
     table.sort(ids)
+    local icons = require('modules.icons')
     local items = {}
     for _, id in ipairs(ids) do
       local s = agents.sessions[id]
       if s and not s.exited and vim.api.nvim_buf_is_valid(s.buf) then
+        local icon, icon_hl = icons.agent_icon(s.name)
+        if icon == ' ' then
+          icon, icon_hl = nil, nil
+        end
         items[#items + 1] = {
           id = id,
           label = s.label,
+          icon = icon,
+          icon_hl = icon_hl,
           active = s.buf == buf,
         }
       end
