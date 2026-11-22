@@ -40,6 +40,16 @@ function M.open()
     end
   end
   api.nvim_set_current_win(editor)
+  local buf = api.nvim_win_get_buf(editor)
+  if
+    api.nvim_buf_get_name(buf) == ''
+    and not vim.bo[buf].modified
+    and api.nvim_buf_line_count(buf) == 1
+    and api.nvim_buf_get_lines(buf, 0, 1, false)[1] == ''
+  then
+    require('modules.home').show(editor)
+    api.nvim_buf_delete(buf, {})
+  end
   vim.cmd.stopinsert()
   require('nvim-tree.api').tree.resize()
 end

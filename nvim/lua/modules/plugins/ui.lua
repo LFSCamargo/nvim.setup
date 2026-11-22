@@ -12,6 +12,10 @@ return {
   },
   { 'nvim-tree/nvim-web-devicons', lazy = true },
   {
+    'MaximilianLloyd/ascii.nvim',
+    lazy = true,
+  },
+  {
     'nvim-tree/nvim-tree.lua',
     dependencies = { 'nvim-tree/nvim-web-devicons' },
     config = function()
@@ -50,7 +54,16 @@ return {
         filetypes = { 'NvimTree', 'git-changes', 'setup-settings', 'setup-themes', 'setup-extensions' },
         horizontal = true,
       },
-      excluded_filetypes = { 'help', 'qf', 'TelescopePrompt', 'lazy', 'mason', 'git-composer', 'setup-agent-picker' },
+      excluded_filetypes = {
+        'help',
+        'qf',
+        'TelescopePrompt',
+        'lazy',
+        'mason',
+        'git-composer',
+        'setup-agent-picker',
+        'setup-home',
+      },
       excluded_buftypes = { 'terminal', 'prompt', 'quickfix' },
     },
   },

@@ -56,6 +56,7 @@ local side_ft = {
   ['setup-settings'] = 'Settings',
   ['setup-themes'] = 'Themes',
   ['setup-extensions'] = 'Extensions',
+  ['setup-home'] = 'Home',
   ['git-diff'] = 'Diff',
 }
 

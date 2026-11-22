@@ -200,7 +200,7 @@ function M.ensure()
     local win = M.editor_win()
     if win and api.nvim_win_is_valid(win) then
       if not has_editor_tab() then
-        api.nvim_win_set_buf(win, api.nvim_create_buf(true, false))
+        require('modules.home').show(win)
       end
       return win
     end
@@ -212,7 +212,7 @@ function M.ensure()
       win = recreate_editor()
     end
     if win and api.nvim_win_is_valid(win) and not has_editor_tab() then
-      api.nvim_win_set_buf(win, api.nvim_create_buf(true, false))
+      require('modules.home').show(win)
     end
     return win
   end)
@@ -505,7 +505,7 @@ function M.close_editor(buf)
       break
     end
   end
-  replacement = replacement or api.nvim_create_buf(true, false)
+  replacement = replacement or require('modules.home').buf()
   for _, win in ipairs(api.nvim_list_wins()) do
     if api.nvim_win_get_buf(win) == buf then
       api.nvim_win_set_buf(win, replacement)
@@ -718,7 +718,7 @@ api.nvim_create_autocmd('QuitPre', {
     if vim.bo[buf].modified then
       return
     end
-    local replacement = next_tab(buf) or api.nvim_create_buf(true, false)
+    local replacement = next_tab(buf) or require('modules.home').buf()
     vim.cmd('aboveleft split')
     api.nvim_win_set_buf(api.nvim_get_current_win(), replacement)
     api.nvim_set_current_win(win)

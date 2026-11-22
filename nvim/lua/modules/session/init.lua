@@ -21,6 +21,8 @@ local function editor_win()
       return win
     end
   end
+  local tabs = package.loaded['modules.tabs']
+  return tabs and tabs.ensure() or nil
 end
 
 local function persist_uuid(value)
