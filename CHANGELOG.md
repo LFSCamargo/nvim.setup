@@ -11,6 +11,8 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Features
 
+- **breadcrumb:** render compact yellow file path breadcrumb below tabs ([c1546d3](https://github.com/LFSCamargo/nvim.setup/commit/c1546d308bfb33140cdc5d8414079044f72e140e))
+- **home:** add Futurama spaceship home screen and empty-tab fallback ([611b83c](https://github.com/LFSCamargo/nvim.setup/commit/611b83cfa0f2a661766d5438e45ef45e9228e0b4))
 - **web:** remove Gemini CLI from landing page copy and tests ([66dad15](https://github.com/LFSCamargo/nvim.setup/commit/66dad15ace1771baa32b2136c3fd3bcfbe741134))
 - **ui:** render AI agent brand glyphs in chat tabs and statusline ([0885a93](https://github.com/LFSCamargo/nvim.setup/commit/0885a93f63721d119364a261949c9401559988ae))
 - **agents:** add fuzzy agent picker, remove Gemini, and isolate jumplist ([93d7b66](https://github.com/LFSCamargo/nvim.setup/commit/93d7b66073f43cdf1af83a5bea0d62102a112af2))
@@ -20,16 +22,23 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Bug Fixes
 
+- **agents:** use lua no-op for disabled Ctrl+O jumplist mapping ([9465144](https://github.com/LFSCamargo/nvim.setup/commit/9465144b27c5f9e1e484a0c9d6ef8678a4bbb90d))
 - **keys:** enable remap for Ctrl+/ comment toggle and drop Gemini key ([aba554e](https://github.com/LFSCamargo/nvim.setup/commit/aba554e07cf59a33a08c816b81c75a990bc9ac93))
 - **keys:** use Ctrl+Shift+[ for left sidebar toggle ([b780d03](https://github.com/LFSCamargo/nvim.setup/commit/b780d03f96b20128d3bb6ce742fe8d3c8a461c8f))
 
 ### Documentation
 
+- document project home screen, breadcrumbs, and e2e coverage ([015c4c3](https://github.com/LFSCamargo/nvim.setup/commit/015c4c325a0587f9a1840e9c780790ef259b0cb8))
 - sync guides and reference docs for agent picker and Gemini removal ([a643abf](https://github.com/LFSCamargo/nvim.setup/commit/a643abfefad3eac331fe191c671162aefcb3e07b))
 
 ### Tests
 
+- **e2e:** cover home screen, file breadcrumb, and Neovim 0.12 mode handling ([db093ab](https://github.com/LFSCamargo/nvim.setup/commit/db093ab191014994476157c499cd37194e3c8a3b))
 - **e2e:** cover agent picker, brand glyphs, and Ctrl+/ commenting ([e028e12](https://github.com/LFSCamargo/nvim.setup/commit/e028e12aa2bebc0a8494415cdefd745a5721f036))
+
+### Chores
+
+- **web:** bump fallback release to v2.1.0 ([cc757c4](https://github.com/LFSCamargo/nvim.setup/commit/cc757c43cd6e5d200cb825de0effbfe806591283))
 
 ## [2.1.0] - 2026-11-11
 
