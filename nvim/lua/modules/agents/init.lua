@@ -495,7 +495,7 @@ local function disable_jumplist(buf)
   end
   -- Ctrl+O jumplist navigation does not apply to the agents sidebar; leave
   -- terminal mode unmapped so agent CLIs (e.g. Claude Code) still get ^O.
-  vim.keymap.set({ 'n', 'x', 's', 'o' }, '<C-o>', '<Nop>', {
+  vim.keymap.set({ 'n', 'x', 's', 'o' }, '<C-o>', function() end, {
     buffer = buf,
     silent = true,
     nowait = true,
