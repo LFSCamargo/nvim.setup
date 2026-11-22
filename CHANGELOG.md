@@ -11,11 +11,25 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ### Features
 
+- **web:** remove Gemini CLI from landing page copy and tests ([66dad15](https://github.com/LFSCamargo/nvim.setup/commit/66dad15ace1771baa32b2136c3fd3bcfbe741134))
+- **ui:** render AI agent brand glyphs in chat tabs and statusline ([0885a93](https://github.com/LFSCamargo/nvim.setup/commit/0885a93f63721d119364a261949c9401559988ae))
+- **agents:** add fuzzy agent picker, remove Gemini, and isolate jumplist ([93d7b66](https://github.com/LFSCamargo/nvim.setup/commit/93d7b66073f43cdf1af83a5bea0d62102a112af2))
+- **icons:** expose AI agent brand glyphs and highlights ([b893e0a](https://github.com/LFSCamargo/nvim.setup/commit/b893e0aaa5c6d289476df694dcd486318b7d34f2))
+- **fonts:** bake pixel AI agent brand glyphs into bundled fonts ([bc99556](https://github.com/LFSCamargo/nvim.setup/commit/bc99556eed08d976058b377460d7bbde1a0938fd))
 - **keys,sidebar:** comment toggle, sidebar hide keys, dim ignored folders ([c4ff9c1](https://github.com/LFSCamargo/nvim.setup/commit/c4ff9c1d337fdc23c88d4653a983ecf27317c264))
 
 ### Bug Fixes
 
+- **keys:** enable remap for Ctrl+/ comment toggle and drop Gemini key ([aba554e](https://github.com/LFSCamargo/nvim.setup/commit/aba554e07cf59a33a08c816b81c75a990bc9ac93))
 - **keys:** use Ctrl+Shift+[ for left sidebar toggle ([b780d03](https://github.com/LFSCamargo/nvim.setup/commit/b780d03f96b20128d3bb6ce742fe8d3c8a461c8f))
+
+### Documentation
+
+- sync guides and reference docs for agent picker and Gemini removal ([a643abf](https://github.com/LFSCamargo/nvim.setup/commit/a643abfefad3eac331fe191c671162aefcb3e07b))
+
+### Tests
+
+- **e2e:** cover agent picker, brand glyphs, and Ctrl+/ commenting ([e028e12](https://github.com/LFSCamargo/nvim.setup/commit/e028e12aa2bebc0a8494415cdefd745a5721f036))
 
 ## [2.1.0] - 2026-11-11
 
