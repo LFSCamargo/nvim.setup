@@ -9,6 +9,8 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-11-22
+
 ### Features
 
 - **breadcrumb:** render compact yellow file path breadcrumb below tabs ([c1546d3](https://github.com/LFSCamargo/nvim.setup/commit/c1546d308bfb33140cdc5d8414079044f72e140e))
@@ -209,7 +211,8 @@ Scopes are optional. Commits from before that convention are listed under Other.
 - Let clicking a chat pane enter terminal input and add a simulated UI e2e check. ([12dce18](https://github.com/LFSCamargo/nvim.setup/commit/12dce188d82256d71d64432a354c01115fec7243))
 - Package Neovim setup with portable install and maintenance scripts ([4a3edaa](https://github.com/LFSCamargo/nvim.setup/commit/4a3edaabc8c887c475080a22263e0a66af1a05f9))
 
-[Unreleased]: https://github.com/LFSCamargo/nvim.setup/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/LFSCamargo/nvim.setup/compare/v2.2.0...HEAD
+[2.2.0]: https://github.com/LFSCamargo/nvim.setup/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/LFSCamargo/nvim.setup/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/LFSCamargo/nvim.setup/compare/v1.1.0...v2.0.0
 [1.1.0]: https://github.com/LFSCamargo/nvim.setup/compare/v1.0.0-beta...v1.1.0
