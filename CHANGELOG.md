@@ -9,6 +9,10 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ## [Unreleased]
 
+### Refactoring
+
+- **ui:** remove scrollbars plugin and settings toggle ([eb34fcc](https://github.com/LFSCamargo/nvim.setup/commit/eb34fcc548e292141dc3342bd2796cdde6d6d891))
+
 ## [2.2.0] - 2026-11-22
 
 ### Features
