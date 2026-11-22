@@ -30,7 +30,15 @@ local child = vim.fn.jobstart({
 assert(child > 0, 'Could not start Neovim')
 
 local function request(method, ...)
-  return vim.rpcrequest(child, method, ...)
+  local result = vim.rpcrequest(child, method, ...)
+  if result == vim.NIL then
+    return nil
+  end
+  -- Terminal-normal accepts normal keys; Neovim 0.12 reports it as nt.
+  if method == 'nvim_get_mode' and result.mode == 'nt' then
+    result.mode = 'n'
+  end
+  return result
 end
 
 local function eval(code)
@@ -38,6 +46,7 @@ local function eval(code)
 end
 
 local function wait_for(description, predicate)
+  vim.wait(20) -- Let queued UI input run before inspecting its result.
   assert(vim.wait(5000, predicate, 20), 'Timed out waiting for ' .. description)
 end
 
@@ -150,6 +159,35 @@ local ok, err = xpcall(function()
   local chat = eval("return require('modules.agents').win")
   local editor = request('nvim_get_current_win')
   assert(editor ~= chat, 'Startup should focus the editor')
+  assert(
+    eval([[
+    local home = require('modules.home')
+    local tabs = require('modules.tabs')
+    assert(home.is_home(vim.api.nvim_get_current_buf()))
+    assert(not tabs.editor_buf(vim.api.nvim_get_current_buf()))
+    return true
+  ]]),
+    'empty startup must show Home without an editor tab'
+  )
+  request('nvim_input', 'jjj<CR>')
+  wait_for('home New File action', function()
+    return eval("return require('modules.tabs').editor_buf(vim.api.nvim_get_current_buf())")
+  end)
+  request('nvim_input', '<C-w>')
+  wait_for('Home after closing final tab', function()
+    return eval("return require('modules.home').is_home(vim.api.nvim_get_current_buf())")
+  end)
+  request('nvim_input', 'n')
+  wait_for('new editor after Home', function()
+    return eval("return require('modules.tabs').editor_buf(vim.api.nvim_get_current_buf())")
+  end)
+  assert(
+    eval([[
+    return dofile(vim.env.SETUP_ROOT .. '/scripts/tests/home-breadcrumb.lua')()
+  ]]),
+    'breadcrumb must show a compact yellow path with folder separators and a solid cap, and exclude Home'
+  )
+  print('PASS: Home startup, New File, last-tab close, and file breadcrumb')
   local chat_term = eval([[
       local win = require('modules.agents').win
       vim.api.nvim_exec_autocmds('BufWinEnter', { buffer = vim.api.nvim_win_get_buf(win) })
@@ -1021,11 +1059,14 @@ local ok, err = xpcall(function()
   -- (must not replace chat with an editor file or another chat, or jump inside
   -- chat in normal/visual mode), while terminal mode still forwards ^O to the CLI
   -- and mid-editor Ctrl+O keeps working without leaking chat buffers.
+  request('nvim_input', '<C-\\><C-n>')
+  wait_for('normal mode before preparing Ctrl+O scenario', function()
+    return request('nvim_get_mode').mode == 'n'
+  end)
   local ctrl_o = eval([[
     local editor = require('modules.tabs').editor_win()
     local prev = vim.api.nvim_win_get_buf(editor)
     vim.api.nvim_set_current_win(editor)
-    vim.cmd.stopinsert()
     vim.cmd('edit ' .. vim.fn.fnameescape(vim.env.E2E_DIR .. '/repo/app.ts'))
     local buf_a = vim.api.nvim_get_current_buf()
     vim.cmd('edit ' .. vim.fn.fnameescape(vim.env.E2E_DIR .. '/repo/lib.rs'))
@@ -1090,7 +1131,11 @@ local ok, err = xpcall(function()
       and request('nvim_get_mode').mode == 'n',
     'Ctrl+O in chat visual mode must remain on the same chat buffer'
   )
-  -- Terminal-mode Ctrl+O stays in terminal mode on the same chat and forwards ^O (0x0f) to the CLI.
+  -- Refocus from the editor to enter chat input, then verify CLI Ctrl+O.
+  click(editor)
+  wait_for('editor focus before refocusing chat input', function()
+    return request('nvim_get_current_win') == editor
+  end)
   click(chat)
   wait_for('terminal mode in chat before terminal Ctrl+O check', function()
     return request('nvim_get_current_win') == chat and request('nvim_get_mode').mode == 't'
@@ -1140,7 +1185,7 @@ local ok, err = xpcall(function()
       vim.api.nvim_win_set_buf(new_ed, prev)
     end
     for _, b in ipairs({ buf_a, buf_b }) do
-      if vim.api.nvim_buf_is_valid(b) then
+      if b ~= prev and vim.api.nvim_buf_is_valid(b) then
         vim.bo[b].modified = false
         vim.api.nvim_buf_delete(b, { force = true })
       end
@@ -1565,6 +1610,10 @@ local ok, err = xpcall(function()
     package.loaded['nvim-tree.api'] = { tree = {
       close = function() if tree_win and vim.api.nvim_win_is_valid(tree_win) then vim.api.nvim_win_close(tree_win, true) end end,
       open = function()
+        if tree_win and vim.api.nvim_win_is_valid(tree_win) then
+          vim.api.nvim_set_current_win(tree_win)
+          return
+        end
         vim.cmd('topleft vsplit')
         tree_win = vim.api.nvim_get_current_win()
         local buf = vim.api.nvim_create_buf(false, true)
@@ -1671,6 +1720,12 @@ local ok, err = xpcall(function()
     ]])
   end)
   local function focus_git_list()
+    if request('nvim_get_mode').mode == 'i' then
+      request('nvim_input', '<Esc>')
+      wait_for('leaving composer input before focusing Git list', function()
+        return request('nvim_get_mode').mode == 'n'
+      end)
+    end
     eval([[
       for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
         if vim.bo[vim.api.nvim_win_get_buf(win)].filetype == 'git-changes' then
@@ -1749,16 +1804,28 @@ local ok, err = xpcall(function()
     eval('vim.api.nvim_win_set_cursor(0, { ' .. line .. ', 0 })')
     return line
   end
+  eval('vim.o.mousetime = 0') -- Sidebar cases below request individual clicks.
   local function click_sidebar(line, col)
     focus_git_list()
     local win = request('nvim_get_current_win')
+    request('nvim_win_set_width', win, eval("return require('modules.sidebar').width()"))
+    vim.wait(50)
+    request('nvim_win_set_cursor', win, { line, 0 })
+    eval([[vim.fn.winrestview({leftcol=0}); vim.cmd('normal! zz')]])
+    request('nvim_command', 'redraw')
     local sp = eval(string.format('return vim.fn.screenpos(%d, %d, %d)', win, line, math.max(col, 1)))
     request('nvim_input_mouse', 'left', 'press', '', 0, sp.row - 1, sp.col - 1)
     request('nvim_input_mouse', 'left', 'release', '', 0, sp.row - 1, sp.col - 1)
+    vim.wait(50)
   end
   local function right_click_sidebar(line, col)
     focus_git_list()
     local win = request('nvim_get_current_win')
+    request('nvim_win_set_width', win, eval("return require('modules.sidebar').width()"))
+    vim.wait(50)
+    request('nvim_win_set_cursor', win, { line, 0 })
+    eval([[vim.fn.winrestview({leftcol=0}); vim.cmd('normal! zz')]])
+    request('nvim_command', 'redraw')
     local sp = eval(string.format('return vim.fn.screenpos(%d, %d, %d)', win, line, math.max(col, 1)))
     request('nvim_input_mouse', 'right', 'press', '', 0, sp.row - 1, sp.col - 1)
     request('nvim_input_mouse', 'right', 'release', '', 0, sp.row - 1, sp.col - 1)
@@ -1792,7 +1859,10 @@ local ok, err = xpcall(function()
   wait_for('visual mode still available in commit message', function()
     return request('nvim_get_mode').mode == 'v'
   end)
-  request('nvim_input', '<Esc>')
+  request('nvim_input', 'v')
+  wait_for('normal mode after commit-message selection', function()
+    return request('nvim_get_mode').mode == 'n'
+  end)
   focus_git_list()
   assert(
     sidebar_line('Staged Changes') > 0 and sidebar_line('deleted.txt') > 0 and sidebar_line('new.txt') > 0,
@@ -2856,12 +2926,15 @@ local ok, err = xpcall(function()
         and vim.api.nvim_get_current_win() == require('modules.agents').win
     ]])
   end)
+  request('nvim_input', '<C-\\><C-n>')
+  wait_for('normal mode before preparing visual chat attachment', function()
+    return request('nvim_get_mode').mode == 'n'
+  end)
   eval([[
     local agents = require('modules.agents')
     agents.last_sent = nil
     local editor = require('modules.tabs').editor_win()
     vim.api.nvim_set_current_win(editor)
-    vim.cmd.stopinsert()
     vim.api.nvim_win_set_cursor(0, { 1, 0 })
     vim.cmd('normal! V2j')
     vim.cmd.AddSelectionToChat()

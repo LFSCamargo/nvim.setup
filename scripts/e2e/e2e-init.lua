@@ -85,3 +85,7 @@ agents.new('cursor')
 agents.show(1)
 vim.api.nvim_set_current_win(editor)
 vim.cmd.stopinsert()
+
+local blank = vim.api.nvim_win_get_buf(editor)
+require('modules.home').show(editor)
+vim.api.nvim_buf_delete(blank, {})
