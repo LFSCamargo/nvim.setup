@@ -76,6 +76,14 @@ function M.set_chrome(chrome)
   if type(picker) == 'table' and picker.highlights then
     picker.highlights()
   end
+  local home = package.loaded['modules.home']
+  if type(home) == 'table' and home.highlights then
+    home.highlights()
+  end
+  local breadcrumb = package.loaded['modules.breadcrumb']
+  if type(breadcrumb) == 'table' and breadcrumb.highlights then
+    breadcrumb.highlights()
+  end
 end
 
 function M.chrome()
@@ -218,7 +226,7 @@ function M.paint_terminal()
   return M.apply_terminal_colors()
 end
 
--- Statusline pills and active tabs keep their fill through transparency passes.
+-- Statusline pills, active tabs, and breadcrumbs keep their fill through transparency passes.
 function M.keeps_fill(name)
   if keep[name] then
     return true
@@ -227,6 +235,9 @@ function M.keeps_fill(name)
     return true
   end
   if name == 'PaneTabActive' or name == 'SidebarTabActive' or name == 'AgentPickerSel' then
+    return true
+  end
+  if name == 'BreadcrumbDir' or name == 'BreadcrumbSep' or name == 'BreadcrumbIcon' or name == 'BreadcrumbFile' then
     return true
   end
   if name:sub(1, 6) == 'Scroll' then
