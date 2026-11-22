@@ -6,7 +6,7 @@ export type InstallRef = {
 };
 
 export const mainRef = 'main';
-export const fallbackRelease = 'v2.0.0';
+export const fallbackRelease = 'v2.1.0';
 export const bootstrapUrl =
   'https://raw.githubusercontent.com/LFSCamargo/nvim.setup/main/scripts/bootstrap.sh';
 export const githubReleasesUrl =
