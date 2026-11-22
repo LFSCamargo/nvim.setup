@@ -1,4 +1,5 @@
--- Devicons for the Files tree, Git sidebar, and editor tabs. Nerd Font glyphs occupy one cell.
+-- Devicons for the Files tree, Git sidebar, editor tabs, and AI agent brand glyphs.
+-- Nerd Font and custom agent glyphs occupy one cell.
 local M = {}
 
 -- Sidebar header tabs. Git/settings/extensions use heavier glyphs so they
@@ -11,6 +12,24 @@ M.sidebar = {
   extensions = '',
 }
 
+-- Custom 1-cell pixel brand glyphs baked into Monocraft Nerd Font and Symbols Nerd Font
+-- at unused BMP PUA codepoints U+E100..U+E104 (scripts/python/overlay_fonts.py).
+M.agents = {
+  codex = { codepoint = 0xE100, glyph = vim.fn.nr2char(0xE100), hl = 'AgentIconCodex', color = '#10a37f' },
+  cursor = { codepoint = 0xE101, glyph = vim.fn.nr2char(0xE101), hl = 'AgentIconCursor', color = '#38bdf8' },
+  claude = { codepoint = 0xE102, glyph = vim.fn.nr2char(0xE102), hl = 'AgentIconClaude', color = '#d97757' },
+  opencode = { codepoint = 0xE103, glyph = vim.fn.nr2char(0xE103), hl = 'AgentIconOpenCode', color = '#e2e8f0' },
+  antigravity = { codepoint = 0xE104, glyph = vim.fn.nr2char(0xE104), hl = 'AgentIconAntigravity', color = '#a78bfa' },
+}
+
+function M.agent_highlights()
+  for _, spec in pairs(M.agents) do
+    vim.api.nvim_set_hl(0, spec.hl, { fg = spec.color })
+  end
+end
+M.agent_highlights()
+vim.api.nvim_create_autocmd('ColorScheme', { callback = M.agent_highlights })
+
 function M.enabled()
   local settings = package.loaded['modules.settings']
   return type(settings) ~= 'table' or settings.get().icons
@@ -19,6 +38,21 @@ end
 pcall(function()
   require('nvim-web-devicons').setup({ default = true, color_icons = M.enabled(), strict = false })
 end)
+
+function M.agent_glyph(name)
+  local spec = type(name) == 'string' and M.agents[name] or nil
+  if not spec then
+    return ' ', 'Normal'
+  end
+  return spec.glyph, spec.hl
+end
+
+function M.agent_icon(name)
+  if not M.enabled() then
+    return ' ', 'Normal'
+  end
+  return M.agent_glyph(name)
+end
 
 function M.file_icon(path)
   if not M.enabled() then
