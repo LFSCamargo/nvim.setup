@@ -38,6 +38,13 @@ local actions = {
     end,
   },
   {
+    'New AI chat',
+    'agent cli model',
+    function()
+      require('modules.agents').select()
+    end,
+  },
+  {
     'Add selection to chat',
     'agent',
     function()

@@ -1,8 +1,7 @@
 -- Chat CLIs in one shared pane (28% width). Switching tabs leaves the process
 -- running. When a CLI exits, that chat tab closes. Sessions resume by ID:
--- `codex resume <uuid>`, `agent --resume=<uuid>`, `gemini --resume <uuid>`,
--- `claude --resume <uuid>`, `opencode --session <id>`,
--- `agy --conversation <id>`.
+-- `codex resume <uuid>`, `agent --resume=<uuid>`, `claude --resume <uuid>`,
+-- `opencode --session <id>`, `agy --conversation <id>`.
 
 local M = { sessions = {}, active = nil, win = nil }
 local next_id = 0
@@ -75,17 +74,6 @@ local function persist()
   if ok and not session.busy then
     session.save()
   end
-end
-
-local function make_uuid()
-  local hex = vim.fn.sha256(('%s:%s:%s'):format(vim.uv.hrtime(), math.random(), vim.uv.os_getpid()))
-  return table.concat({
-    hex:sub(1, 8),
-    hex:sub(9, 12),
-    hex:sub(13, 16),
-    hex:sub(17, 20),
-    hex:sub(21, 32),
-  }, '-')
 end
 
 local function known_ids(name)
@@ -193,6 +181,9 @@ local CLIS = {
     prompt = 'Codex',
     command = 'Codex',
     prefix = 'Codex ',
+    shortcut = '<Space>ac',
+    description = 'OpenAI coding agent',
+    aliases = { 'openai', 'gpt' },
     start = function()
       return { 'codex' }
     end,
@@ -206,6 +197,9 @@ local CLIS = {
     prompt = 'Cursor Agent',
     command = 'CursorAgent',
     prefix = 'Agent ',
+    shortcut = '<Space>au',
+    description = 'Cursor terminal agent',
+    aliases = { 'cursor', 'agent' },
     allocate = allocate_agent_uuid,
     start = function(id)
       if persist_id(id) then
@@ -217,27 +211,14 @@ local CLIS = {
       return { 'agent', '--resume=' .. id }
     end,
   },
-  gemini = {
-    bin = 'gemini',
-    prompt = 'Gemini',
-    command = 'Gemini',
-    prefix = 'Gemini ',
-    allocate = make_uuid,
-    start = function(id)
-      if persist_id(id) then
-        return { 'gemini', '--session-id', id }
-      end
-      return { 'gemini' }
-    end,
-    resume = function(id)
-      return { 'gemini', '--resume', id }
-    end,
-  },
   claude = {
     bin = 'claude',
     prompt = 'Claude',
     command = 'Claude',
     prefix = 'Claude ',
+    shortcut = '<Space>al',
+    description = 'Anthropic coding agent',
+    aliases = { 'anthropic' },
     start = function()
       return { 'claude' }
     end,
@@ -251,6 +232,9 @@ local CLIS = {
     prompt = 'OpenCode',
     command = 'OpenCode',
     prefix = 'OpenCode ',
+    shortcut = '<Space>ao',
+    description = 'Open-source coding agent',
+    aliases = { 'oss', 'open' },
     allocate = function()
       return 'ses_' .. vim.fn.sha256(('%s:%s'):format(vim.uv.hrtime(), math.random())):sub(1, 16)
     end,
@@ -269,6 +253,9 @@ local CLIS = {
     prompt = 'Antigravity',
     command = 'Antigravity',
     prefix = 'Antigravity ',
+    shortcut = '<Space>aa',
+    description = 'Google Antigravity agent',
+    aliases = { 'agy', 'google' },
     start = function()
       return { 'agy' }
     end,
@@ -282,7 +269,44 @@ local CLIS = {
   },
 }
 
-M.order = { 'codex', 'cursor', 'gemini', 'claude', 'opencode', 'antigravity' }
+M.order = { 'codex', 'cursor', 'claude', 'opencode', 'antigravity' }
+
+local function open_count_for(name)
+  local n = 0
+  for _, session in pairs(M.sessions) do
+    if session and session.name == name and not session.exited and vim.api.nvim_buf_is_valid(session.buf) then
+      n = n + 1
+    end
+  end
+  return n
+end
+
+function M.meta(name)
+  local cli = CLIS[name]
+  if not cli then
+    return nil
+  end
+  return {
+    name = name,
+    bin = cli.bin,
+    prompt = cli.prompt,
+    command = cli.command,
+    prefix = cli.prefix,
+    shortcut = cli.shortcut,
+    description = cli.description,
+    aliases = vim.deepcopy(cli.aliases or {}),
+    installed = vim.fn.executable(cli.bin) == 1,
+    open_count = open_count_for(name),
+  }
+end
+
+function M.list()
+  local items = {}
+  for _, name in ipairs(M.order) do
+    items[#items + 1] = M.meta(name)
+  end
+  return items
+end
 
 function M.capture_pending()
   local ids = vim.tbl_keys(M.sessions)
@@ -465,6 +489,20 @@ function M.attach_current_file()
   return M.attach_files({ vim.api.nvim_buf_get_name(0) })
 end
 
+local function disable_jumplist(buf)
+  if not buf or not vim.api.nvim_buf_is_valid(buf) then
+    return
+  end
+  -- Ctrl+O jumplist navigation does not apply to the agents sidebar; leave
+  -- terminal mode unmapped so agent CLIs (e.g. Claude Code) still get ^O.
+  vim.keymap.set({ 'n', 'x', 's', 'o' }, '<C-o>', '<Nop>', {
+    buffer = buf,
+    silent = true,
+    nowait = true,
+    desc = 'Disable Ctrl+O in chat',
+  })
+end
+
 -- Show an existing session, creating the sidebar split if needed.
 function M.show(id)
   local session = M.sessions[id]
@@ -476,11 +514,15 @@ function M.show(id)
     return
   end
   if not valid_win() then
-    vim.cmd('botright vsplit')
+    vim.cmd('keepjumps botright vsplit')
     M.win = vim.api.nvim_get_current_win()
   end
   vim.api.nvim_set_current_win(M.win)
   vim.api.nvim_win_set_buf(M.win, session.buf)
+  vim.api.nvim_win_call(M.win, function()
+    vim.cmd('clearjumps')
+  end)
+  disable_jumplist(session.buf)
   vim.api.nvim_win_set_width(M.win, width())
   vim.wo[M.win].winfixwidth = true
   -- TUIs (Cursor Agent input box) break when wrap reflows their cells.
@@ -595,19 +637,8 @@ function M.new(name, opts)
   persist()
 end
 
-function M.select()
-  local choices = {}
-  for _, name in ipairs(M.order) do
-    choices[#choices + 1] = CLIS[name].prompt
-  end
-  vim.ui.select(choices, { prompt = 'New chat — choose CLI:' }, function(choice)
-    for name, cli in pairs(CLIS) do
-      if cli.prompt == choice then
-        M.new(name)
-        return
-      end
-    end
-  end)
+function M.select(opts)
+  return require('modules.agents.picker').open(opts)
 end
 
 -- Hide the chat pane without closing the underlying sessions.

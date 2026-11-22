@@ -50,7 +50,7 @@ return {
         filetypes = { 'NvimTree', 'git-changes', 'setup-settings', 'setup-themes', 'setup-extensions' },
         horizontal = true,
       },
-      excluded_filetypes = { 'help', 'qf', 'TelescopePrompt', 'lazy', 'mason', 'git-composer' },
+      excluded_filetypes = { 'help', 'qf', 'TelescopePrompt', 'lazy', 'mason', 'git-composer', 'setup-agent-picker' },
       excluded_buftypes = { 'terminal', 'prompt', 'quickfix' },
     },
   },

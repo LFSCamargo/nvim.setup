@@ -72,6 +72,10 @@ function M.set_chrome(chrome)
   if type(settings) == 'table' and settings.highlights then
     settings.highlights()
   end
+  local picker = package.loaded['modules.agents.picker']
+  if type(picker) == 'table' and picker.highlights then
+    picker.highlights()
+  end
 end
 
 function M.chrome()
@@ -222,7 +226,7 @@ function M.keeps_fill(name)
   if name == 'StatusLine' or name == 'StatusLineNC' then
     return true
   end
-  if name == 'PaneTabActive' or name == 'SidebarTabActive' then
+  if name == 'PaneTabActive' or name == 'SidebarTabActive' or name == 'AgentPickerSel' then
     return true
   end
   if name:sub(1, 6) == 'Scroll' then
