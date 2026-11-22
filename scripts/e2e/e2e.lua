@@ -377,6 +377,12 @@ local ok, err = xpcall(function()
     chat_stl:find('Codex', 1, true) or chat_stl:find('Agent', 1, true),
     'statusline should name the chat session: ' .. chat_stl
   )
+  local codex_glyph = eval("return require('modules.icons').agent_glyph('codex')")
+  local cursor_glyph = eval("return require('modules.icons').agent_glyph('cursor')")
+  assert(
+    chat_stl:find(codex_glyph, 1, true) or chat_stl:find(cursor_glyph, 1, true),
+    'statusline should show the active AI agent brand glyph: ' .. chat_stl
+  )
   local chat_usage = eval([[
     local agents = require('modules.agents')
     local win = agents.win
@@ -403,7 +409,6 @@ local ok, err = xpcall(function()
     claude = 'Claude Usage',
     opencode = 'OpenCode Usage',
     antigravity = 'Antigravity Usage',
-    gemini = 'Gemini Usage',
   })[usage_name] or (usage_name .. ' Usage')
   assert(usage_stl:find(usage_title, 1, true), 'focused chat should name usage: ' .. usage_stl)
   assert(
@@ -452,33 +457,79 @@ local ok, err = xpcall(function()
     local normal = vim.fn.maparg('<C-/>', 'n', false, true)
     local visual = vim.fn.maparg('<C-/>', 'x', false, true)
     local insert = vim.fn.maparg('<C-/>', 'i', false, true)
-    vim.cmd.normal('gcc')
+    local function feed(keys)
+      vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(keys, true, false, true), 'mx', false)
+    end
+    vim.api.nvim_win_set_cursor(win, { 1, 0 })
+    feed('<C-/>')
     local line1 = vim.api.nvim_buf_get_lines(buf, 0, 1, false)[1]
-    vim.cmd.normal('gcc')
+    feed('<C-/>')
     local line1_back = vim.api.nvim_buf_get_lines(buf, 0, 1, false)[1]
     vim.api.nvim_win_set_cursor(win, { 1, 0 })
-    vim.cmd.normal('Vjgc')
+    feed('Vj<C-/>')
     local visual_lines = vim.api.nvim_buf_get_lines(buf, 0, 2, false)
+    vim.api.nvim_win_set_cursor(win, { 1, 0 })
+    feed('Vj<C-_>')
+    local visual_back = vim.api.nvim_buf_get_lines(buf, 0, 2, false)
+    vim.api.nvim_win_set_cursor(win, { 1, 0 })
+    feed('i<C-/>')
+    local insert_line = vim.api.nvim_buf_get_lines(buf, 0, 1, false)[1]
+    vim.api.nvim_win_set_cursor(win, { 1, 0 })
+    feed('i<C-_>')
+    local insert_back = vim.api.nvim_buf_get_lines(buf, 0, 1, false)[1]
     return {
       normal = normal.rhs,
+      normal_noremap = normal.noremap,
       visual = visual.rhs,
+      visual_noremap = visual.noremap,
       insert = insert.rhs,
+      insert_noremap = insert.noremap,
       line1 = line1,
       line1_back = line1_back,
       visual_lines = visual_lines,
+      visual_back = visual_back,
+      insert_line = insert_line,
+      insert_back = insert_back,
       prev = prev,
       buf = buf,
       win = win,
     }
   ]])
-  assert(comment.normal == 'gcc', 'Ctrl+/ normal mapping should run gcc, got: ' .. tostring(comment.normal))
-  assert(comment.visual == 'gc', 'Ctrl+/ visual mapping should run gc, got: ' .. tostring(comment.visual))
-  assert(comment.insert == '<C-o>gcc', 'Ctrl+/ insert mapping should run <C-o>gcc, got: ' .. tostring(comment.insert))
-  assert(comment.line1 == '-- hello world', 'gcc should comment the line, got: ' .. tostring(comment.line1))
-  assert(comment.line1_back == 'hello world', 'gcc should uncomment the line, got: ' .. tostring(comment.line1_back))
+  assert(
+    comment.normal == 'gcc' and comment.normal_noremap == 0,
+    'Ctrl+/ normal mapping should remap to gcc, got: ' .. vim.inspect(comment)
+  )
+  assert(
+    comment.visual == 'gc' and comment.visual_noremap == 0,
+    'Ctrl+/ visual mapping should remap to gc, got: ' .. vim.inspect(comment)
+  )
+  assert(
+    comment.insert == '<C-o>gcc' and comment.insert_noremap == 0,
+    'Ctrl+/ insert mapping should remap to <C-o>gcc, got: ' .. vim.inspect(comment)
+  )
+  assert(
+    comment.line1 == '-- hello world',
+    'Ctrl+/ in normal mode should comment the line, got: ' .. tostring(comment.line1)
+  )
+  assert(
+    comment.line1_back == 'hello world',
+    'Ctrl+/ in normal mode should uncomment the line, got: ' .. tostring(comment.line1_back)
+  )
   assert(
     comment.visual_lines[1] == '-- hello world' and comment.visual_lines[2] == '-- second line',
-    'gc should comment the visual selection, got: ' .. vim.inspect(comment.visual_lines)
+    'Ctrl+/ in visual mode should comment the selection, got: ' .. vim.inspect(comment.visual_lines)
+  )
+  assert(
+    comment.visual_back[1] == 'hello world' and comment.visual_back[2] == 'second line',
+    'Ctrl+_ in visual mode should uncomment the selection, got: ' .. vim.inspect(comment.visual_back)
+  )
+  assert(
+    comment.insert_line == '-- hello world',
+    'Ctrl+/ in insert mode should comment the line, got: ' .. tostring(comment.insert_line)
+  )
+  assert(
+    comment.insert_back == 'hello world',
+    'Ctrl+_ in insert mode should uncomment the line, got: ' .. tostring(comment.insert_back)
   )
   eval(string.format(
     [[
@@ -631,11 +682,12 @@ local ok, err = xpcall(function()
       fake_id = math.max(fake_id, id + 1)
     end
     local fake_buf = vim.api.nvim_create_buf(false, true)
-    agents.sessions[fake_id] = { buf = fake_buf, label = 'Agent 2', exited = false }
+    agents.sessions[fake_id] = { buf = fake_buf, name = 'cursor', label = 'Agent 2', exited = false }
     local chat_width = vim.api.nvim_win_get_width(chat)
     vim.api.nvim_win_set_width(chat, 60)
     local two_chat_raw = require('modules.tabs').render()
     local two_chat_bar = vim.api.nvim_eval_statusline(two_chat_raw, { use_winbar = true, winid = chat }).str
+    local chat_icon_hl = vim.api.nvim_get_hl(0, { name = 'PaneTabIconAgentIconCursor', link = false })
     vim.api.nvim_win_set_width(chat, chat_width)
     agents.sessions[fake_id] = nil
     vim.api.nvim_buf_delete(fake_buf, { force = true })
@@ -653,6 +705,9 @@ local ok, err = xpcall(function()
       extensions_bar = extensions_bar,
       icon_bar = icon_bar,
       chat_bar = chat_bar,
+      two_chat_bar = two_chat_bar,
+      chat_icon_fill = hex(chat_icon_hl, 'bg'),
+      chat_icon_fg = hex(chat_icon_hl, 'fg'),
       vert = vert,
       winbar_ul = not not wb.underline,
       sep_ul = not not sep.underline,
@@ -750,6 +805,17 @@ local ok, err = xpcall(function()
   assert(
     tabs.chat_bar:find('+', 1, true) and tabs.chat_bar:find('×', 1, true),
     'chat tab bar should keep + and in-tab ×: ' .. tabs.chat_bar
+  )
+  assert(
+    tabs.chat_bar:find(codex_glyph, 1, true) and tabs.two_chat_bar:find(cursor_glyph, 1, true),
+    'chat tabs should display custom brand glyphs for active and inactive sessions: ' .. tabs.two_chat_bar
+  )
+  assert(
+    not tabs.chat_icon_fill and tabs.chat_icon_fg == '#38bdf8',
+    'inactive chat tab brand glyph should keep brand color on the transparent bar, got '
+      .. tostring(tabs.chat_icon_fg)
+      .. ' / '
+      .. tostring(tabs.chat_icon_fill)
   )
   assert(tabs.plus_first, 'agent + should sit before the chat tabs, got: ' .. tabs.chat_bar)
   assert(tabs.chat_rev, 'agent tabs should use reversed /, got: ' .. tabs.chat_bar)
@@ -950,6 +1016,147 @@ local ok, err = xpcall(function()
   end)
   escape_reaches('agent')
   print('PASS: local chat config, mouse focus, Escape delivery and terminal mode')
+
+  -- Regression: Ctrl+O jumplist navigation must not apply in the agents sidebar
+  -- (must not replace chat with an editor file or another chat, or jump inside
+  -- chat in normal/visual mode), while terminal mode still forwards ^O to the CLI
+  -- and mid-editor Ctrl+O keeps working without leaking chat buffers.
+  local ctrl_o = eval([[
+    local editor = require('modules.tabs').editor_win()
+    local prev = vim.api.nvim_win_get_buf(editor)
+    vim.api.nvim_set_current_win(editor)
+    vim.cmd.stopinsert()
+    vim.cmd('edit ' .. vim.fn.fnameescape(vim.env.E2E_DIR .. '/repo/app.ts'))
+    local buf_a = vim.api.nvim_get_current_buf()
+    vim.cmd('edit ' .. vim.fn.fnameescape(vim.env.E2E_DIR .. '/repo/lib.rs'))
+    local buf_b = vim.api.nvim_get_current_buf()
+    -- Re-open the agents sidebar from an editor with a populated jumplist, then
+    -- switch chat tabs so both editor and prior chat buffers would have entered
+    -- the sidebar jumplist without keepjumps/clearjumps.
+    vim.cmd('SidebarHideRight')
+    vim.cmd('SidebarHideRight')
+    local agents = require('modules.agents')
+    agents.show(1)
+    agents.show(2)
+    local win = agents.win
+    return {
+      prev = prev,
+      buf_a = buf_a,
+      buf_b = buf_b,
+      chat_win = win,
+      chat_buf = vim.api.nvim_win_get_buf(win),
+      chat_jumps = #vim.fn.getjumplist(win)[1],
+    }
+  ]])
+  chat = ctrl_o.chat_win
+  assert(ctrl_o.chat_jumps == 0, 'agents sidebar jumplist should stay empty, got ' .. tostring(ctrl_o.chat_jumps))
+  wait_for('second chat terminal input before Ctrl+O check', function()
+    return request('nvim_get_current_win') == chat and request('nvim_get_mode').mode == 't'
+  end)
+  request('nvim_input', '<C-\\><C-n>')
+  wait_for('normal mode in chat before Ctrl+O check', function()
+    return request('nvim_get_mode').mode == 'n'
+  end)
+  -- Create an intra-buffer jump inside the chat buffer (line 1 -> line 10), then press Ctrl+O.
+  eval([[
+    vim.api.nvim_win_set_cursor(0, { 1, 0 })
+    vim.cmd('normal! 10G')
+  ]])
+  local chat_line_before = eval('return vim.api.nvim_win_get_cursor(0)[1]')
+  assert(chat_line_before > 1, 'expected intra-buffer jump motion in chat, got line ' .. tostring(chat_line_before))
+  request('nvim_input', '<C-o>')
+  request('nvim_input', '2<C-o>')
+  assert(
+    eval('return vim.api.nvim_get_current_win()') == chat,
+    'Ctrl+O in agents sidebar must stay in the agents window'
+  )
+  assert(
+    eval('return vim.api.nvim_win_get_buf(0)') == ctrl_o.chat_buf,
+    'Ctrl+O in agents sidebar must not switch away from the active chat buffer'
+  )
+  assert(
+    eval("return require('modules.agents').active") == 2,
+    'Ctrl+O in agents sidebar must keep the active chat session'
+  )
+  assert(request('nvim_get_mode').mode == 'n', 'Ctrl+O in chat normal mode must keep normal mode')
+  assert(
+    eval('return vim.api.nvim_win_get_cursor(0)[1]') == chat_line_before,
+    'Ctrl+O in chat normal mode must not jump cursor within the chat buffer'
+  )
+  request('nvim_input', 'v<C-o><Esc>')
+  assert(
+    eval('return vim.api.nvim_get_current_win()') == chat
+      and eval('return vim.api.nvim_win_get_buf(0)') == ctrl_o.chat_buf
+      and request('nvim_get_mode').mode == 'n',
+    'Ctrl+O in chat visual mode must remain on the same chat buffer'
+  )
+  -- Terminal-mode Ctrl+O stays in terminal mode on the same chat and forwards ^O (0x0f) to the CLI.
+  click(chat)
+  wait_for('terminal mode in chat before terminal Ctrl+O check', function()
+    return request('nvim_get_current_win') == chat and request('nvim_get_mode').mode == 't'
+  end)
+  request('nvim_input', '<C-o>')
+  wait_for('Ctrl+O reaching agent CLI in terminal mode', function()
+    local f = io.open(vim.env.E2E_DIR .. '/agent-input', 'rb')
+    if not f then
+      return false
+    end
+    local input = f:read('*a')
+    f:close()
+    return input:find('\15', 1, true) ~= nil
+  end)
+  assert(
+    request('nvim_get_current_win') == chat
+      and request('nvim_win_get_buf', chat) == ctrl_o.chat_buf
+      and eval("return require('modules.agents').active") == 2
+      and request('nvim_get_mode').mode == 't',
+    'terminal-mode Ctrl+O must stay in terminal mode on the active chat'
+  )
+  -- Mid-editor Ctrl+O keeps working normally across editor files.
+  click(editor)
+  wait_for('editor focus before editor Ctrl+O check', function()
+    return request('nvim_get_current_win') == editor and request('nvim_get_mode').mode == 'n'
+  end)
+  request('nvim_input', '<C-o>')
+  wait_for('editor Ctrl+O jumping back to app.ts', function()
+    return request('nvim_win_get_buf', editor) == ctrl_o.buf_a
+  end)
+  -- Recreating the editor pane from the agents sidebar must not leak chat buffers into the editor jumplist.
+  local recreated = eval(string.format(
+    [[
+    local prev, buf_a, buf_b = %d, %d, %d
+    local ed = require('modules.tabs').editor_win()
+    vim.api.nvim_win_close(ed, true)
+    local new_ed = require('modules.tabs').ensure()
+    local jumps = vim.fn.getjumplist(new_ed)[1]
+    local leaked_chat = false
+    local agents = require('modules.agents')
+    for _, item in ipairs(jumps) do
+      if item.bufnr and vim.api.nvim_buf_is_valid(item.bufnr) and agents.is_chat(item.bufnr) then
+        leaked_chat = true
+      end
+    end
+    if vim.api.nvim_buf_is_valid(prev) then
+      vim.api.nvim_win_set_buf(new_ed, prev)
+    end
+    for _, b in ipairs({ buf_a, buf_b }) do
+      if vim.api.nvim_buf_is_valid(b) then
+        vim.bo[b].modified = false
+        vim.api.nvim_buf_delete(b, { force = true })
+      end
+    end
+    vim.api.nvim_set_current_win(new_ed)
+    vim.cmd.stopinsert()
+    return { leaked_chat = leaked_chat, editor = new_ed, chat = agents.win }
+  ]],
+    ctrl_o.prev,
+    ctrl_o.buf_a,
+    ctrl_o.buf_b
+  ))
+  editor = recreated.editor
+  chat = recreated.chat
+  assert(not recreated.leaked_chat, 'recreating the editor pane must not leak chat buffers into its jumplist')
+  print('PASS: Ctrl+O is disabled in the agents sidebar and does not leak chat jumps')
 
   click(editor)
   wait_for('editor focus before horizontal scroll', function()
@@ -1897,6 +2104,7 @@ local ok, err = xpcall(function()
   wait_for('deleted file diff from sidebar click', function()
     return diff_text():find('deleted.txt', 1, true) and diff_text():find('%-before')
   end)
+  vim.wait(500)
   click_sidebar(sidebar_line('app.ts'), 10)
   wait_for('untracked file diff from sidebar click', function()
     return diff_text():find('app.ts', 1, true) and diff_text():find('%+export')
@@ -2245,6 +2453,8 @@ local ok, err = xpcall(function()
   wait_for('icons off from Settings', function()
     return eval("return require('modules.settings').get().icons") == false
       and eval("return require('modules.icons').file_icon('app.ts')") == ' '
+      and eval("return require('modules.icons').agent_icon('codex')") == ' '
+      and eval("return require('modules.icons').agent_glyph('codex')") ~= ' '
   end)
   assert(
     eval("return require('modules.icons').tree_icons().web_devicons.file.enable") == false,
@@ -2734,8 +2944,12 @@ local ok, err = xpcall(function()
   wait_for('paste image path into chat', function()
     return eval([[
       local sent = require('modules.agents').last_sent or ''
-      local text = table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), '\n')
-      return sent:find('photo.png', 1, true) and text == vim.g.e2e_paste_before
+      local editor = require('modules.tabs').editor_win()
+      local buf = editor and vim.api.nvim_win_get_buf(editor) or 0
+      local text = table.concat(vim.api.nvim_buf_get_lines(buf, 0, -1, false), '\n')
+      return sent:find('photo.png', 1, true)
+        and vim.api.nvim_get_current_win() == require('modules.agents').win
+        and text == vim.g.e2e_paste_before
     ]])
   end)
   eval([[
@@ -2808,6 +3022,263 @@ local ok, err = xpcall(function()
   end)
   print('PASS: paste drop and add selection or file to chat')
 
+  -- Brand symbols & custom floating AI agent picker (Ctrl+], :AgentSelect, Ctrl+T, +).
+  eval([[
+    vim.api.nvim_set_current_win(require('modules.tabs').editor_win() or 0)
+    vim.cmd.stopinsert()
+  ]])
+  request('nvim_input', '<Esc>')
+  wait_for('editor normal mode before agent picker', function()
+    return request('nvim_get_mode').mode == 'n'
+  end)
+  assert(
+    eval([[
+      local icons = require('modules.icons')
+      local picker = require('modules.agents.picker')
+      local order = require('modules.agents').order
+      local seen = {}
+      for _, name in ipairs(order) do
+        local glyph, hl = icons.agent_glyph(name)
+        if type(glyph) ~= 'string' or glyph == '' or glyph == ' ' or seen[glyph] then
+          return false
+        end
+        if vim.fn.strdisplaywidth(glyph) ~= 1 then
+          return false
+        end
+        local def = vim.api.nvim_get_hl(0, { name = hl, link = false })
+        if not def or not def.fg then
+          return false
+        end
+        local art = picker.ascii[name]
+        if type(art) ~= 'table' or #art ~= 7 then
+          return false
+        end
+        for _, line in ipairs(art) do
+          if line:find('[^\32-\126]') then
+            return false
+          end
+        end
+        seen[glyph] = true
+      end
+      return require('modules.appearance').keeps_fill('AgentPickerSel') == true
+    ]]),
+    'all 5 AI agents need distinct 1-cell glyphs, brand colors, and 7-line pure-ASCII logos'
+  )
+
+  local picker_origin = request('nvim_get_current_win')
+  local sessions_before_picker = eval("return vim.tbl_count(require('modules.agents').sessions)")
+  request('nvim_input', '<C-]>')
+  wait_for('Ctrl+] opens floating agent picker', function()
+    return eval("return require('modules.agents.picker').visible()")
+  end)
+  local picker_info = eval([[
+    local picker = require('modules.agents.picker')
+    local st = picker.state()
+    local cfg = vim.api.nvim_win_get_config(st.win)
+    local text = table.concat(vim.api.nvim_buf_get_lines(st.buf, 0, -1, false), '\n')
+    local sel = vim.api.nvim_get_hl(0, { name = 'AgentPickerSel', link = false })
+    return {
+      relative = cfg.relative,
+      ft = vim.bo[st.buf].filetype,
+      selected = st.selected,
+      items = st.items,
+      wide = st.wide,
+      text = text,
+      sel_has_bg = sel.bg ~= nil,
+    }
+  ]])
+  assert(picker_info.relative == 'editor', 'agent picker must open as a floating modal')
+  assert(picker_info.ft == 'setup-agent-picker', 'agent picker filetype mismatch: ' .. tostring(picker_info.ft))
+  assert(picker_info.wide, 'agent picker should render two-column layout at 120 cols')
+  assert(picker_info.sel_has_bg, 'selected agent row must keep its accent fill')
+  assert(
+    picker_info.selected == 'codex' and #picker_info.items == 5,
+    'picker should list all 5 agents starting on codex'
+  )
+  for _, needle in ipairs({ 'Codex', 'Cursor Agent', 'Claude', 'OpenCode', 'Antigravity', '●', ".' /--\\ '." }) do
+    assert(picker_info.text:find(needle, 1, true), 'agent picker missing ' .. needle .. ':\n' .. picker_info.text)
+  end
+
+  -- Moving down updates selection and right-hand ASCII brand art.
+  request('nvim_input', 'j')
+  wait_for('j moves picker to cursor', function()
+    return eval("return require('modules.agents.picker').state().selected") == 'cursor'
+  end)
+  local cursor_preview = eval([[
+    local st = require('modules.agents.picker').state()
+    return table.concat(vim.api.nvim_buf_get_lines(st.buf, 0, -1, false), '\n')
+  ]])
+  assert(
+    cursor_preview:find('|    | \\   |', 1, true) and cursor_preview:find("'.__.'", 1, true),
+    'moving selection should switch ASCII preview to Cursor:\n' .. cursor_preview
+  )
+  request('nvim_input', 'k')
+  wait_for('k moves picker back to codex', function()
+    return eval("return require('modules.agents.picker').state().selected") == 'codex'
+  end)
+
+  -- Esc closes without creating a session and restores focus.
+  request('nvim_input', '<Esc>')
+  wait_for('Esc closes agent picker', function()
+    return eval("return not require('modules.agents.picker').visible()")
+  end)
+  assert(request('nvim_get_current_win') == picker_origin, 'closing picker should restore origin window')
+  assert(
+    eval("return vim.tbl_count(require('modules.agents').sessions)") == sessions_before_picker,
+    'cancelling picker must not open a new chat tab'
+  )
+
+  -- :AgentSelect + live '/' filter ranks prefix match first, narrows to 1 item, and opens Antigravity.
+  eval('vim.cmd.AgentSelect()')
+  wait_for(':AgentSelect opens picker', function()
+    return eval("return require('modules.agents.picker').visible()")
+  end)
+  request('nvim_input', '/ant')
+  wait_for('live filter ranks antigravity ahead of Anthropic/Claude', function()
+    return eval([[
+      local st = require('modules.agents.picker').state()
+      return st.filtering and #st.items == 2 and st.selected == 'antigravity'
+    ]])
+  end)
+  request('nvim_input', 'ig')
+  wait_for('live filter narrows picker to antigravity', function()
+    return eval([[
+      local st = require('modules.agents.picker').state()
+      return st.filtering and #st.items == 1 and st.selected == 'antigravity'
+    ]])
+  end)
+  local agy_preview = eval([[
+    local st = require('modules.agents.picker').state()
+    return table.concat(vim.api.nvim_buf_get_lines(st.buf, 0, -1, false), '\n')
+  ]])
+  assert(agy_preview:find('/ /()\\ \\', 1, true), 'filtered preview should render Antigravity ASCII art')
+  request('nvim_input', '<CR>')
+  wait_for('Enter in filtered picker opens Antigravity tab', function()
+    return eval([[
+      local a = require('modules.agents')
+      return not require('modules.agents.picker').visible()
+        and vim.tbl_count(a.sessions) == ]] .. (sessions_before_picker + 1) .. [[
+        and a.sessions[a.active]
+        and a.sessions[a.active].name == 'antigravity'
+    ]])
+  end)
+  local agy_bar = eval([[
+    local win = require('modules.agents').win
+    return vim.api.nvim_eval_statusline(vim.wo[win].winbar, { use_winbar = true, winid = win }).str
+  ]])
+  local agy_glyph = eval("return require('modules.icons').agent_glyph('antigravity')")
+  assert(agy_bar:find(agy_glyph, 1, true), 'Antigravity chat tab should show its custom brand glyph: ' .. agy_bar)
+
+  -- Ctrl+T from terminal chat input opens the picker; quick-pick '3' opens Claude.
+  wait_for('terminal mode in chat before Ctrl+T', function()
+    return request('nvim_get_mode').mode == 't'
+  end)
+  local before_claude = eval("return vim.tbl_count(require('modules.agents').sessions)")
+  request('nvim_input', '<C-t>')
+  wait_for('Ctrl+T in chat opens floating picker', function()
+    return eval("return require('modules.agents.picker').visible()")
+  end)
+  request('nvim_input', '3')
+  wait_for('number key 3 picks Claude', function()
+    return eval([[
+      local a = require('modules.agents')
+      return not require('modules.agents.picker').visible()
+        and vim.tbl_count(a.sessions) == ]] .. (before_claude + 1) .. [[
+        and a.sessions[a.active]
+        and a.sessions[a.active].name == 'claude'
+    ]])
+  end)
+
+  -- Clicking '+' opens picker; clicking OpenCode row opens an OpenCode chat tab.
+  local before_opencode = eval("return vim.tbl_count(require('modules.agents').sessions)")
+  eval("_G.ChatTabNew(0, 0, 'l')")
+  wait_for('+ click opens floating picker', function()
+    return eval("return require('modules.agents.picker').visible()")
+  end)
+  local opencode_click = eval([[
+    local st = require('modules.agents.picker').state()
+    local pos = vim.api.nvim_win_get_position(st.win)
+    local lines = vim.api.nvim_buf_get_lines(st.buf, 0, -1, false)
+    for i, line in ipairs(lines) do
+      if line:find('OpenCode', 1, true) then
+        -- Border occupies +1 row and +1 col around floating content.
+        return { row = pos[1] + i, col = pos[2] + 8 }
+      end
+    end
+    error('OpenCode row missing in picker')
+  ]])
+  request('nvim_input_mouse', 'left', 'press', '', 0, opencode_click.row, opencode_click.col)
+  request('nvim_input_mouse', 'left', 'release', '', 0, opencode_click.row, opencode_click.col)
+  wait_for('mouse click on OpenCode opens tab', function()
+    return eval([[
+      local a = require('modules.agents')
+      return not require('modules.agents.picker').visible()
+        and vim.tbl_count(a.sessions) == ]] .. (before_opencode + 1) .. [[
+        and a.sessions[a.active]
+        and a.sessions[a.active].name == 'opencode'
+    ]])
+  end)
+
+  -- Empty filter + clear + missing binary indicator + q cancel.
+  eval([[
+    local old_path = vim.env.PATH
+    vim.env.PATH = ''
+    require('modules.agents').select()
+    vim.g._e2e_missing_text = table.concat(
+      vim.api.nvim_buf_get_lines(require('modules.agents.picker').state().buf, 0, -1, false),
+      '\n'
+    )
+    vim.env.PATH = old_path
+  ]])
+  assert(
+    eval("return vim.g._e2e_missing_text:find('○ Not on PATH', 1, true) ~= nil"),
+    'picker should show Not on PATH badge when a CLI binary is missing'
+  )
+  -- Ctrl+O inside the floating chat picker must not replace the picker with an editor buffer.
+  local picker_before_o = eval("return require('modules.agents.picker').state()")
+  request('nvim_input', '<C-o>')
+  assert(
+    eval(string.format(
+      [[
+      local st = require('modules.agents.picker').state()
+      return st.visible and st.win == %d and st.buf == %d and vim.api.nvim_win_get_buf(st.win) == st.buf
+    ]],
+      picker_before_o.win,
+      picker_before_o.buf
+    )),
+    'Ctrl+O must not replace the floating AI chat picker buffer'
+  )
+  request('nvim_input', '/zzzz')
+  wait_for('unmatched filter renders empty state', function()
+    return eval([[
+      local st = require('modules.agents.picker').state()
+      local text = table.concat(vim.api.nvim_buf_get_lines(st.buf, 0, -1, false), '\n')
+      return #st.items == 0 and text:find('No matching agents', 1, true) ~= nil
+    ]])
+  end)
+  request('nvim_input', '<Esc>')
+  wait_for('Esc leaves filter insert mode', function()
+    return eval("return not require('modules.agents.picker').state().filtering")
+  end)
+  request('nvim_input', '<BS>')
+  wait_for('BS clears filter and restores all 5 agents', function()
+    return eval("return #require('modules.agents.picker').state().items == 5")
+  end)
+  request('nvim_input', 'q')
+  wait_for('q closes picker', function()
+    return eval("return not require('modules.agents.picker').visible()")
+  end)
+  -- Close the extra sessions opened by the picker checks so later Antigravity tests start cleanly.
+  eval([[
+    local a = require('modules.agents')
+    local ids = vim.tbl_keys(a.sessions)
+    table.sort(ids)
+    while #ids > ]] .. sessions_before_picker .. [[ do
+      a.close(table.remove(ids))
+    end
+  ]])
+  print('PASS: AI agent brand glyphs, ASCII logos, and floating chat picker')
+
   eval([[
     vim.api.nvim_set_current_win(require('modules.tabs').editor_win() or 0)
     vim.cmd.stopinsert()
@@ -2862,11 +3333,15 @@ local ok, err = xpcall(function()
   assert(
     eval([[
     local a = require('modules.agents')
-    return a.is_cli('gemini') and a.is_cli('claude') and a.is_cli('opencode') and a.is_cli('antigravity')
-      and a.order[3] == 'gemini' and a.order[4] == 'claude' and a.order[5] == 'opencode'
-      and a.order[6] == 'antigravity'
+    return not a.is_cli('gemini')
+      and vim.fn.exists(':Gemini') == 0
+      and vim.fn.maparg('<leader>ag', 'n') == ''
+      and a.is_cli('claude') and a.is_cli('opencode') and a.is_cli('antigravity')
+      and #a.order == 5
+      and a.order[3] == 'claude' and a.order[4] == 'opencode'
+      and a.order[5] == 'antigravity'
   ]]),
-    'Gemini, Claude, OpenCode, and Antigravity must be registered chat CLIs'
+    'Claude, OpenCode, and Antigravity must be registered chat CLIs without Gemini'
   )
   eval("require('modules.agents').new('codex', { uuid = 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee' })")
   wait_for('codex resume argv', function()
@@ -2887,16 +3362,6 @@ local ok, err = xpcall(function()
     local args = f:read('*a')
     f:close()
     return args:find('--resume=11111111-2222-4333-8444-555555555555', 1, true)
-  end)
-  eval("require('modules.agents').new('gemini', { uuid = '22222222-3333-4444-8555-666666666666' })")
-  wait_for('gemini resume argv', function()
-    local f = io.open(vim.env.E2E_DIR .. '/gemini-args', 'r')
-    if not f then
-      return false
-    end
-    local args = f:read('*a')
-    f:close()
-    return args:find('--resume 22222222-3333-4444-8555-666666666666', 1, true)
   end)
   eval("require('modules.agents').new('claude', { uuid = '33333333-4444-4555-8666-777777777777' })")
   wait_for('claude resume argv', function()
@@ -2927,16 +3392,6 @@ local ok, err = xpcall(function()
     local args = f:read('*a')
     f:close()
     return args:find('--conversation 33333333-cccc-4ddd-8eee-333333333333', 1, true)
-  end)
-  eval("require('modules.agents').new('gemini')")
-  wait_for('gemini new session-id argv', function()
-    local f = io.open(vim.env.E2E_DIR .. '/gemini-args', 'r')
-    if not f then
-      return false
-    end
-    local args = f:read('*a')
-    f:close()
-    return args:find('--session-id ', 1, true)
   end)
   eval("require('modules.agents').new('opencode')")
   wait_for('opencode new session argv', function()
@@ -2972,7 +3427,7 @@ local ok, err = xpcall(function()
         if s.uuid == 'ses_cafef00d12345678' then found.opencode = true end
         if s.uuid == '44444444-dddd-4eee-8fff-444444444444' then found.antigravity = true end
       end
-      return found.codex and found.gemini and found.claude and found.opencode and found.antigravity
+      return found.codex and not found.gemini and found.claude and found.opencode and found.antigravity
     ]])
   end)
   wait_for('restored codex resume argv', function()
@@ -2983,15 +3438,6 @@ local ok, err = xpcall(function()
     local args = f:read('*a')
     f:close()
     return args:find('resume 99999999-aaaa-4bbb-8ccc-dddddddddddd', 1, true)
-  end)
-  wait_for('restored gemini resume argv', function()
-    local f = io.open(vim.env.E2E_DIR .. '/gemini-args', 'r')
-    if not f then
-      return false
-    end
-    local args = f:read('*a')
-    f:close()
-    return args:find('--resume aaaa1111-bbbb-4ccc-8ddd-eeeeeeeeeeee', 1, true)
   end)
   wait_for('restored claude resume argv', function()
     local f = io.open(vim.env.E2E_DIR .. '/claude-args', 'r')
