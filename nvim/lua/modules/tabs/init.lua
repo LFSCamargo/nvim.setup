@@ -62,6 +62,10 @@ local function is_side(win)
   if not api.nvim_win_is_valid(win) then
     return true
   end
+  local ok, cfg = pcall(api.nvim_win_get_config, win)
+  if ok and type(cfg) == 'table' and cfg.relative ~= '' then
+    return true
+  end
   local buf = api.nvim_win_get_buf(win)
   local ft = vim.bo[buf].filetype
   if side_ft[ft] then
@@ -134,6 +138,9 @@ function M.apply_scroll(win)
     end
     vim.wo[w].wrap = false
     vim.wo[w].sidescrolloff = 0
+    api.nvim_win_call(w, function()
+      vim.opt_local.fillchars:append({ eob = ' ' })
+    end)
   end
   if win then
     one(win)
@@ -150,6 +157,35 @@ local function next_tab(except)
       return buf
     end
   end
+end
+
+local function notify_missing_file(buf)
+  if not (buf and api.nvim_buf_is_valid(buf)) or vim.b[buf].missing_file_notified then
+    return
+  end
+  vim.b[buf].missing_file_notified = true
+  local name = api.nvim_buf_get_name(buf)
+  local label = name ~= '' and vim.fn.fnamemodify(name, ':.') or '[No Name]'
+  vim.schedule(function()
+    vim.notify('File no longer exists on disk: ' .. label, vim.log.levels.WARN)
+  end)
+end
+
+-- Safely show buf in win even if its file disappeared on disk (Vim:E211).
+function M.set_buf(win, buf)
+  if not (win and api.nvim_win_is_valid(win) and buf and api.nvim_buf_is_valid(buf)) then
+    return false
+  end
+  local ok, err = pcall(api.nvim_win_set_buf, win, buf)
+  if ok then
+    return true
+  end
+  local msg = tostring(err or '')
+  if msg:find('E211:', 1, true) and api.nvim_win_is_valid(win) and api.nvim_win_get_buf(win) == buf then
+    notify_missing_file(buf)
+    return true
+  end
+  error(err, 0)
 end
 
 local function recreate_editor()
@@ -458,7 +494,7 @@ function M.open(path, loc)
     vim.bo[buf].buflisted = true
   end
   api.nvim_set_current_win(win)
-  api.nvim_win_set_buf(win, buf)
+  M.set_buf(win, buf)
   if loc.line and loc.line > 0 then
     pcall(api.nvim_win_set_cursor, win, { loc.line, math.max(0, (loc.col or 1) - 1) })
   end
@@ -507,11 +543,13 @@ function M.close_editor(buf)
   end
   replacement = replacement or require('modules.home').buf()
   for _, win in ipairs(api.nvim_list_wins()) do
-    if api.nvim_win_get_buf(win) == buf then
-      api.nvim_win_set_buf(win, replacement)
+    if api.nvim_win_is_valid(win) and api.nvim_win_get_buf(win) == buf then
+      M.set_buf(win, replacement)
     end
   end
-  api.nvim_buf_delete(buf, {})
+  if api.nvim_buf_is_valid(buf) then
+    api.nvim_buf_delete(buf, {})
+  end
   M.ensure()
 end
 
@@ -595,7 +633,7 @@ _G.PaneTabCycle = function(direction, _, button)
     agents.show(id)
   else
     api.nvim_set_current_win(win)
-    api.nvim_win_set_buf(win, id)
+    M.set_buf(win, id)
   end
 end
 
@@ -613,7 +651,7 @@ _G.EditorTabClick = function(id, _, button)
   end
   if win then
     api.nvim_set_current_win(win)
-    api.nvim_win_set_buf(win, id)
+    M.set_buf(win, id)
   end
 end
 
@@ -720,8 +758,33 @@ api.nvim_create_autocmd('QuitPre', {
     end
     local replacement = next_tab(buf) or require('modules.home').buf()
     vim.cmd('aboveleft split')
-    api.nvim_win_set_buf(api.nvim_get_current_win(), replacement)
+    M.set_buf(api.nvim_get_current_win(), replacement)
     api.nvim_set_current_win(win)
+  end,
+})
+
+-- Switching to a buffer whose file disappeared on disk raises Vim:E211 inside
+-- nvim_win_set_buf and aborts tab operations. Keep the buffer open, warn once
+-- while the file is gone, and preserve Neovim's prompt for other file changes.
+api.nvim_create_autocmd('FileChangedShell', {
+  callback = function(ev)
+    if vim.v.fcs_reason ~= 'deleted' then
+      if ev.buf and api.nvim_buf_is_valid(ev.buf) then
+        vim.b[ev.buf].missing_file_notified = nil
+      end
+      vim.v.fcs_choice = 'ask'
+      return
+    end
+    vim.v.fcs_choice = ''
+    notify_missing_file(ev.buf)
+  end,
+})
+
+api.nvim_create_autocmd({ 'BufWritePost', 'BufReadPost' }, {
+  callback = function(ev)
+    if ev.buf and api.nvim_buf_is_valid(ev.buf) then
+      vim.b[ev.buf].missing_file_notified = nil
+    end
   end,
 })
 

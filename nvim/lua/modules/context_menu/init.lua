@@ -238,7 +238,7 @@ function M.editor_tab(id, pos)
       run = function()
         local win = tabs.focus()
         if win then
-          api.nvim_win_set_buf(win, id)
+          tabs.set_buf(win, id)
         end
       end,
     },
@@ -258,7 +258,7 @@ function M.editor_tab(id, pos)
         end
         local win = tabs.focus()
         if win and api.nvim_buf_is_valid(id) then
-          api.nvim_win_set_buf(win, id)
+          tabs.set_buf(win, id)
         end
       end,
     },

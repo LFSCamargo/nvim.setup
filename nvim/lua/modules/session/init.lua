@@ -232,6 +232,14 @@ local function set_cursor(win, cursor)
   pcall(api.nvim_win_set_cursor, win, { math.max(1, cursor[1]), math.max(0, cursor[2] or 0) })
 end
 
+local function set_buf(win, buf)
+  local tabs = package.loaded['modules.tabs']
+  if tabs and tabs.set_buf then
+    return tabs.set_buf(win, buf)
+  end
+  api.nvim_win_set_buf(win, buf)
+end
+
 function M.restore_editor(data)
   local tabs = data and data.editor and data.editor.tabs
   if type(tabs) ~= 'table' or #tabs == 0 then
@@ -257,7 +265,7 @@ function M.restore_editor(data)
         buf = api.nvim_get_current_buf()
       end
     else
-      api.nvim_win_set_buf(win, buf)
+      set_buf(win, buf)
     end
     if persist_uuid(tab.uuid) then
       vim.b[buf].session_uuid = tab.uuid
@@ -271,7 +279,7 @@ function M.restore_editor(data)
   local active = data.editor.active or {}
   local focus = find_buf(active.path or '', active.uuid)
   if focus then
-    api.nvim_win_set_buf(win, focus)
+    set_buf(win, focus)
   end
   for _, buf in ipairs(api.nvim_list_bufs()) do
     if editor_buf(buf) and not kept[buf] then
@@ -281,7 +289,7 @@ function M.restore_editor(data)
       if empty then
         for _, w in ipairs(api.nvim_list_wins()) do
           if api.nvim_win_get_buf(w) == buf then
-            api.nvim_win_set_buf(w, api.nvim_win_get_buf(win))
+            set_buf(w, api.nvim_win_get_buf(win))
           end
         end
         pcall(api.nvim_buf_delete, buf, { force = true })
