@@ -11,6 +11,37 @@ assert(
 )
 
 local exit_status
+local suite_start = vim.uv.hrtime()
+local block_start = suite_start
+local max_block_sec = tonumber(vim.env.E2E_BLOCK_TIMEOUT_SEC) or 60
+local max_suite_sec = tonumber(vim.env.E2E_TIMEOUT_SEC) or 60
+local raw_print = print
+print = function(...)
+  local first = tostring(select(1, ...) or '')
+  if first:find('^PASS:') then
+    local now = vim.uv.hrtime()
+    local block_sec = (now - block_start) / 1e9
+    local total_sec = (now - suite_start) / 1e9
+    block_start = now
+    assert(
+      block_sec <= max_block_sec,
+      string.format('%s exceeded %ds threshold (took %.2fs)', first, max_block_sec, block_sec)
+    )
+    assert(
+      total_sec <= max_suite_sec,
+      string.format('E2E suite exceeded %ds threshold at %s (took %.2fs)', max_suite_sec, first, total_sec)
+    )
+  end
+  raw_print(...)
+  io.stdout:flush()
+end
+
+local watchdog = vim.uv.new_timer()
+watchdog:start(max_suite_sec * 1000, 0, function()
+  io.stderr:write(string.format('ERROR: E2E suite hung and exceeded %ds threshold\n', max_suite_sec))
+  os.exit(124)
+end)
+
 local child = vim.fn.jobstart({
   vim.v.progpath,
   '--embed',
@@ -987,6 +1018,187 @@ local ok, err = xpcall(function()
     tabs.win
   ))
   print('PASS: tab bar uses one solid active point, hollow inactive points, transparent fills, and thin pane borders')
+
+  -- Regression: closing or switching tabs must not throw Vim:E211 when the
+  -- replacement (or clicked) buffer's file was deleted on disk.
+  local del_case = eval([[
+    local tabs = require('modules.tabs')
+    local win = tabs.editor_win()
+    local prev = vim.api.nvim_win_get_buf(win)
+    local hidden = {}
+    for _, b in ipairs(vim.api.nvim_list_bufs()) do
+      if tabs.editor_buf(b) then
+        hidden[#hidden + 1] = b
+        vim.bo[b].buflisted = false
+      end
+    end
+    local dir = vim.env.E2E_DIR .. '/deleted-tab-e211'
+    vim.fn.mkdir(dir, 'p')
+    local f_del1 = dir .. '/rules-one.ts'
+    local f_keep1 = dir .. '/keep-one.ts'
+    local f_del2 = dir .. '/rules-two.ts'
+    local f_keep2 = dir .. '/keep-two.ts'
+    local f_keep3 = dir .. '/keep-three.ts'
+    local f_del3 = dir .. '/rules-three.ts'
+    for _, f in ipairs({ f_del1, f_keep1, f_del2, f_keep2, f_keep3, f_del3 }) do
+      vim.fn.writefile({ 'export const ok = true' }, f)
+    end
+    tabs.open(f_del1)
+    local b_del1 = vim.api.nvim_get_current_buf()
+    tabs.open(f_keep1)
+    local b_keep1 = vim.api.nvim_get_current_buf()
+    vim.uv.fs_unlink(f_del1)
+    vim.v.errmsg = ''
+    vim.cmd('redraw')
+    local bar = vim.api.nvim_eval_statusline(vim.wo[win].winbar, { use_winbar = true, winid = win }).str
+    local label_at = assert(bar:find('keep-one.ts', 1, true), 'keep-one.ts tab missing: ' .. bar)
+    local close_at = assert(bar:find('×', label_at, true), 'keep-one.ts × missing: ' .. bar)
+    return {
+      win = win,
+      prev = prev,
+      hidden = hidden,
+      dir = dir,
+      b_del1 = b_del1,
+      b_keep1 = b_keep1,
+      f_del2 = f_del2,
+      f_keep2 = f_keep2,
+      f_keep3 = f_keep3,
+      f_del3 = f_del3,
+      close_col = vim.fn.strdisplaywidth(bar:sub(1, close_at - 1)),
+    }
+  ]])
+  local del_pos = request('nvim_win_get_position', del_case.win)
+  request('nvim_input_mouse', 'left', 'press', '', 0, del_pos[1], del_pos[2] + del_case.close_col)
+  request('nvim_input_mouse', 'left', 'release', '', 0, del_pos[1], del_pos[2] + del_case.close_col)
+  wait_for('closing keep-one.ts onto deleted rules-one.ts without E211', function()
+    return eval(string.format(
+      [[
+      return not vim.api.nvim_buf_is_valid(%d)
+        and vim.api.nvim_buf_is_valid(%d)
+        and vim.api.nvim_win_get_buf(%d) == %d
+    ]],
+      del_case.b_keep1,
+      del_case.b_del1,
+      del_case.win,
+      del_case.b_del1
+    ))
+  end)
+  assert(
+    eval([[return not vim.v.errmsg:find('E211', 1, true) and not vim.v.errmsg:find('E5108', 1, true)]]),
+    'closing onto deleted-on-disk tab must not raise E211/E5108: ' .. eval('return vim.v.errmsg')
+  )
+  local del_case2 = eval(string.format(
+    [[
+    local tabs = require('modules.tabs')
+    local win = %d
+    tabs.open(%q)
+    local b_del2 = vim.api.nvim_get_current_buf()
+    vim.api.nvim_buf_set_lines(b_del2, 0, 1, false, { 'export const edited = true' })
+    tabs.open(%q)
+    local b_keep2 = vim.api.nvim_get_current_buf()
+    if vim.api.nvim_buf_is_valid(%d) then
+      vim.api.nvim_buf_delete(%d, { force = true })
+    end
+    vim.uv.fs_unlink(%q)
+    vim.v.errmsg = ''
+    vim.cmd('redraw')
+    local bar = vim.api.nvim_eval_statusline(vim.wo[win].winbar, { use_winbar = true, winid = win }).str
+    local label_at = assert(bar:find('keep-two.ts', 1, true), 'keep-two.ts tab missing: ' .. bar)
+    local close_at = assert(bar:find('×', label_at, true), 'keep-two.ts × missing: ' .. bar)
+    return {
+      b_del2 = b_del2,
+      b_keep2 = b_keep2,
+      close_col = vim.fn.strdisplaywidth(bar:sub(1, close_at - 1)),
+    }
+  ]],
+    del_case.win,
+    del_case.f_del2,
+    del_case.f_keep2,
+    del_case.b_del1,
+    del_case.b_del1,
+    del_case.f_del2
+  ))
+  request('nvim_input_mouse', 'left', 'press', '', 0, del_pos[1], del_pos[2] + del_case2.close_col)
+  request('nvim_input_mouse', 'left', 'release', '', 0, del_pos[1], del_pos[2] + del_case2.close_col)
+  wait_for('closing keep-two.ts onto modified deleted rules-two.ts without E211', function()
+    return eval(string.format(
+      [[
+      return not vim.api.nvim_buf_is_valid(%d)
+        and vim.api.nvim_buf_is_valid(%d)
+        and vim.api.nvim_win_get_buf(%d) == %d
+        and vim.bo[%d].modified == true
+    ]],
+      del_case2.b_keep2,
+      del_case2.b_del2,
+      del_case.win,
+      del_case2.b_del2,
+      del_case2.b_del2
+    ))
+  end)
+  assert(
+    eval(
+      string.format(
+        [[
+      local tabs = require('modules.tabs')
+      local win = %d
+      local b_del2 = %d
+      assert(not vim.v.errmsg:find('E211', 1, true) and not vim.v.errmsg:find('E5108', 1, true), vim.v.errmsg)
+      assert(vim.b[b_del2].missing_file_notified == true, 'missing file should notify once')
+      -- Clicking a deleted-file tab and running :q onto it must both stay error-free.
+      tabs.open(%q)
+      local b_keep3 = vim.api.nvim_get_current_buf()
+      _G.EditorTabClick(b_del2, 1, 'l')
+      assert(vim.api.nvim_win_get_buf(win) == b_del2, 'EditorTabClick should show deleted-file buffer')
+      _G.EditorTabClick(b_keep3, 1, 'l')
+      vim.v.errmsg = ''
+      vim.cmd('q')
+      local cur_win = tabs.editor_win()
+      assert(cur_win and vim.api.nvim_win_get_buf(cur_win) == b_del2, ':q should keep editor pane on deleted-file tab')
+      assert(not vim.v.errmsg:find('E211', 1, true) and not vim.v.errmsg:find('E5108', 1, true), vim.v.errmsg)
+      -- Defense-in-depth: tabs.set_buf survives E211 even if FileChangedShell is ignored.
+      tabs.open(%q)
+      local b_del3 = vim.api.nvim_get_current_buf()
+      tabs.set_buf(cur_win, b_del2)
+      vim.uv.fs_unlink(%q)
+      local prev_ei = vim.o.eventignore
+      vim.o.eventignore = 'FileChangedShell'
+      local ok, res = pcall(tabs.set_buf, cur_win, b_del3)
+      vim.o.eventignore = prev_ei
+      assert(ok and res == true and vim.api.nvim_win_get_buf(cur_win) == b_del3, 'set_buf must survive E211 under eventignore')
+      -- Restore original editor buffers and clean up temp files.
+      for _, b in ipairs(%s) do
+        if vim.api.nvim_buf_is_valid(b) then
+          vim.bo[b].buflisted = true
+        end
+      end
+      if vim.api.nvim_win_is_valid(cur_win) and vim.api.nvim_buf_is_valid(%d) then
+        tabs.set_buf(cur_win, %d)
+      end
+      for _, b in ipairs({ b_del2, b_keep3, b_del3 }) do
+        if vim.api.nvim_buf_is_valid(b) then
+          vim.bo[b].modified = false
+          vim.api.nvim_buf_delete(b, { force = true })
+        end
+      end
+      vim.fn.delete(%q, 'rf')
+      vim.v.errmsg = ''
+      return true
+    ]],
+        del_case.win,
+        del_case2.b_del2,
+        del_case.f_keep3,
+        del_case.f_del3,
+        del_case.f_del3,
+        vim.inspect(del_case.hidden),
+        del_case.prev,
+        del_case.prev,
+        del_case.dir
+      )
+    ),
+    'deleted-on-disk tab close, click, :q, and set_buf fallback must succeed without E211'
+  )
+  editor = eval("return require('modules.tabs').editor_win()")
+  print('PASS: closing and switching tabs onto files deleted on disk avoids Vim:E211')
 
   local function click(win)
     local pos = request('nvim_win_get_position', win)
@@ -3551,6 +3763,10 @@ local ok, err = xpcall(function()
   assert(exit_status == 0, 'Ctrl-Q should exit successfully')
 end, debug.traceback)
 
+pcall(function()
+  watchdog:stop()
+  watchdog:close()
+end)
 pcall(request, 'nvim_command', 'qa!')
 vim.fn.jobstop(child)
 if not ok then
