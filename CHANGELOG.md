@@ -9,6 +9,28 @@ Scopes are optional. Commits from before that convention are listed under Other.
 
 ## [Unreleased]
 
+### Features
+
+- **breadcrumb:** add diff toggle, path limits, and bottom spacing ([133b5e9](https://github.com/LFSCamargo/nvim.setup/commit/133b5e95409a4b7eece064e3e7178a16b555d9cf))
+- **diff:** add source_buf and per-file diff toggle for breadcrumb integration ([16d94dd](https://github.com/LFSCamargo/nvim.setup/commit/16d94ddebcacb5fead8553f58eedd0937b34a80b))
+
+### Bug Fixes
+
+- **tabs:** wrap buffer switches to survive E211 on deleted-on-disk files ([773a060](https://github.com/LFSCamargo/nvim.setup/commit/773a0605d6f18ea9ff87bfa9f1924e8107a90dcc))
+
+### Documentation
+
+- list deleted-on-disk tab handling and breadcrumb bottom spacing in e2e plan ([1389075](https://github.com/LFSCamargo/nvim.setup/commit/1389075b84d4b6cbd052dbc382dd457dd6e87ddb))
+
+### Tests
+
+- **e2e:** cover E211-safe tab close/switch and add per-block timeout watchdog ([2904ecb](https://github.com/LFSCamargo/nvim.setup/commit/2904ecb195db1e54e813244ab2665c84ef00dea0))
+
+### CI
+
+- **web:** raise vitest, playwright, and workspace test timeouts ([082ce05](https://github.com/LFSCamargo/nvim.setup/commit/082ce057c027b0e88ad04e2f4e935a48819431f2))
+- **test:** add run_with_timeout helper and enforce per-test thresholds in shell suite ([04951a2](https://github.com/LFSCamargo/nvim.setup/commit/04951a21f793ce8da7750cfc4e96ba2eddbcd197))
+
 ## [2.2.1] - 2026-11-22
 
 ### Refactoring
