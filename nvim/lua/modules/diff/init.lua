@@ -28,6 +28,10 @@ local function paint(lines)
     return
   end
   require('modules.shared.buffer').replace(buf, lines)
+  local crumb = package.loaded['modules.breadcrumb']
+  if crumb and crumb.render then
+    crumb.render()
+  end
   api.nvim_buf_clear_namespace(buf, ns, 0, -1)
   for i, line in ipairs(lines) do
     local group
@@ -54,6 +58,76 @@ end
 
 function M.buffer()
   return M.active() and buf or nil
+end
+
+function M.source_buf()
+  return M.active() and previous and api.nvim_buf_is_valid(previous) and previous or nil
+end
+
+local function resolve_git_target(file_buf)
+  if not api.nvim_buf_is_valid(file_buf) then
+    return nil
+  end
+  local name = api.nvim_buf_get_name(file_buf)
+  if name == '' then
+    return nil
+  end
+  local abs = vim.fs.normalize(vim.fn.fnamemodify(name, ':p'))
+  local dir = vim.fn.fnamemodify(abs, ':h')
+  local out = vim.fn.systemlist({ 'git', '-C', dir, 'rev-parse', '--show-toplevel' })
+  if vim.v.shell_error ~= 0 or not out[1] or out[1] == '' then
+    return nil
+  end
+  local root = vim.fs.normalize(out[1])
+  local rel = abs
+  if abs:sub(1, #root + 1) == root .. '/' then
+    rel = abs:sub(#root + 2)
+  end
+  local st = vim.fn.systemlist({ 'git', '-C', root, 'status', '--porcelain=v1', '--', rel })
+  local line = vim.v.shell_error == 0 and st[1] or nil
+  local status = 'M'
+  local group = 'unstaged'
+  if line and #line >= 2 then
+    local x, y = line:sub(1, 1), line:sub(2, 2)
+    if x == '?' and y == '?' then
+      status = '?'
+      group = 'unstaged'
+    elseif y ~= ' ' and y ~= '' then
+      status = y
+      group = 'unstaged'
+    elseif x ~= ' ' and x ~= '' then
+      status = x
+      group = 'staged'
+    end
+  end
+  return root, {
+    path = rel,
+    status = status,
+    group = group,
+  }
+end
+
+function M.toggle_for_buf(target_buf)
+  local tabs = require('modules.tabs')
+  local win = tabs.editor_win() or api.nvim_get_current_win()
+  target_buf = target_buf
+    or (win and api.nvim_win_is_valid(win) and api.nvim_win_get_buf(win))
+    or api.nvim_get_current_buf()
+  if
+    M.active() and (target_buf == buf or (win and api.nvim_win_is_valid(win) and api.nvim_win_get_buf(win) == buf))
+  then
+    M.close()
+    local sidebar = package.loaded['modules.sidebar']
+    if sidebar and sidebar.view == 'git' and sidebar.render then
+      sidebar.render(sidebar.current_branch or 'Git', sidebar.generation)
+    end
+    return true
+  end
+  local root, entry = resolve_git_target(target_buf)
+  if not root or not entry then
+    return false
+  end
+  return M.open(root, entry)
 end
 
 function M.open(root, entry)
@@ -83,6 +157,8 @@ function M.open(root, entry)
   end
   request_id = request_id + 1
   local current = request_id
+  vim.b[buf].git_diff_path = full
+  vim.b[buf].git_diff_rel = entry.path
   vim.b[buf].git_diff_label = 'Diff: ' .. vim.fn.fnamemodify(entry.path, ':t')
   api.nvim_win_set_buf(win, buf)
   local scope = entry.group == 'staged' and 'Staged' or 'Unstaged'
@@ -138,8 +214,8 @@ function M.close()
   local old_buf = buf
   local replacement = previous and api.nvim_buf_is_valid(previous) and previous or api.nvim_create_buf(true, false)
   for _, win in ipairs(api.nvim_list_wins()) do
-    if api.nvim_win_get_buf(win) == old_buf then
-      api.nvim_win_set_buf(win, replacement)
+    if api.nvim_win_is_valid(win) and api.nvim_win_get_buf(win) == old_buf then
+      require('modules.tabs').set_buf(win, replacement)
     end
   end
   buf, previous = nil, nil
