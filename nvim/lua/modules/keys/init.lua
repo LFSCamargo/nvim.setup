@@ -106,6 +106,18 @@ end
 -- Winbar clicks have no buffer line and must keep their own tab actions.
 vim.keymap.set({ 'n', 'i' }, '<LeftMouse>', function()
   local pos = vim.fn.getmousepos()
+  if pos.winid ~= 0 then
+    local ok, crumb = pcall(require, 'modules.breadcrumb')
+    if ok and crumb.is_button_click then
+      local hit, target_buf = crumb.is_button_click(pos)
+      if hit then
+        vim.schedule(function()
+          crumb.toggle_diff(target_buf)
+        end)
+        return '<Ignore>'
+      end
+    end
+  end
   if pos.line > 0 and pos.winid ~= 0 then
     vim.schedule(function()
       if not vim.api.nvim_win_is_valid(pos.winid) or vim.api.nvim_get_current_win() ~= pos.winid then

@@ -201,7 +201,13 @@ function M.keeps_fill(name)
   if name == 'PaneTabActive' or name == 'SidebarTabActive' or name == 'AgentPickerSel' then
     return true
   end
-  if name == 'BreadcrumbDir' or name == 'BreadcrumbSep' or name == 'BreadcrumbIcon' or name == 'BreadcrumbFile' then
+  if
+    name == 'BreadcrumbDir'
+    or name == 'BreadcrumbSep'
+    or name == 'BreadcrumbIcon'
+    or name == 'BreadcrumbFile'
+    or name == 'BreadcrumbAction'
+  then
     return true
   end
   return name:sub(1, 2) == 'SL'
