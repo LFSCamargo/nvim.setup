@@ -2,11 +2,18 @@
 set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "$0")/../../.." && pwd -P)"
 PASS=0
+TEST_START_SEC=$SECONDS
+MAX_TEST_SEC="${TEST_TIMEOUT_SEC:-60}"
 fail() {
   printf 'FAIL: %s\n' "$*" >&2
   exit 1
 }
 pass() {
+  local elapsed=$((SECONDS - TEST_START_SEC))
+  TEST_START_SEC=$SECONDS
+  if ((elapsed > MAX_TEST_SEC)); then
+    fail "$* exceeded ${MAX_TEST_SEC}s threshold (took ${elapsed}s)"
+  fi
   printf 'PASS: %s\n' "$*"
   PASS=$((PASS + 1))
 }

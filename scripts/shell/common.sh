@@ -32,3 +32,22 @@ verify_sha256() {
 run_lua() {
   SETUP_LUA_FILE="$1" nvim --headless -n '+lua local ok, err = pcall(dofile, vim.env.SETUP_LUA_FILE); if not ok then print(err); vim.cmd("cquit 1") end'
 }
+run_with_timeout() {
+  local limit="${1:-60}"
+  shift
+  "$@" &
+  local pid=$!
+  (
+    sleep "$limit"
+    printf 'ERROR: Timed out after %ss running: %s\n' "$limit" "$*" >&2
+    kill -TERM "$pid" 2> /dev/null || true
+    sleep 1
+    kill -KILL "$pid" 2> /dev/null || true
+  ) &
+  local watcher=$!
+  local rc=0
+  wait "$pid" || rc=$?
+  kill -TERM "$watcher" 2> /dev/null || true
+  wait "$watcher" 2> /dev/null || true
+  return "$rc"
+}
